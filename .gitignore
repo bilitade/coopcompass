@@ -1,0 +1,102 @@
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Backend - Python
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/**/*.py[cod]
+backend/**/*.so
+backend/.Python
+backend/build/
+backend/develop-eggs/
+backend/dist/
+backend/downloads/
+backend/eggs/
+backend/.eggs/
+backend/lib/
+backend/lib64/
+backend/parts/
+backend/sdist/
+backend/var/
+backend/wheels/
+backend/pip-wheel-metadata/
+backend/share/python-wheels/
+backend/*.egg-info/
+backend/.installed.cfg
+backend/*.egg
+backend/MANIFEST
+
+# Backend - Database files
+backend/*.db
+backend/*.sqlite
+backend/*.sqlite3
+backend/tpes.db
+backend/tpes_test.db
+backend/test.db
+
+# Backend - Logs
+backend/*.log
+backend/logs/
+
+# Frontend - Node modules and dependencies
+frontend/node_modules/
+frontend/package-lock.json
+frontend/yarn.lock
+
+# Frontend - Build outputs
+frontend/dist/
+frontend/.vite/
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.cursor/
+
+# OS-specific
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Temporary files
+*.tmp
+*.temp
+.temp/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Node modules cache
+frontend/.eslintcache
+frontend/.stylelintcache
+
+# Miscellaneous
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE temporary files
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Alembic
+backend/alembic/versions/__pycache__/
+
+# Documentation build artifacts
+docs/_build/
+
+

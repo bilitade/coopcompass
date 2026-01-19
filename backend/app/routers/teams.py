@@ -1,0 +1,103 @@
+"""Team management endpoints."""
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app import models, schemas
+from app.utils.dependencies import get_current_user, get_current_team_lead
+
+router = APIRouter(prefix="/api/teams", tags=["teams"])
+
+
+@router.get("", response_model=list[schemas.TeamResponse])
+def list_teams(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """List all teams."""
+    teams = db.query(models.Team).all()
+    return teams
+
+
+@router.post("", response_model=schemas.TeamResponse, status_code=status.HTTP_201_CREATED)
+def create_team(
+    team_data: schemas.TeamCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_team_lead)
+):
+    """Create a new team."""
+    new_team = models.Team(name=team_data.name)
+    db.add(new_team)
+    db.commit()
+    db.refresh(new_team)
+    return new_team
+
+
+@router.get("/{team_id}", response_model=schemas.TeamDetailResponse)
+def get_team(
+    team_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Get team details with users."""
+    team = db.query(models.Team).filter(models.Team.id == team_id).first()
+    
+    if not team:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Team not found"
+        )
+    
+    return team
+
+
+@router.get("/{team_id}/users", response_model=list[schemas.UserResponse])
+def list_team_users(
+    team_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """List all users in a team."""
+    team = db.query(models.Team).filter(models.Team.id == team_id).first()
+    
+    if not team:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Team not found"
+        )
+    
+    users = db.query(models.User).filter(models.User.team_id == team_id).all()
+    return users
+
+
+@router.post("/{team_id}/users", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
+def add_user_to_team(
+    team_id: int,
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_team_lead)
+):
+    """Add an existing user to a team."""
+    # Check team exists
+    team = db.query(models.Team).filter(models.Team.id == team_id).first()
+    if not team:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Team not found"
+        )
+    
+    # Check user exists
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Add user to team
+    user.team_id = team_id
+    db.commit()
+    db.refresh(user)
+    
+    return user
+

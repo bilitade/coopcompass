@@ -1,0 +1,71 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { OKRPage } from './pages/OKRPage';
+import { BAUPage } from './pages/BAUPage';
+import { WorkItemsPage } from './pages/WorkItemsPage';
+import { PlanningPage } from './pages/PlanningPage';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+
+          {/* Protected Routes */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/okrs"
+            element={
+              <ProtectedRoute>
+                <OKRPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bau"
+            element={
+              <ProtectedRoute>
+                <BAUPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/work-items"
+            element={
+              <ProtectedRoute>
+                <WorkItemsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/planning"
+            element={
+              <ProtectedRoute>
+                <PlanningPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Catch all - redirect to dashboard */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
+
+export default App;

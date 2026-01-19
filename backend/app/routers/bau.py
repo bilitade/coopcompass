@@ -1,0 +1,253 @@
+"""BAU (Business As Usual) management endpoints."""
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app import models, schemas
+from app.utils.dependencies import get_current_user, get_current_team_lead
+from app.calculations import calculate_bau_health
+
+router = APIRouter(prefix="/api", tags=["bau"])
+
+
+@router.post("/teams/{team_id}/bau", response_model=schemas.BAUActivityResponse, status_code=status.HTTP_201_CREATED)
+def create_bau_activity(
+    team_id: int,
+    bau_data: schemas.BAUActivityCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_team_lead)
+):
+    """Create a new BAU activity for a team."""
+    # Check team exists
+    team = db.query(models.Team).filter(models.Team.id == team_id).first()
+    if not team:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Team not found"
+        )
+    
+    new_bau = models.BAUActivity(
+        team_id=team_id,
+        name=bau_data.name,
+        description=bau_data.description
+    )
+    
+    db.add(new_bau)
+    db.commit()
+    db.refresh(new_bau)
+    
+    return new_bau
+
+
+@router.get("/teams/{team_id}/bau", response_model=list[schemas.BAUActivityResponse])
+def list_team_bau_activities(
+    team_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """List all BAU activities for a team."""
+    # Check team exists
+    team = db.query(models.Team).filter(models.Team.id == team_id).first()
+    if not team:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Team not found"
+        )
+    
+    activities = db.query(models.BAUActivity).filter(
+        models.BAUActivity.team_id == team_id
+    ).all()
+    
+    return activities
+
+
+@router.get("/bau/{bau_id}", response_model=schemas.BAUActivityDetailResponse)
+def get_bau_activity(
+    bau_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Get BAU activity details with metrics."""
+    activity = db.query(models.BAUActivity).filter(models.BAUActivity.id == bau_id).first()
+    
+    if not activity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="BAU activity not found"
+        )
+    
+    return activity
+
+
+@router.put("/bau/{bau_id}", response_model=schemas.BAUActivityResponse)
+def update_bau_activity(
+    bau_id: int,
+    bau_data: schemas.BAUActivityUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_team_lead)
+):
+    """Update a BAU activity."""
+    activity = db.query(models.BAUActivity).filter(models.BAUActivity.id == bau_id).first()
+    
+    if not activity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="BAU activity not found"
+        )
+    
+    if bau_data.name is not None:
+        activity.name = bau_data.name
+    
+    if bau_data.description is not None:
+        activity.description = bau_data.description
+    
+    if bau_data.is_active is not None:
+        activity.is_active = bau_data.is_active
+    
+    db.commit()
+    db.refresh(activity)
+    
+    return activity
+
+
+@router.post("/bau/{bau_id}/metrics", response_model=schemas.BAUMetricResponse, status_code=status.HTTP_201_CREATED)
+def create_bau_metric(
+    bau_id: int,
+    metric_data: schemas.BAUMetricCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_team_lead)
+):
+    """Add a metric to a BAU activity."""
+    activity = db.query(models.BAUActivity).filter(models.BAUActivity.id == bau_id).first()
+    
+    if not activity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="BAU activity not found"
+        )
+    
+    new_metric = models.BAUMetric(
+        bau_activity_id=bau_id,
+        name=metric_data.name,
+        target_value=metric_data.target_value,
+        unit=metric_data.unit,
+        weight=metric_data.weight,
+        is_higher_better=metric_data.is_higher_better
+    )
+    
+    db.add(new_metric)
+    db.commit()
+    db.refresh(new_metric)
+    
+    return new_metric
+
+
+@router.patch("/bau-metrics/{metric_id}", response_model=schemas.BAUMetricResponse)
+def update_bau_metric(
+    metric_id: int,
+    metric_data: schemas.BAUMetricUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_team_lead)
+):
+    """Update a BAU metric value and other properties."""
+    metric = db.query(models.BAUMetric).filter(models.BAUMetric.id == metric_id).first()
+    
+    if not metric:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Metric not found"
+        )
+    
+    if metric_data.name is not None:
+        metric.name = metric_data.name
+    
+    if metric_data.target_value is not None:
+        metric.target_value = metric_data.target_value
+    
+    if metric_data.unit is not None:
+        metric.unit = metric_data.unit
+    
+    if metric_data.weight is not None:
+        metric.weight = metric_data.weight
+    
+    if metric_data.is_higher_better is not None:
+        metric.is_higher_better = metric_data.is_higher_better
+    
+    if metric_data.current_value is not None:
+        metric.current_value = metric_data.current_value
+        
+        # Record metric history
+        history_entry = models.MetricHistory(
+            bau_metric_id=metric_id,
+            value=metric_data.current_value
+        )
+        db.add(history_entry)
+    
+    db.commit()
+    db.refresh(metric)
+    
+    return metric
+
+
+@router.get("/bau/{bau_id}/health", response_model=schemas.BAUHealthResponse)
+def get_bau_health(
+    bau_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Get BAU activity health score."""
+    activity = db.query(models.BAUActivity).filter(models.BAUActivity.id == bau_id).first()
+    
+    if not activity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="BAU activity not found"
+        )
+    
+    health = calculate_bau_health(db, bau_id)
+    
+    metrics_data = [
+        {
+            "id": m.id,
+            "bau_activity_id": m.bau_activity_id,
+            "name": m.name,
+            "target_value": m.target_value,
+            "current_value": m.current_value,
+            "unit": m.unit,
+            "weight": m.weight,
+            "is_higher_better": m.is_higher_better,
+            "created_at": m.created_at,
+            "updated_at": m.updated_at
+        }
+        for m in activity.metrics
+    ]
+    
+    return {
+        "activity_id": activity.id,
+        "activity_name": activity.name,
+        "health": health,
+        "metrics": metrics_data
+    }
+
+
+@router.get("/bau-metrics/{metric_id}/history", response_model=list[schemas.MetricHistoryResponse])
+def get_metric_history(
+    metric_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Get metric history."""
+    metric = db.query(models.BAUMetric).filter(models.BAUMetric.id == metric_id).first()
+    
+    if not metric:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Metric not found"
+        )
+    
+    history = db.query(models.MetricHistory).filter(
+        models.MetricHistory.bau_metric_id == metric_id
+    ).order_by(models.MetricHistory.recorded_at.desc()).all()
+    
+    return history
+

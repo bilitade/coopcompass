@@ -1,7 +1,7 @@
 """Team management endpoints."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app import models, schemas
 from app.utils.dependencies import get_current_user, get_current_team_lead
@@ -100,4 +100,30 @@ def add_user_to_team(
     db.refresh(user)
     
     return user
+
+
+@router.get("/{team_id}/tasks", response_model=list[schemas.TaskWithWorkItemResponse])
+def get_team_tasks(
+    team_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Get all tasks for a team (grouped by work items)."""
+    # Verify user belongs to the team
+    if current_user.team_id != team_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to this team's tasks"
+        )
+    
+    # Get all work items for the team
+    work_items = db.query(models.WorkItem).filter(models.WorkItem.team_id == team_id).all()
+    
+    # Get all tasks for these work items with eager loading of work_item relationship
+    task_ids = [wi.id for wi in work_items]
+    tasks = db.query(models.Task).filter(models.Task.work_item_id.in_(task_ids)).options(
+        joinedload(models.Task.work_item)
+    ).all() if task_ids else []
+    
+    return tasks
 

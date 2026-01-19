@@ -7,6 +7,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { OKRPage } from './pages/OKRPage';
 import { BAUPage } from './pages/BAUPage';
 import { WorkItemsPage } from './pages/WorkItemsPage';
+import { TasksPage } from './pages/TasksPage';
 import { PlanningPage } from './pages/PlanningPage';
 
 function App() {
@@ -48,6 +49,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <WorkItemsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks"
+            element={
+              <ProtectedRoute>
+                <TasksPage />
               </ProtectedRoute>
             }
           />

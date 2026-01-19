@@ -6,13 +6,50 @@ import { Modal } from '../components/Modal';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import type { WorkItem, WorkItemDetail, Task, OKR, BAUActivity } from '../types';
-import { Plus, ClipboardList, CheckCircle, Circle, AlertCircle, Clock } from 'lucide-react';
+import { Plus, ClipboardList, CheckCircle, Circle, AlertCircle, Clock, Calendar } from 'lucide-react';
+
+const getCurrentMonth = (): string => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+};
+
+const getMonthName = (monthStr: string): string => {
+  const [year, month] = monthStr.split('-');
+  const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+};
+
+const getSourceName = (item: WorkItem, okrs: OKR[], keyResults: any[], bauActivities: BAUActivity[]): string => {
+  if (item.source_type === 'OKR') {
+    const kr = keyResults.find(k => k.id === item.source_id);
+    if (kr) {
+      return kr.description;
+    }
+  } else {
+    const bau = bauActivities.find(b => b.id === item.source_id);
+    if (bau) {
+      return bau.name;
+    }
+  }
+  return 'Unknown';
+};
+
+const getSourceOKRQuarter = (item: WorkItem, keyResults: any[]): string | null => {
+  if (item.source_type === 'OKR') {
+    const kr = keyResults.find(k => k.id === item.source_id);
+    if (kr) {
+      return kr.okr_quarter;
+    }
+  }
+  return null;
+};
 
 export const WorkItemsPage: React.FC = () => {
   const { user } = useAuth();
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
   const [selectedWorkItem, setSelectedWorkItem] = useState<WorkItemDetail | null>(null);
   const [okrs, setOkrs] = useState<OKR[]>([]);
+  const [keyResults, setKeyResults] = useState<any[]>([]);
   const [bauActivities, setBauActivities] = useState<BAUActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -21,6 +58,8 @@ export const WorkItemsPage: React.FC = () => {
   const [showWorkItemModal, setShowWorkItemModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   
+  const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonth());
+
   const [workItemForm, setWorkItemForm] = useState({
     name: '',
     description: '',
@@ -37,7 +76,7 @@ export const WorkItemsPage: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, [user]);
+  }, [user, selectedMonth]);
 
   const loadData = async () => {
     if (!user?.team_id) {
@@ -48,13 +87,30 @@ export const WorkItemsPage: React.FC = () => {
 
     try {
       const [workItemsData, okrsData, bauData] = await Promise.all([
-        api.getWorkItems({ team_id: user.team_id }),
+        api.getWorkItems({ team_id: user.team_id, month: selectedMonth }),
         api.getTeamOKRs(user.team_id),
         api.getTeamBAUActivities(user.team_id),
       ]);
+      
       setWorkItems(workItemsData);
       setOkrs(okrsData);
       setBauActivities(bauData);
+
+      // Flatten key results from all OKRs
+      const allKeyResults: any[] = [];
+      for (const okr of okrsData) {
+        const okrDetail = await api.getOKR(okr.id);
+        if (okrDetail.key_results) {
+          okrDetail.key_results.forEach((kr: any) => {
+            allKeyResults.push({
+              ...kr,
+              okr_objective: okr.objective,
+              okr_quarter: okr.quarter,
+            });
+          });
+        }
+      }
+      setKeyResults(allKeyResults);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load data');
     } finally {
@@ -126,11 +182,6 @@ export const WorkItemsPage: React.FC = () => {
     }
   };
 
-  const getCurrentMonth = (): string => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  };
-
   const getStatusIcon = (status: Task['status']) => {
     switch (status) {
       case 'Done':
@@ -156,20 +207,20 @@ export const WorkItemsPage: React.FC = () => {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-start md:items-center gap-4 flex-col md:flex-row">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Work Items</h1>
-            <p className="text-gray-600 mt-1">Monthly work items and tasks</p>
+            <h1 className="text-3xl font-bold text-gray-900">Monthly Headsup</h1>
+            <p className="text-gray-600 mt-1">Plan monthly work items from OKRs and BAU</p>
           </div>
           <button
             onClick={() => {
               setWorkItemForm({
                 ...workItemForm,
-                month: getCurrentMonth(),
+                month: selectedMonth,
               });
               setShowWorkItemModal(true);
             }}
-            className="btn btn-primary flex items-center space-x-2"
+            className="btn btn-primary flex items-center space-x-2 whitespace-nowrap"
           >
             <Plus size={20} />
             <span>New Work Item</span>
@@ -178,6 +229,23 @@ export const WorkItemsPage: React.FC = () => {
 
         {error && <Alert type="error" message={error} onClose={() => setError('')} />}
         {success && <Alert type="success" message={success} onClose={() => setSuccess('')} />}
+
+        {/* Month Selector */}
+        <div className="card">
+          <div className="flex items-center space-x-3">
+            <Calendar size={20} className="text-blue-600" />
+            <label className="font-medium text-gray-900">Select Month:</label>
+            <input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <span className="text-sm text-gray-500">
+              {getMonthName(selectedMonth)}
+            </span>
+          </div>
+        </div>
 
         {/* Work Items Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -197,11 +265,28 @@ export const WorkItemsPage: React.FC = () => {
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900">{item.name}</h3>
                     <p className="text-sm text-gray-500">{item.month}</p>
-                    <span className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${
-                      item.source_type === 'OKR' ? 'bg-primary-100 text-primary-700' : 'bg-green-100 text-green-700'
-                    }`}>
-                      {item.source_type}
-                    </span>
+                    
+                    {/* Source Information */}
+                    <div className="mt-2 space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                          item.source_type === 'OKR' ? 'bg-primary-100 text-primary-700' : 'bg-green-100 text-green-700'
+                        }`}>
+                          {item.source_type}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600">
+                        <span className="font-medium">
+                          {item.source_type === 'OKR' ? 'Key Result:' : 'BAU Activity:'}
+                        </span>{' '}
+                        {getSourceName(item, okrs, keyResults, bauActivities)}
+                      </p>
+                      {item.source_type === 'OKR' && getSourceOKRQuarter(item, keyResults) && (
+                        <p className="text-xs text-gray-500">
+                          {getSourceOKRQuarter(item, keyResults)}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -344,7 +429,7 @@ export const WorkItemsPage: React.FC = () => {
 
             <div>
               <label className="label">
-                {workItemForm.source_type === 'OKR' ? 'Select OKR' : 'Select BAU Activity'}
+                {workItemForm.source_type === 'OKR' ? 'Select Key Result' : 'Select BAU Activity'}
               </label>
               <select
                 required
@@ -354,9 +439,9 @@ export const WorkItemsPage: React.FC = () => {
               >
                 <option value="">Select...</option>
                 {workItemForm.source_type === 'OKR' ? (
-                  okrs.map((okr) => (
-                    <option key={okr.id} value={okr.id}>
-                      {okr.objective} ({okr.quarter})
+                  keyResults.map((kr) => (
+                    <option key={kr.id} value={kr.id}>
+                      {kr.description} ({kr.okr_quarter} - {kr.okr_objective})
                     </option>
                   ))
                 ) : (

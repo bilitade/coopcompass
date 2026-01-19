@@ -214,6 +214,11 @@ class ApiService {
     return response.data;
   }
 
+  async getTeamTasks(teamId: number): Promise<Task[]> {
+    const response = await this.client.get<Task[]>(`/api/teams/${teamId}/tasks`);
+    return response.data;
+  }
+
   // Weekly Priority endpoints
   async setWeeklyPriority(data: WeeklyPriorityCreate): Promise<WeeklyPriority> {
     const response = await this.client.post<WeeklyPriority>('/api/weekly-priorities', data);

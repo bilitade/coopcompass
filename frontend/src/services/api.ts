@@ -93,7 +93,7 @@ class ApiService {
     return response.data;
   }
 
-  async getTeamOKRs(teamId: number, quarter?: string): Promise<OKR[]> {
+  async getTeamOKRs(teamId: number, quarter?: string): Promise<OKRDetail[]> {
     const response = await this.client.get<OKR[]>(`/api/okrs/teams/${teamId}/okrs`, {
       params: quarter ? { quarter } : undefined,
     });
@@ -105,13 +105,22 @@ class ApiService {
     return response.data;
   }
 
-  async updateOKR(okrId: number, data: { objective?: string; is_active?: boolean }): Promise<OKR> {
+  async updateOKR(okrId: number, data: { quarter?: string; objective?: string; is_active?: boolean }): Promise<OKR> {
     const response = await this.client.put<OKR>(`/api/okrs/${okrId}`, data);
     return response.data;
   }
 
   async deleteOKR(okrId: number): Promise<void> {
     await this.client.delete(`/api/okrs/${okrId}`);
+  }
+
+  async updateKeyResult(krId: number, data: { description?: string; target_value?: number; unit?: string; current_value?: number }): Promise<KeyResult> {
+    const response = await this.client.put<KeyResult>(`/api/okrs/key-results/${krId}`, data);
+    return response.data;
+  }
+
+  async deleteKeyResult(krId: number): Promise<void> {
+    await this.client.delete(`/api/okrs/key-results/${krId}`);
   }
 
   async createKeyResult(okrId: number, data: KeyResultCreate): Promise<KeyResult> {

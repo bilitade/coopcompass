@@ -138,8 +138,8 @@ export const WorkItemsPage: React.FC = () => {
         {/* Header */}
         <div className="flex justify-between items-start md:items-center gap-4 flex-col md:flex-row">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Monthly Headsup</h1>
-            <p className="text-gray-600 mt-1">Plan monthly work items from OKRs and BAU</p>
+            <h1 className="text-3xl font-bold text-text-primary">Monthly Headsup</h1>
+            <p className="text-text-secondary mt-1">Plan monthly work items from OKRs and BAU</p>
           </div>
           <button
             onClick={() => {
@@ -163,14 +163,14 @@ export const WorkItemsPage: React.FC = () => {
         <div className="card">
           <div className="flex items-center space-x-3">
             <Calendar size={20} className="text-blue-600" />
-            <label className="font-medium text-gray-900">Select Month:</label>
+            <label className="font-medium text-text-primary">Select Month:</label>
             <input
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-text-secondary">
               {getMonthName(selectedMonth)}
             </span>
           </div>
@@ -181,7 +181,7 @@ export const WorkItemsPage: React.FC = () => {
           {workItems.map((item) => (
             <div
               key={item.id}
-              className="flex items-center justify-between px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-between px-4 py-3 border border-border rounded-lg hover:bg-surface-highlight transition-colors"
             >
               <div className="flex items-center space-x-3 flex-1">
                 {/* Source Type Badge */}
@@ -193,8 +193,8 @@ export const WorkItemsPage: React.FC = () => {
                 
                 {/* Work Item Info */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-gray-900 truncate">{item.name}</h3>
-                  <div className="flex items-center space-x-2 mt-1 text-xs text-gray-600">
+                  <h3 className="font-medium text-text-primary truncate">{item.name}</h3>
+                  <div className="flex items-center space-x-2 mt-1 text-xs text-text-secondary">
                     <span>{item.month}</span>
                     <span>•</span>
                     <span className="truncate">
@@ -217,8 +217,8 @@ export const WorkItemsPage: React.FC = () => {
         {workItems.length === 0 && (
           <div className="text-center py-12">
             <ClipboardList className="mx-auto text-gray-400" size={48} />
-            <h3 className="mt-4 text-lg font-medium text-gray-900">No work items yet</h3>
-            <p className="mt-2 text-gray-600">Create work items from your OKRs or BAU activities</p>
+            <h3 className="mt-4 text-lg font-medium text-text-primary">No work items yet</h3>
+            <p className="mt-2 text-text-secondary">Create work items from your OKRs or BAU activities</p>
           </div>
         )}
 

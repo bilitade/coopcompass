@@ -8,7 +8,7 @@ import { OKRPage } from './pages/OKRPage';
 import { BAUPage } from './pages/BAUPage';
 import { WorkItemsPage } from './pages/WorkItemsPage';
 import { TasksPage } from './pages/TasksPage';
-import { PlanningPage } from './pages/PlanningPage';
+import { PriorityPage } from './pages/PriorityPage';
 
 function App() {
   return (
@@ -61,10 +61,10 @@ function App() {
             }
           />
           <Route
-            path="/planning"
+            path="/weekly-priority"
             element={
               <ProtectedRoute>
-                <PlanningPage />
+                <PriorityPage />
               </ProtectedRoute>
             }
           />

@@ -141,6 +141,7 @@ class OKRCreate(BaseModel):
 
 class OKRUpdate(BaseModel):
     """OKR update schema."""
+    quarter: Optional[str] = None
     objective: Optional[str] = None
     is_active: Optional[bool] = None
 

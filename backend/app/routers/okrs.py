@@ -51,14 +51,14 @@ def create_okr(
     return new_okr
 
 
-@router.get("/teams/{team_id}/okrs", response_model=list[schemas.OKRResponse])
+@router.get("/teams/{team_id}/okrs", response_model=list[schemas.OKRDetailResponse])
 def list_team_okrs(
     team_id: int,
     quarter: str = None,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    """List team OKRs with optional quarter filter."""
+    """List team OKRs with key results and optional quarter filter."""
     # Check team exists
     team = db.query(models.Team).filter(models.Team.id == team_id).first()
     if not team:
@@ -66,12 +66,12 @@ def list_team_okrs(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Team not found"
         )
-    
-    query = db.query(models.OKR).filter(models.OKR.team_id == team_id)
-    
+
+    query = db.query(models.OKR).options(joinedload(models.OKR.key_results)).filter(models.OKR.team_id == team_id)
+
     if quarter:
         query = query.filter(models.OKR.quarter == quarter)
-    
+
     okrs = query.all()
     return okrs
 
@@ -110,9 +110,12 @@ def update_okr(
             detail="OKR not found"
         )
     
+    if okr_data.quarter is not None:
+        okr.quarter = okr_data.quarter
+
     if okr_data.objective is not None:
         okr.objective = okr_data.objective
-    
+
     if okr_data.is_active is not None:
         okr.is_active = okr_data.is_active
     
@@ -123,21 +126,21 @@ def update_okr(
 
 
 @router.delete("/{okr_id}", status_code=status.HTTP_204_NO_CONTENT)
-def archive_okr(
+def delete_okr(
     okr_id: int,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_team_lead)
 ):
-    """Archive (soft delete) an OKR."""
+    """Delete an OKR and all its key results."""
     okr = db.query(models.OKR).filter(models.OKR.id == okr_id).first()
-    
+
     if not okr:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="OKR not found"
         )
-    
-    okr.is_active = False
+
+    db.delete(okr)
     db.commit()
 
 
@@ -180,29 +183,48 @@ def update_key_result(
 ):
     """Update a key result."""
     kr = db.query(models.KeyResult).filter(models.KeyResult.id == kr_id).first()
-    
+
     if not kr:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Key result not found"
         )
-    
+
     if kr_data.description is not None:
         kr.description = kr_data.description
-    
+
     if kr_data.target_value is not None:
         kr.target_value = kr_data.target_value
-    
+
     if kr_data.unit is not None:
         kr.unit = kr_data.unit
-    
+
     if kr_data.current_value is not None:
         kr.current_value = kr_data.current_value
-    
+
     db.commit()
     db.refresh(kr)
-    
+
     return kr
+
+
+@router.delete("/key-results/{kr_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_key_result(
+    kr_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_team_lead)
+):
+    """Delete a key result."""
+    kr = db.query(models.KeyResult).filter(models.KeyResult.id == kr_id).first()
+
+    if not kr:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Key result not found"
+        )
+
+    db.delete(kr)
+    db.commit()
 
 
 @router.get("/{kr_id}/progress", response_model=schemas.KRProgressResponse)

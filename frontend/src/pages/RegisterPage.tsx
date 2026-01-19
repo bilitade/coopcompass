@@ -59,8 +59,8 @@ export const RegisterPage: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl mb-4">
             <UserPlus className="text-white" size={32} />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
-          <p className="text-gray-600 mt-2">Join your team on TPES</p>
+          <h1 className="text-3xl font-bold text-text-primary">Create Account</h1>
+          <p className="text-text-secondary mt-2">Join your team on TPES</p>
         </div>
 
         <div className="card">

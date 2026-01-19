@@ -8,7 +8,7 @@ import { api } from '../services/api';
 import type { WorkItem, WeeklyPriority, Task } from '../types';
 import { Plus, Star, CheckCircle, Circle, AlertCircle } from 'lucide-react';
 
-export const PlanningPage: React.FC = () => {
+export const PriorityPage: React.FC = () => {
   const { user } = useAuth();
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
   const [priorities, setPriorities] = useState<WeeklyPriority[]>([]);
@@ -142,8 +142,8 @@ export const PlanningPage: React.FC = () => {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Weekly Planning</h1>
-            <p className="text-gray-600 mt-1">Set priorities for the week</p>
+            <h1 className="text-3xl font-bold text-text-primary">Weekly Priority</h1>
+            <p className="text-text-secondary mt-1">Set priorities for the week</p>
           </div>
           <div className="flex items-center space-x-4">
             <input
@@ -174,13 +174,13 @@ export const PlanningPage: React.FC = () => {
                 <Star className="text-red-600" size={20} />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Priority 1 - Critical</h2>
-                <p className="text-sm text-gray-600">Must be completed this week</p>
+                <h2 className="text-xl font-semibold text-text-primary">Priority 1 - Critical</h2>
+                <p className="text-sm text-text-secondary">Must be completed this week</p>
               </div>
             </div>
             <div className="space-y-2">
               {getPrioritizedWorkItems(1).length === 0 ? (
-                <p className="text-gray-500 text-sm">No items set</p>
+                <p className="text-text-secondary text-sm">No items set</p>
               ) : (
                 getPrioritizedWorkItems(1).map((item) => (
                   <WorkItemCard
@@ -206,13 +206,13 @@ export const PlanningPage: React.FC = () => {
                 <Star className="text-yellow-600" size={20} />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Priority 2 - Important</h2>
-                <p className="text-sm text-gray-600">Should be completed this week</p>
+                <h2 className="text-xl font-semibold text-text-primary">Priority 2 - Important</h2>
+                <p className="text-sm text-text-secondary">Should be completed this week</p>
               </div>
             </div>
             <div className="space-y-2">
               {getPrioritizedWorkItems(2).length === 0 ? (
-                <p className="text-gray-500 text-sm">No items set</p>
+                <p className="text-text-secondary text-sm">No items set</p>
               ) : (
                 getPrioritizedWorkItems(2).map((item) => (
                   <WorkItemCard
@@ -238,13 +238,13 @@ export const PlanningPage: React.FC = () => {
                 <Star className="text-blue-600" size={20} />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Priority 3 - Nice to Have</h2>
-                <p className="text-sm text-gray-600">Can be started if time permits</p>
+                <h2 className="text-xl font-semibold text-text-primary">Priority 3 - Nice to Have</h2>
+                <p className="text-sm text-text-secondary">Can be started if time permits</p>
               </div>
             </div>
             <div className="space-y-2">
               {getPrioritizedWorkItems(3).length === 0 ? (
-                <p className="text-gray-500 text-sm">No items set</p>
+                <p className="text-text-secondary text-sm">No items set</p>
               ) : (
                 getPrioritizedWorkItems(3).map((item) => (
                   <WorkItemCard
@@ -417,7 +417,7 @@ const WorkItemCard: React.FC<WorkItemCardProps> = ({ item, priority, onRemove, t
       case 'Blocked':
         return <AlertCircle size={16} className="text-red-600" />;
       default:
-        return <Circle size={16} className="text-gray-400" />;
+        return <Circle size={16} className="text-text-secondary" />;
     }
   };
 
@@ -425,8 +425,8 @@ const WorkItemCard: React.FC<WorkItemCardProps> = ({ item, priority, onRemove, t
     <div className={`border-l-4 ${getPriorityColor(priority)} bg-gray-50 rounded-lg p-4`}>
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
-          <h3 className="font-medium text-gray-900">{item.name}</h3>
-          <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500">
+          <h3 className="font-medium text-text-primary">{item.name}</h3>
+          <div className="flex items-center space-x-4 mt-1 text-sm text-text-secondary">
             <span>{item.month}</span>
             <span className={`px-2 py-0.5 rounded text-xs font-medium ${
               item.source_type === 'OKR' ? 'bg-primary-100 text-primary-700' : 'bg-green-100 text-green-700'
@@ -473,7 +473,7 @@ const WorkItemCard: React.FC<WorkItemCardProps> = ({ item, priority, onRemove, t
                   task.status === 'Done' ? 'bg-green-100 text-green-700' :
                   task.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
                   task.status === 'Blocked' ? 'bg-red-100 text-red-700' :
-                  'bg-gray-100 text-gray-700'
+                  'bg-gray-100 text-text-secondary'
                 }`}>
                   {task.status}
                 </span>

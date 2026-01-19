@@ -135,8 +135,8 @@ export const BAUPage: React.FC = () => {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">BAU Activities</h1>
-            <p className="text-gray-600 mt-1">Business As Usual operational metrics</p>
+            <h1 className="text-3xl font-bold text-text-primary">BAU Activities</h1>
+            <p className="text-text-secondary mt-1">Business As Usual operational metrics</p>
           </div>
           <button
             onClick={() => setShowActivityModal(true)}
@@ -164,14 +164,14 @@ export const BAUPage: React.FC = () => {
                     <Activity className="text-green-600" size={20} />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{activity.name}</h3>
+                    <h3 className="font-semibold text-text-primary">{activity.name}</h3>
                     {activity.description && (
-                      <p className="text-sm text-gray-500 mt-1">{activity.description}</p>
+                      <p className="text-sm text-text-secondary mt-1">{activity.description}</p>
                     )}
                   </div>
                 </div>
                 <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  activity.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                  activity.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-text-secondary'
                 }`}>
                   {activity.is_active ? 'Active' : 'Inactive'}
                 </span>
@@ -182,9 +182,9 @@ export const BAUPage: React.FC = () => {
 
         {activities.length === 0 && (
           <div className="text-center py-12">
-            <Activity className="mx-auto text-gray-400" size={48} />
-            <h3 className="mt-4 text-lg font-medium text-gray-900">No BAU activities yet</h3>
-            <p className="mt-2 text-gray-600">Get started by creating your first activity</p>
+            <Activity className="mx-auto text-text-secondary" size={48} />
+            <h3 className="mt-4 text-lg font-medium text-text-primary">No BAU activities yet</h3>
+            <p className="mt-2 text-text-secondary">Get started by creating your first activity</p>
           </div>
         )}
 
@@ -198,11 +198,11 @@ export const BAUPage: React.FC = () => {
           >
             <div className="space-y-4">
               {selectedActivity.description && (
-                <p className="text-gray-600">{selectedActivity.description}</p>
+                <p className="text-text-secondary">{selectedActivity.description}</p>
               )}
 
               <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-gray-900">Metrics</h3>
+                <h3 className="font-semibold text-text-primary">Metrics</h3>
                 <button
                   onClick={() => setShowMetricModal(true)}
                   className="btn btn-primary btn-sm flex items-center space-x-2"
@@ -214,14 +214,14 @@ export const BAUPage: React.FC = () => {
 
               <div className="space-y-3">
                 {selectedActivity.metrics.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No metrics yet</p>
+                  <p className="text-text-secondary text-sm">No metrics yet</p>
                 ) : (
                   selectedActivity.metrics.map((metric) => (
                     <div key={metric.id} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{metric.name}</h4>
-                          <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                          <h4 className="font-medium text-text-primary">{metric.name}</h4>
+                          <div className="flex items-center space-x-4 text-sm text-text-secondary mt-1">
                             <span>Current: {metric.current_value} {metric.unit}</span>
                             <span>Target: {metric.target_value} {metric.unit}</span>
                             <span>Weight: {metric.weight}</span>
@@ -366,7 +366,7 @@ export const BAUPage: React.FC = () => {
                 onChange={(e) => setMetricForm({ ...metricForm, is_higher_better: e.target.checked })}
                 className="w-4 h-4 text-primary-600"
               />
-              <label htmlFor="is_higher_better" className="text-sm text-gray-700">
+              <label htmlFor="is_higher_better" className="text-sm text-text-secondary">
                 Higher values are better
               </label>
             </div>
@@ -392,8 +392,8 @@ export const BAUPage: React.FC = () => {
             {selectedMetric && (
               <>
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">{selectedMetric.name}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-text-secondary mb-2">{selectedMetric.name}</p>
+                  <p className="text-sm text-text-secondary">
                     Target: {selectedMetric.target_value} {selectedMetric.unit}
                   </p>
                 </div>

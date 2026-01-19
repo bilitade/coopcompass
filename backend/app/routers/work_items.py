@@ -1,7 +1,7 @@
 """Work items and tasks endpoints."""
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app import models, schemas
 from app.utils.dependencies import get_current_user, get_current_team_lead
@@ -69,6 +69,78 @@ def list_work_items(
     
     work_items = query.all()
     return work_items
+
+
+@router.get("/work-items-with-source", response_model=list[schemas.WorkItemWithSourceResponse])
+def list_work_items_with_source(
+    team_id: int = Query(None),
+    month: str = Query(None),
+    source_type: str = Query(None),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """List work items with related OKR Key Results or BAU Activities data."""
+    query = db.query(models.WorkItem)
+    
+    if team_id:
+        query = query.filter(models.WorkItem.team_id == team_id)
+    
+    if month:
+        query = query.filter(models.WorkItem.month == month)
+    
+    if source_type:
+        query = query.filter(models.WorkItem.source_type == source_type)
+    
+    work_items = query.all()
+    
+    # Manually load related source data
+    result = []
+    for wi in work_items:
+        wi_dict = {
+            'id': wi.id,
+            'team_id': wi.team_id,
+            'name': wi.name,
+            'description': wi.description,
+            'source_type': wi.source_type,
+            'source_id': wi.source_id,
+            'owner_id': wi.owner_id,
+            'month': wi.month,
+            'created_at': wi.created_at,
+            'updated_at': wi.updated_at,
+            'key_result': None,
+            'bau_activity': None,
+        }
+        
+        # Load the related source
+        if wi.source_type == 'OKR':
+            kr = db.query(models.KeyResult).filter(models.KeyResult.id == wi.source_id).first()
+            if kr:
+                wi_dict['key_result'] = {
+                    'id': kr.id,
+                    'okr_id': kr.okr_id,
+                    'description': kr.description,
+                    'target_value': kr.target_value,
+                    'current_value': kr.current_value,
+                    'unit': kr.unit,
+                    'created_at': kr.created_at,
+                    'updated_at': kr.updated_at,
+                }
+        else:  # BAU
+            bau = db.query(models.BAUActivity).filter(models.BAUActivity.id == wi.source_id).first()
+            if bau:
+                wi_dict['bau_activity'] = {
+                    'id': bau.id,
+                    'team_id': bau.team_id,
+                    'name': bau.name,
+                    'description': bau.description,
+                    'is_active': bau.is_active,
+                    'created_at': bau.created_at,
+                    'updated_at': bau.updated_at,
+                }
+        
+        result.append(wi_dict)
+    
+    return result
 
 
 @router.get("/work-items/{work_item_id}", response_model=schemas.WorkItemDetailResponse)

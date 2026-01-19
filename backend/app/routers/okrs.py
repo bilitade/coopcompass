@@ -1,7 +1,7 @@
 """OKR management endpoints."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app import models, schemas
 from app.utils.dependencies import get_current_user, get_current_team_lead
@@ -83,7 +83,7 @@ def get_okr(
     current_user: models.User = Depends(get_current_user)
 ):
     """Get OKR details with key results."""
-    okr = db.query(models.OKR).filter(models.OKR.id == okr_id).first()
+    okr = db.query(models.OKR).options(joinedload(models.OKR.key_results)).filter(models.OKR.id == okr_id).first()
     
     if not okr:
         raise HTTPException(

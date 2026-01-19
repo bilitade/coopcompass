@@ -3,7 +3,7 @@
 import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app import models, schemas
 from app.auth import hash_password, verify_password, create_access_token
@@ -145,10 +145,24 @@ def login_for_access_token(
 
 
 @router.get("/me", response_model=schemas.UserResponse)
-def get_current_user_info(current_user: models.User = Depends(get_current_user)):
+def get_current_user_info(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Get current authenticated user information."""
-    return current_user
-    pass
+    # Reload user with team relationship
+    user = db.query(models.User).options(joinedload(models.User.team)).filter(models.User.id == current_user.id).first()
+    
+    # Create a response dict with team_name
+    user_dict = {
+        'id': user.id,
+        'name': user.name,
+        'email': user.email,
+        'role': user.role,
+        'team_id': user.team_id,
+        'team_name': user.team.name if user.team else None,
+        'is_active': user.is_active,
+        'created_at': user.created_at,
+        'updated_at': user.updated_at,
+    }
+    return schemas.UserResponse(**user_dict)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

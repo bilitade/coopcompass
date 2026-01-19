@@ -24,6 +24,7 @@ class UserResponse(UserBase):
     """User response schema."""
     id: int
     team_id: Optional[int] = None
+    team_name: Optional[str] = None
     is_active: bool
     created_at: datetime
     updated_at: datetime
@@ -341,6 +342,12 @@ class WorkItemDetailResponse(WorkItemResponse):
     """Work item detail response with tasks and owner."""
     owner: Optional[UserResponse] = None
     tasks: List[TaskResponse] = []
+
+
+class WorkItemWithSourceResponse(WorkItemResponse):
+    """Work item response with related OKR Key Result or BAU Activity data."""
+    key_result: Optional['KeyResultResponse'] = None
+    bau_activity: Optional['BAUActivityResponse'] = None
 
 
 # ============ Weekly Priority Schemas ============

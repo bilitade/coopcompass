@@ -181,6 +181,11 @@ class ApiService {
     return response.data;
   }
 
+  async getWorkItemsWithSource(filters?: { team_id?: number; month?: string; source_type?: string }): Promise<any[]> {
+    const response = await this.client.get<any[]>('/api/work-items-with-source', { params: filters });
+    return response.data;
+  }
+
   async getWorkItem(workItemId: number): Promise<WorkItemDetail> {
     const response = await this.client.get<WorkItemDetail>(`/api/work-items/${workItemId}`);
     return response.data;

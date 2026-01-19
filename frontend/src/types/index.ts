@@ -5,6 +5,7 @@ export interface User {
   email: string;
   role: 'member' | 'lead' | 'executive';
   team_id: number | null;
+  team_name?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;

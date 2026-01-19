@@ -5,22 +5,32 @@ import { Alert } from '../components/Alert';
 import { Modal } from '../components/Modal';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import type { WorkItem, WeeklyPriority } from '../types';
-import { Plus, Star } from 'lucide-react';
+import type { WorkItem, WeeklyPriority, Task } from '../types';
+import { Plus, Star, CheckCircle, Circle, AlertCircle } from 'lucide-react';
 
 export const PlanningPage: React.FC = () => {
   const { user } = useAuth();
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
   const [priorities, setPriorities] = useState<WeeklyPriority[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedWeek, setSelectedWeek] = useState(getCurrentWeek());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
   const [showPriorityModal, setShowPriorityModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [selectedWorkItemForTask, setSelectedWorkItemForTask] = useState<WorkItem | null>(null);
+  
   const [priorityForm, setPriorityForm] = useState({
     work_item_id: '',
     priority: '1' as '1' | '2' | '3',
+  });
+
+  const [taskForm, setTaskForm] = useState({
+    description: '',
+    effort_hours: '',
+    assignee_id: '',
   });
 
   useEffect(() => {
@@ -35,12 +45,14 @@ export const PlanningPage: React.FC = () => {
     }
 
     try {
-      const [workItemsData, prioritiesData] = await Promise.all([
+      const [workItemsData, prioritiesData, tasksData] = await Promise.all([
         api.getWorkItems({ team_id: user.team_id }),
         api.getWeeklyPriorities({ week: selectedWeek, team_id: user.team_id }),
+        api.getTeamTasks(user.team_id),
       ]);
       setWorkItems(workItemsData);
       setPriorities(prioritiesData);
+      setTasks(tasksData);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load data');
     } finally {
@@ -74,6 +86,36 @@ export const PlanningPage: React.FC = () => {
     } catch (err: any) {
       setError('Failed to remove priority');
     }
+  };
+
+  const handleCreateTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedWorkItemForTask) {
+      setError('No work item selected');
+      return;
+    }
+
+    try {
+      await api.createTask(selectedWorkItemForTask.id, {
+        description: taskForm.description,
+        effort_hours: taskForm.effort_hours ? parseInt(taskForm.effort_hours) : undefined,
+        assignee_id: taskForm.assignee_id ? parseInt(taskForm.assignee_id) : undefined,
+      });
+      setSuccess('Task created successfully');
+      setShowTaskModal(false);
+      setTaskForm({ description: '', effort_hours: '', assignee_id: '' });
+      setSelectedWorkItemForTask(null);
+      loadData();
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to create task');
+    }
+  };
+
+  const openTaskModal = (workItem: WorkItem) => {
+    setSelectedWorkItemForTask(workItem);
+    setTaskForm({ description: '', effort_hours: '', assignee_id: '' });
+    setShowTaskModal(true);
   };
 
   const getAvailableWorkItems = (): WorkItem[] => {
@@ -145,6 +187,8 @@ export const PlanningPage: React.FC = () => {
                     key={item.id}
                     item={item}
                     priority={1}
+                    tasks={tasks}
+                    onCreateTask={openTaskModal}
                     onRemove={() => {
                       const priorityId = getPriorityId(item.id);
                       if (priorityId) handleRemovePriority(priorityId);
@@ -175,6 +219,8 @@ export const PlanningPage: React.FC = () => {
                     key={item.id}
                     item={item}
                     priority={2}
+                    tasks={tasks}
+                    onCreateTask={openTaskModal}
                     onRemove={() => {
                       const priorityId = getPriorityId(item.id);
                       if (priorityId) handleRemovePriority(priorityId);
@@ -205,6 +251,8 @@ export const PlanningPage: React.FC = () => {
                     key={item.id}
                     item={item}
                     priority={3}
+                    tasks={tasks}
+                    onCreateTask={openTaskModal}
                     onRemove={() => {
                       const priorityId = getPriorityId(item.id);
                       if (priorityId) handleRemovePriority(priorityId);
@@ -264,6 +312,70 @@ export const PlanningPage: React.FC = () => {
             </div>
           </form>
         </Modal>
+
+        {/* Create Task Modal */}
+        <Modal
+          isOpen={showTaskModal}
+          onClose={() => {
+            setShowTaskModal(false);
+            setSelectedWorkItemForTask(null);
+          }}
+          title={selectedWorkItemForTask ? `Create Task for "${selectedWorkItemForTask.name}"` : 'Create Task'}
+        >
+          <form onSubmit={handleCreateTask} className="space-y-4">
+            <div>
+              <label className="label">Task Description</label>
+              <textarea
+                required
+                className="input"
+                rows={3}
+                placeholder="Describe the task..."
+                value={taskForm.description}
+                onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="label">Effort Hours (optional)</label>
+                <input
+                  type="number"
+                  min="0"
+                  className="input"
+                  placeholder="e.g., 4"
+                  value={taskForm.effort_hours}
+                  onChange={(e) => setTaskForm({ ...taskForm, effort_hours: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="label">Assign To (optional)</label>
+                <input
+                  type="number"
+                  className="input"
+                  placeholder="User ID"
+                  value={taskForm.assignee_id}
+                  onChange={(e) => setTaskForm({ ...taskForm, assignee_id: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button 
+                type="button" 
+                onClick={() => {
+                  setShowTaskModal(false);
+                  setSelectedWorkItemForTask(null);
+                }} 
+                className="btn btn-secondary flex-1"
+              >
+                Cancel
+              </button>
+              <button type="submit" className="btn btn-primary flex-1">
+                Create Task
+              </button>
+            </div>
+          </form>
+        </Modal>
       </div>
     </Layout>
   );
@@ -273,9 +385,16 @@ interface WorkItemCardProps {
   item: WorkItem;
   priority: number;
   onRemove: () => void;
+  tasks: Task[];
+  onCreateTask: (workItem: WorkItem) => void;
 }
 
-const WorkItemCard: React.FC<WorkItemCardProps> = ({ item, priority, onRemove }) => {
+const WorkItemCard: React.FC<WorkItemCardProps> = ({ item, priority, onRemove, tasks, onCreateTask }) => {
+  const workItemTasks = tasks.filter(t => t.work_item_id === item.id);
+  const completedTasks = workItemTasks.filter(t => t.status === 'Done').length;
+  const totalTasks = workItemTasks.length;
+  const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
   const getPriorityColor = (priority: number): string => {
     switch (priority) {
       case 1:
@@ -289,25 +408,80 @@ const WorkItemCard: React.FC<WorkItemCardProps> = ({ item, priority, onRemove })
     }
   };
 
+  const getStatusIcon = (status: Task['status']) => {
+    switch (status) {
+      case 'Done':
+        return <CheckCircle size={16} className="text-green-600" />;
+      case 'In Progress':
+        return <Circle size={16} className="text-blue-600" />;
+      case 'Blocked':
+        return <AlertCircle size={16} className="text-red-600" />;
+      default:
+        return <Circle size={16} className="text-gray-400" />;
+    }
+  };
+
   return (
-    <div className={`border-l-4 ${getPriorityColor(priority)} bg-gray-50 rounded-lg p-4 flex justify-between items-center`}>
-      <div className="flex-1">
-        <h3 className="font-medium text-gray-900">{item.name}</h3>
-        <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500">
-          <span>{item.month}</span>
-          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-            item.source_type === 'OKR' ? 'bg-primary-100 text-primary-700' : 'bg-green-100 text-green-700'
-          }`}>
-            {item.source_type}
-          </span>
+    <div className={`border-l-4 ${getPriorityColor(priority)} bg-gray-50 rounded-lg p-4`}>
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex-1">
+          <h3 className="font-medium text-gray-900">{item.name}</h3>
+          <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500">
+            <span>{item.month}</span>
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+              item.source_type === 'OKR' ? 'bg-primary-100 text-primary-700' : 'bg-green-100 text-green-700'
+            }`}>
+              {item.source_type}
+            </span>
+          </div>
+        </div>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => onCreateTask(item)}
+            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+            title="Add task"
+          >
+            <Plus size={18} />
+          </button>
+          <button
+            onClick={onRemove}
+            className="text-red-600 hover:text-red-700 text-sm font-medium"
+          >
+            Remove
+          </button>
         </div>
       </div>
-      <button
-        onClick={onRemove}
-        className="text-red-600 hover:text-red-700 text-sm font-medium"
-      >
-        Remove
-      </button>
+
+      {/* Tasks Section */}
+      {workItemTasks.length > 0 && (
+        <div className="mt-3 pt-3 border-t">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-gray-600">Tasks ({completedTasks}/{totalTasks})</span>
+            <div className="flex-1 ml-2 bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-green-600 h-2 rounded-full transition-all"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+          <div className="space-y-1 max-h-32 overflow-y-auto">
+            {workItemTasks.map((task) => (
+              <div key={task.id} className="flex items-center space-x-2 text-xs text-gray-600">
+                {getStatusIcon(task.status)}
+                <span className="truncate flex-1">{task.description}</span>
+                <span className={`px-1.5 py-0.5 rounded text-xs ${
+                  task.status === 'Done' ? 'bg-green-100 text-green-700' :
+                  task.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                  task.status === 'Blocked' ? 'bg-red-100 text-red-700' :
+                  'bg-gray-100 text-gray-700'
+                }`}>
+                  {task.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

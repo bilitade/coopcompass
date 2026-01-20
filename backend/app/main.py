@@ -20,15 +20,15 @@ except Exception as e:
 async def lifespan(app: FastAPI):
     """Application lifecycle management."""
     # Startup
-    print("Starting TPES Backend API")
+    print("Starting Compass Backend API")
     yield
     # Shutdown
-    print("Shutting down TPES Backend API")
+    print("Shutting down Compass Backend API")
 
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Team Performance & Execution System (TPES)",
+    title="Team Performance & Execution System (Compass)",
     description="Backend API for tracking strategic goals and operational health",
     version="1.0.0",
     lifespan=lifespan
@@ -77,7 +77,7 @@ app.include_router(planning_dashboard.router)
 def root():
     """Root endpoint."""
     return {
-        "message": "Team Performance & Execution System (TPES) Backend",
+        "message": "Team Performance & Execution System (Compass) Backend",
         "version": "1.0.0",
         "docs": "/docs",
         "openapi": "/openapi.json",
@@ -114,7 +114,7 @@ def auth_page():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>TPES Authentication</title>
+        <title>Compass Authentication</title>
         <style>
             body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
             .container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -126,7 +126,7 @@ def auth_page():
     </head>
     <body>
         <div class="container">
-            <h1>🔐 TPES Authentication</h1>
+            <h1>🔐 Compass Authentication</h1>
             <p>Use this page to get your JWT token for Swagger UI authentication.</p>
 
             <div class="demo">

@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-**Project Name:** Team Performance & Execution System (TPES)  
+**Project Name:** Team Performance & Execution System (Compass)  
 **Purpose:** Unified system for tracking strategic goals (OKRs) and operational health (BAU)  
 **Timeline:** 6 weeks for MVP  
 **Deployment:** Fully functional production system (not a prototype)  

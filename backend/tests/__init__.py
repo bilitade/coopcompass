@@ -1,2 +1,2 @@
-"""Test suite for TPES backend."""
+"""Test suite for Compass backend."""
 

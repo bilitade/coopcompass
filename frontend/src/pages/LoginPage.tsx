@@ -34,7 +34,7 @@ export const LoginPage: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl mb-4">
             <LogIn className="text-white" size={32} />
           </div>
-          <h1 className="text-3xl font-bold text-text-primary">Welcome to TPES</h1>
+          <h1 className="text-3xl font-bold text-text-primary">Welcome to Compass</h1>
           <p className="text-text-secondary mt-2">Team Performance & Execution System</p>
         </div>
 

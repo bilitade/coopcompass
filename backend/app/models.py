@@ -1,4 +1,4 @@
-"""SQLAlchemy ORM models for the TPES system."""
+"""SQLAlchemy ORM models for the Compass system."""
 
 from sqlalchemy import Column, Integer, String, Text, DateTime, Float, Boolean, ForeignKey, CheckConstraint, UniqueConstraint, Index, Numeric, DECIMAL
 from sqlalchemy.ext.declarative import declarative_base

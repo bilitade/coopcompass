@@ -179,6 +179,24 @@ class ApiService {
     return response.data;
   }
 
+  async deleteBAUActivity(bauId: number): Promise<void> {
+    await this.client.delete(`/api/bau/${bauId}`);
+  }
+
+  async deleteBAUMetric(metricId: number): Promise<void> {
+    await this.client.delete(`/api/bau-metrics/${metricId}`);
+  }
+
+  async getBAUMetrics(bauId: number): Promise<BAUMetric[]> {
+    const response = await this.client.get<BAUMetric[]>(`/api/bau/${bauId}/metrics`);
+    return response.data;
+  }
+
+  async getBAUMetric(metricId: number): Promise<BAUMetric> {
+    const response = await this.client.get<BAUMetric>(`/api/bau-metrics/${metricId}`);
+    return response.data;
+  }
+
   // Work Item endpoints
   async createWorkItem(data: WorkItemCreate): Promise<WorkItem> {
     const response = await this.client.post<WorkItem>('/api/work-items', data);

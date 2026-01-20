@@ -1,4 +1,4 @@
-"""Unit and integration tests for TPES backend."""
+"""Unit and integration tests for Compass backend."""
 
 import pytest
 from fastapi.testclient import TestClient

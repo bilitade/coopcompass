@@ -380,6 +380,6 @@ def seed_demo_data():
 
 
 if __name__ == "__main__":
-    print("🌱 Seeding TPES database with demo data...\n")
+    print("🌱 Seeding Compass database with demo data...\n")
     seed_demo_data()
 

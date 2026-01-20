@@ -1,4 +1,4 @@
-# TPES Backend - Team Performance & Execution System
+# Compass Backend - Team Performance & Execution System
 
 FastAPI backend for tracking strategic goals (OKRs) and operational health (BAU) metrics.
 

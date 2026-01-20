@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# TPES Frontend Startup Script
+# Compass Frontend Startup Script
 
-echo "🚀 Starting TPES Frontend..."
+echo "🚀 Starting Compass Frontend..."
 echo ""
 
 # Check if node_modules exists

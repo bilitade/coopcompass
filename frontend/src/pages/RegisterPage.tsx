@@ -60,7 +60,7 @@ export const RegisterPage: React.FC = () => {
             <UserPlus className="text-white" size={32} />
           </div>
           <h1 className="text-3xl font-bold text-text-primary">Create Account</h1>
-          <p className="text-text-secondary mt-2">Join your team on TPES</p>
+          <p className="text-text-secondary mt-2">Join your team on Compass</p>
         </div>
 
         <div className="card">

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# TPES Backend - Force Restart Script
+# Compass Backend - Force Restart Script
 
-echo "🔄 Restarting TPES Backend with CORS fix..."
+echo "🔄 Restarting Compass Backend with CORS fix..."
 echo ""
 
 # Find and kill any running uvicorn processes on port 8000

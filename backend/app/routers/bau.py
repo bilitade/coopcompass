@@ -110,6 +110,32 @@ def update_bau_activity(
     return activity
 
 
+@router.delete("/bau/{bau_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_bau_activity(
+    bau_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_team_lead)
+):
+    """Delete a BAU activity."""
+    activity = db.query(models.BAUActivity).filter(models.BAUActivity.id == bau_id).first()
+
+    if not activity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="BAU activity not found"
+        )
+
+    # Check if user is from the same team
+    if activity.team_id != current_user.team_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete this BAU activity"
+        )
+
+    db.delete(activity)
+    db.commit()
+
+
 @router.post("/bau/{bau_id}/metrics", response_model=schemas.BAUMetricResponse, status_code=status.HTTP_201_CREATED)
 def create_bau_metric(
     bau_id: int,
@@ -140,6 +166,64 @@ def create_bau_metric(
     db.refresh(new_metric)
     
     return new_metric
+
+
+@router.get("/bau/{bau_id}/metrics", response_model=list[schemas.BAUMetricResponse])
+def list_bau_metrics(
+    bau_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """List all metrics for a BAU activity."""
+    activity = db.query(models.BAUActivity).filter(models.BAUActivity.id == bau_id).first()
+
+    if not activity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="BAU activity not found"
+        )
+
+    # Check if user is from the same team
+    if activity.team_id != current_user.team_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view this BAU activity"
+        )
+
+    metrics = db.query(models.BAUMetric).filter(
+        models.BAUMetric.bau_activity_id == bau_id
+    ).all()
+
+    return metrics
+
+
+@router.get("/bau-metrics/{metric_id}", response_model=schemas.BAUMetricResponse)
+def get_bau_metric(
+    metric_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Get a specific BAU metric."""
+    metric = db.query(models.BAUMetric).filter(models.BAUMetric.id == metric_id).first()
+
+    if not metric:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="BAU metric not found"
+        )
+
+    # Check if user is from the same team as the activity
+    activity = db.query(models.BAUActivity).filter(
+        models.BAUActivity.id == metric.bau_activity_id
+    ).first()
+
+    if activity.team_id != current_user.team_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view this BAU metric"
+        )
+
+    return metric
 
 
 @router.patch("/bau-metrics/{metric_id}", response_model=schemas.BAUMetricResponse)
@@ -187,6 +271,36 @@ def update_bau_metric(
     db.refresh(metric)
     
     return metric
+
+
+@router.delete("/bau-metrics/{metric_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_bau_metric(
+    metric_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_team_lead)
+):
+    """Delete a BAU metric."""
+    metric = db.query(models.BAUMetric).filter(models.BAUMetric.id == metric_id).first()
+
+    if not metric:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="BAU metric not found"
+        )
+
+    # Check if user is from the same team as the activity
+    activity = db.query(models.BAUActivity).filter(
+        models.BAUActivity.id == metric.bau_activity_id
+    ).first()
+
+    if activity.team_id != current_user.team_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete this BAU metric"
+        )
+
+    db.delete(metric)
+    db.commit()
 
 
 @router.get("/bau/{bau_id}/health", response_model=schemas.BAUHealthResponse)

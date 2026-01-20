@@ -96,6 +96,11 @@ class TeamResponse(BaseModel):
         from_attributes = True
 
 
+class TeamUpdate(BaseModel):
+    """Team update schema."""
+    name: Optional[str] = Field(None, min_length=1)
+
+
 class TeamDetailResponse(TeamResponse):
     """Team detail response with users."""
     users: List[UserResponse] = []

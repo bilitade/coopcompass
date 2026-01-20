@@ -9,6 +9,7 @@ import { BAUPage } from './pages/BAUPage';
 import { WorkItemsPage } from './pages/WorkItemsPage';
 import { TasksPage } from './pages/TasksPage';
 import { PriorityPage } from './pages/PriorityPage';
+import { TeamPage } from './pages/TeamPage';
 
 function App() {
   return (
@@ -41,6 +42,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <BAUPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teams"
+            element={
+              <ProtectedRoute>
+                <TeamPage />
               </ProtectedRoute>
             }
           />

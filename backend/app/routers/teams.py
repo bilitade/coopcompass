@@ -70,6 +70,16 @@ def list_team_users(
     return users
 
 
+@router.get("/available-users/all", response_model=list[schemas.UserResponse])
+def list_available_users(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """List all available users (not yet assigned to any team)."""
+    users = db.query(models.User).filter(models.User.team_id == None).all()
+    return users
+
+
 @router.post("/{team_id}/users", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
 def add_user_to_team(
     team_id: int,
@@ -100,6 +110,84 @@ def add_user_to_team(
     db.refresh(user)
     
     return user
+
+
+@router.delete("/{team_id}/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_user_from_team(
+    team_id: int,
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_team_lead)
+):
+    """Remove a user from a team."""
+    # Check team exists
+    team = db.query(models.Team).filter(models.Team.id == team_id).first()
+    if not team:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Team not found"
+        )
+    
+    # Check user exists and is in the team
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    if user.team_id != team_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is not a member of this team"
+        )
+    
+    # Remove user from team
+    user.team_id = None
+    db.commit()
+
+
+@router.put("/{team_id}", response_model=schemas.TeamResponse)
+def update_team(
+    team_id: int,
+    team_data: schemas.TeamUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_team_lead)
+):
+    """Update a team."""
+    team = db.query(models.Team).filter(models.Team.id == team_id).first()
+    
+    if not team:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Team not found"
+        )
+    
+    if team_data.name:
+        team.name = team_data.name
+    
+    db.commit()
+    db.refresh(team)
+    return team
+
+
+@router.delete("/{team_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_team(
+    team_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_team_lead)
+):
+    """Delete a team."""
+    team = db.query(models.Team).filter(models.Team.id == team_id).first()
+    
+    if not team:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Team not found"
+        )
+    
+    db.delete(team)
+    db.commit()
 
 
 @router.get("/{team_id}/tasks", response_model=list[schemas.TaskWithWorkItemResponse])

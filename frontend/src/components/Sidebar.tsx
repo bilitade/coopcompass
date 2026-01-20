@@ -9,6 +9,7 @@ import {
   CheckSquare,
   ChevronLeft,
   ChevronRight,
+  Users,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -23,6 +24,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isCollapsed
 
   const navItems = [
     { label: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
+    { label: 'Teams', path: '/teams', icon: <Users size={20} /> },
     { label: 'OKRs', path: '/okrs', icon: <Target size={20} /> },
     { label: 'BAU', path: '/bau', icon: <Activity size={20} /> },
     { label: 'Monthly Headsup', path: '/work-items', icon: <ClipboardList size={20} /> },

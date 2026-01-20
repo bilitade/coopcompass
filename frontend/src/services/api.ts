@@ -87,6 +87,29 @@ class ApiService {
     return response.data;
   }
 
+  async getAvailableUsers(): Promise<User[]> {
+    const response = await this.client.get<User[]>('/api/teams/available-users/all');
+    return response.data;
+  }
+
+  async addUserToTeam(teamId: number, userId: number): Promise<User> {
+    const response = await this.client.post<User>(`/api/teams/${teamId}/users?user_id=${userId}`);
+    return response.data;
+  }
+
+  async removeUserFromTeam(teamId: number, userId: number): Promise<void> {
+    await this.client.delete(`/api/teams/${teamId}/users/${userId}`);
+  }
+
+  async updateTeam(teamId: number, data: { name: string }): Promise<Team> {
+    const response = await this.client.put<Team>(`/api/teams/${teamId}`, data);
+    return response.data;
+  }
+
+  async deleteTeam(teamId: number): Promise<void> {
+    await this.client.delete(`/api/teams/${teamId}`);
+  }
+
   // OKR endpoints
   async createOKR(teamId: number, data: OKRCreate): Promise<OKR> {
     const response = await this.client.post<OKR>(`/api/okrs/teams/${teamId}/okrs`, data);

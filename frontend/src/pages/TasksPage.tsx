@@ -9,8 +9,6 @@ import type { Task, WorkItem } from '../types';
 import {
   Plus,
   CheckCircle,
-  Circle,
-  AlertCircle,
   Clock,
   Filter,
   TrendingUp,
@@ -103,32 +101,6 @@ export const TasksPage: React.FC = () => {
       loadData();
     } catch (err: any) {
       setError('Failed to update task');
-    }
-  };
-
-  const getStatusIcon = (status: Task['status']) => {
-    switch (status) {
-      case 'Done':
-        return <CheckCircle className="text-green-600" size={20} />;
-      case 'In Progress':
-        return <Clock className="text-blue-600" size={20} />;
-      case 'Blocked':
-        return <AlertCircle className="text-red-600" size={20} />;
-      default:
-        return <Circle className="text-text-secondary" size={20} />;
-    }
-  };
-
-  const getStatusColor = (status: Task['status']) => {
-    switch (status) {
-      case 'Done':
-        return 'bg-green-50 border-green-200';
-      case 'In Progress':
-        return 'bg-blue-50 border-blue-200';
-      case 'Blocked':
-        return 'bg-red-50 border-red-200';
-      default:
-        return 'bg-surface border-border';
     }
   };
 

@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
+  UsersRound,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -24,7 +25,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isCollapsed
 
   const navItems = [
     { label: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
-    { label: 'Teams', path: '/teams', icon: <Users size={20} /> },
+    { label: 'Teams', path: '/teams', icon: <UsersRound size={20} /> },
     { label: 'Users', path: '/users', icon: <Users size={20} /> },
     { label: 'OKRs', path: '/okrs', icon: <Target size={20} /> },
     { label: 'BAU', path: '/bau', icon: <Activity size={20} /> },
@@ -49,7 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isCollapsed
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:relative top-0 left-0 h-full bg-surface border-r border-border transition-[width] duration-300 ease-in-out z-40 overflow-y-auto flex flex-col ${
+        className={`fixed md:relative top-0 left-0 h-full transition-[width] duration-300 ease-in-out z-40 overflow-y-auto flex flex-col ${
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         } ${isCollapsed ? 'w-20' : 'w-64'}`}
       >

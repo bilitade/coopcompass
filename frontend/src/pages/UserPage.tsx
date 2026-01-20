@@ -5,8 +5,8 @@ import { Alert } from '../components/Alert';
 import { Modal } from '../components/Modal';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import type { User, UserCreate } from '../types';
-import { Plus, Edit2, Trash2, Users, Mail, Shield, X } from 'lucide-react';
+import type { User } from '../types';
+import { Plus, Edit2, Trash2, Users, Shield } from 'lucide-react';
 
 export const UserPage: React.FC = () => {
   const { user: currentUser } = useAuth();

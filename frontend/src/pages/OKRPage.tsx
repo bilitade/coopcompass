@@ -5,7 +5,7 @@ import { Alert } from '../components/Alert';
 import { Modal } from '../components/Modal';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import type { OKRDetail } from '../types';
+import type { OKRDetail, KeyResult } from '../types';
 import { Plus, Target } from 'lucide-react';
 
 export const OKRPage: React.FC = () => {
@@ -169,14 +169,18 @@ export const OKRPage: React.FC = () => {
     }
   };
 
-  const getCurrentQuarter = (): string => {
-    const now = new Date();
-    const quarter = Math.floor(now.getMonth() / 3) + 1;
-    return `Q${quarter} ${now.getFullYear()}`;
-  };
-
   const getCurrentYear = (): string => {
     return new Date().getFullYear().toString();
+  };
+
+  const handleArchiveOKR = async (okrId: number) => {
+    try {
+      await api.updateOKR(okrId, { is_active: false });
+      setSuccess('OKR archived successfully');
+      loadOKRs();
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to archive OKR');
+    }
   };
 
   // Generate year range from 2024 to 2040
@@ -395,7 +399,7 @@ export const OKRPage: React.FC = () => {
                           </button>
                         ) : (
                           <button
-                            onClick={() => currentOKR && handleUnarchiveOKR(currentOKR.id)}
+                            onClick={() => currentOKR && handleArchiveOKR(currentOKR.id)}
                             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm font-medium"
                           >
                             Unarchive OKR

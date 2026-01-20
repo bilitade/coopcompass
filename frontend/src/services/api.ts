@@ -142,7 +142,7 @@ class ApiService {
   }
 
   async getTeamOKRs(teamId: number, quarter?: string): Promise<OKRDetail[]> {
-    const response = await this.client.get<OKR[]>(`/api/okrs/teams/${teamId}/okrs`, {
+    const response = await this.client.get<OKRDetail[]>(`/api/okrs/teams/${teamId}/okrs`, {
       params: quarter ? { quarter } : undefined,
     });
     return response.data;
@@ -160,11 +160,6 @@ class ApiService {
 
   async deleteOKR(okrId: number): Promise<void> {
     await this.client.delete(`/api/okrs/${okrId}`);
-  }
-
-  async updateKeyResult(krId: number, data: { description?: string; target_value?: number; unit?: string; current_value?: number }): Promise<KeyResult> {
-    const response = await this.client.put<KeyResult>(`/api/okrs/key-results/${krId}`, data);
-    return response.data;
   }
 
   async deleteKeyResult(krId: number): Promise<void> {

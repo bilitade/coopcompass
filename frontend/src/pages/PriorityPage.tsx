@@ -422,14 +422,14 @@ const WorkItemCard: React.FC<WorkItemCardProps> = ({ item, priority, onRemove, t
   };
 
   return (
-    <div className={`border-l-4 ${getPriorityColor(priority)} bg-gray-50 rounded-lg p-4`}>
+    <div className={`border-l-4 ${getPriorityColor(priority)} bg-surface rounded-lg p-4`}>
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
           <h3 className="font-medium text-text-primary">{item.name}</h3>
           <div className="flex items-center space-x-4 mt-1 text-sm text-text-secondary">
             <span>{item.month}</span>
             <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-              item.source_type === 'OKR' ? 'bg-primary-100 text-primary-700' : 'bg-green-100 text-green-700'
+              item.source_type === 'OKR' ? 'bg-primary/10 text-primary' : 'bg-green-500/10 text-green-600 dark:text-green-300'
             }`}>
               {item.source_type}
             </span>
@@ -456,8 +456,8 @@ const WorkItemCard: React.FC<WorkItemCardProps> = ({ item, priority, onRemove, t
       {workItemTasks.length > 0 && (
         <div className="mt-3 pt-3 border-t">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-gray-600">Tasks ({completedTasks}/{totalTasks})</span>
-            <div className="flex-1 ml-2 bg-gray-200 rounded-full h-2">
+            <span className="text-xs font-semibold text-text-secondary">Tasks ({completedTasks}/{totalTasks})</span>
+            <div className="flex-1 ml-2 bg-border rounded-full h-2">
               <div
                 className="bg-green-600 h-2 rounded-full transition-all"
                 style={{ width: `${progress}%` }}
@@ -466,14 +466,14 @@ const WorkItemCard: React.FC<WorkItemCardProps> = ({ item, priority, onRemove, t
           </div>
           <div className="space-y-1 max-h-32 overflow-y-auto">
             {workItemTasks.map((task) => (
-              <div key={task.id} className="flex items-center space-x-2 text-xs text-gray-600">
+              <div key={task.id} className="flex items-center space-x-2 text-xs text-text-secondary">
                 {getStatusIcon(task.status)}
                 <span className="truncate flex-1">{task.description}</span>
                 <span className={`px-1.5 py-0.5 rounded text-xs ${
-                  task.status === 'Done' ? 'bg-green-100 text-green-700' :
-                  task.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
-                  task.status === 'Blocked' ? 'bg-red-100 text-red-700' :
-                  'bg-gray-100 text-text-secondary'
+                  task.status === 'Done' ? 'bg-green-500/10 text-green-600 dark:text-green-300' :
+                  task.status === 'In Progress' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-300' :
+                  task.status === 'Blocked' ? 'bg-red-500/10 text-red-600 dark:text-red-300' :
+                  'bg-surface-hover text-text-secondary'
                 }`}>
                   {task.status}
                 </span>

@@ -66,7 +66,7 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Key Metrics */}
-        <div className="flex items-center gap-8 p-6 bg-surface-highlight rounded-lg">
+        <div className="flex items-center gap-8 p-6 bg-surface border border-border rounded-lg">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-primary/10 rounded-lg">
               <Target className="text-primary" size={24} />
@@ -80,8 +80,8 @@ export const DashboardPage: React.FC = () => {
           <div className="w-px h-16 bg-border"></div>
 
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <Activity className="text-green-600" size={24} />
+            <div className="p-3 bg-green-500/10 rounded-lg">
+              <Activity className="text-green-600 dark:text-green-400" size={24} />
             </div>
             <div>
               <div className="text-base text-text-secondary">BAU Health</div>
@@ -92,7 +92,7 @@ export const DashboardPage: React.FC = () => {
 
         {/* OKR Progress */}
         {dashboard.okrs.length > 0 && (
-          <div className="bg-white border border-border rounded-lg p-4">
+          <div className="bg-surface border border-border rounded-lg p-4">
             <h2 className="text-xl font-semibold text-text-primary mb-4 flex items-center gap-2">
               <Target className="text-primary" size={20} />
               OKR Progress
@@ -139,9 +139,9 @@ export const DashboardPage: React.FC = () => {
 
         {/* BAU Health */}
         {dashboard.bau_activities.length > 0 && (
-          <div className="bg-white border border-border rounded-lg p-4">
+          <div className="bg-surface border border-border rounded-lg p-4">
             <h2 className="text-xl font-semibold text-text-primary mb-4 flex items-center gap-2">
-              <Activity className="text-green-600" size={20} />
+              <Activity className="text-green-600 dark:text-green-400" size={20} />
               BAU Health
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -177,7 +177,7 @@ export const DashboardPage: React.FC = () => {
 
         {/* Weekly Priorities */}
         {dashboard.current_week_priorities.length > 0 && (
-          <div className="bg-white border border-border rounded-lg p-4">
+          <div className="bg-surface border border-border rounded-lg p-4">
             <h2 className="text-xl font-semibold text-text-primary mb-4">This Week's Priorities</h2>
             <div className="space-y-3">
               {dashboard.current_week_priorities
@@ -213,15 +213,15 @@ export const DashboardPage: React.FC = () => {
 
 
 const getHealthColor = (health: number): string => {
-  if (health >= 75) return 'text-green-600';
-  if (health >= 50) return 'text-yellow-600';
-  return 'text-red-600';
+  if (health >= 75) return 'text-green-600 dark:text-green-400';
+  if (health >= 50) return 'text-yellow-600 dark:text-yellow-400';
+  return 'text-red-600 dark:text-red-400';
 };
 
 const getHealthColorClass = (health: number): string => {
-  if (health >= 75) return 'bg-green-600';
-  if (health >= 50) return 'bg-yellow-600';
-  return 'bg-red-600';
+  if (health >= 75) return 'bg-green-600 dark:bg-green-500';
+  if (health >= 50) return 'bg-yellow-600 dark:bg-yellow-500';
+  return 'bg-red-600 dark:bg-red-500';
 };
 
 

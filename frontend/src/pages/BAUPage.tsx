@@ -270,8 +270,8 @@ export const BAUPage: React.FC = () => {
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-start space-x-3 flex-1">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Activity className="text-green-600" size={20} />
+                  <div className="w-10 h-10 bg-green-500/10 dark:bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <Activity className="text-green-600 dark:text-green-400" size={20} />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-text-primary">{activity.name}</h3>
@@ -282,7 +282,7 @@ export const BAUPage: React.FC = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    activity.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-text-secondary'
+                    activity.is_active ? 'bg-green-500/10 dark:bg-green-500/20 text-green-700 dark:text-green-300' : 'bg-gray-500/10 dark:bg-gray-500/20 text-text-secondary'
                   }`}>
                     {activity.is_active ? 'Active' : 'Inactive'}
                   </span>
@@ -390,11 +390,11 @@ export const BAUPage: React.FC = () => {
                           </button>
                         </div>
                       </div>
-                      <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                      <div className="mt-2 w-full bg-border rounded-full h-2">
                         <div
                           className={`h-2 rounded-full transition-all ${
-                            calculateMetricProgress(metric) >= 100 ? 'bg-green-600' :
-                            calculateMetricProgress(metric) >= 75 ? 'bg-yellow-600' : 'bg-red-600'
+                            calculateMetricProgress(metric) >= 100 ? 'bg-green-600 dark:bg-green-500' :
+                            calculateMetricProgress(metric) >= 75 ? 'bg-yellow-600 dark:bg-yellow-500' : 'bg-red-600 dark:bg-red-500'
                           }`}
                           style={{ width: `${Math.min(calculateMetricProgress(metric), 100)}%` }}
                         />

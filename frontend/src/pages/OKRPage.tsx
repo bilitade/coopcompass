@@ -254,7 +254,7 @@ export const OKRPage: React.FC = () => {
             <select
               value={selectedYear}
               onChange={(e) => handleYearChange(e.target.value as 'All' | string)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              className="px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-text-primary bg-surface"
             >
               <option value="All">All Years</option>
               {availableYears.map((year) => (
@@ -270,7 +270,7 @@ export const OKRPage: React.FC = () => {
             <select
               value={selectedQuarter}
               onChange={(e) => handleQuarterChange(e.target.value as 'All' | 'Q1' | 'Q2' | 'Q3' | 'Q4')}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              className="px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-text-primary bg-surface"
             >
               <option value="All">All Quarters</option>
               <option value="Q1">Q1</option>
@@ -298,13 +298,13 @@ export const OKRPage: React.FC = () => {
           <div className="space-y-4">
             {filteredOKRs.length === 0 ? (
               <div className="text-center py-12">
-                <Target className="mx-auto text-gray-400" size={48} />
+                <Target className="mx-auto text-text-secondary/40 dark:text-text-secondary/30" size={48} />
                 <h3 className="mt-4 text-lg font-medium text-text-primary">No OKRs found</h3>
                 <p className="mt-2 text-text-secondary">Create your first OKR to get started</p>
               </div>
             ) : (
               filteredOKRs.map((okr) => (
-                <div key={okr.id} className="bg-white border border-border rounded-lg p-6 hover:shadow-sm transition-shadow">
+                <div key={okr.id} className="bg-surface border border-border rounded-lg p-6 hover:shadow-sm transition-shadow">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -335,7 +335,7 @@ export const OKRPage: React.FC = () => {
           <div className="space-y-6">
             {filteredOKRs.length === 0 ? (
               <div className="text-center py-12">
-                <Target className="mx-auto text-gray-400" size={48} />
+                <Target className="mx-auto text-text-secondary/40 dark:text-text-secondary/30" size={48} />
                 <h3 className="mt-4 text-lg font-medium text-text-primary">No OKRs for {selectedQuarter}</h3>
                 <p className="mt-2 text-text-secondary">Create an OKR for this quarter to get started</p>
               </div>
@@ -366,7 +366,7 @@ export const OKRPage: React.FC = () => {
                   )}
 
                   {/* OKR Detail */}
-                  <div className="bg-white border border-border rounded-lg p-6">
+                  <div className="bg-surface border border-border rounded-lg p-6">
                     <div className="flex items-start justify-between mb-6">
                         <div className="flex items-start gap-4">
                           <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -434,7 +434,7 @@ export const OKRPage: React.FC = () => {
                                   </div>
                                   <button
                                     onClick={() => handleEditKR(kr)}
-                                    className="p-1 text-gray-500 hover:text-primary transition-colors"
+                                    className="p-1 text-text-secondary hover:text-primary transition-colors"
                                     title="Edit key result"
                                   >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

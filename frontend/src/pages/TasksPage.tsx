@@ -128,7 +128,7 @@ export const TasksPage: React.FC = () => {
       case 'Blocked':
         return 'bg-red-50 border-red-200';
       default:
-        return 'bg-gray-50 border-gray-200';
+        return 'bg-surface border-border';
     }
   };
 
@@ -205,7 +205,7 @@ export const TasksPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <TrendingUp className="text-green-600" size={16} />
           <span className="text-sm font-medium text-text-primary">Progress</span>
-          <div className="flex-1 bg-gray-200 rounded-full h-2">
+          <div className="flex-1 bg-border rounded-full h-2">
             <div
               className="bg-green-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${donePercentage}%` }}
@@ -221,7 +221,7 @@ export const TasksPage: React.FC = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as any)}
-              className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="px-2 py-1 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="All">All Tasks</option>
               <option value="Not Started">Not Started</option>
@@ -236,7 +236,7 @@ export const TasksPage: React.FC = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="px-2 py-1 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="recent">Recent</option>
               <option value="priority">Priority</option>
@@ -245,7 +245,7 @@ export const TasksPage: React.FC = () => {
         </div>
 
         {/* Ultra-Compact Tasks Table */}
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <div className="border border-border rounded-lg overflow-hidden">
           {sortedTasks.length === 0 ? (
             <div className="text-center py-8">
               <CheckCircle className="mx-auto text-text-secondary" size={32} />
@@ -262,80 +262,80 @@ export const TasksPage: React.FC = () => {
             <>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-surface border-b border-border">
                     <tr>
-                      <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                      <th className="px-2 py-1.5 text-left text-xs font-medium text-text-secondary uppercase tracking-wider w-24">
                         Status
                       </th>
-                      <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-64">
+                      <th className="px-2 py-1.5 text-left text-xs font-medium text-text-secondary uppercase tracking-wider w-64">
                         Description
                       </th>
-                      <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                      <th className="px-2 py-1.5 text-left text-xs font-medium text-text-secondary uppercase tracking-wider w-40">
                         Work Item
                       </th>
-                      <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                      <th className="px-2 py-1.5 text-left text-xs font-medium text-text-secondary uppercase tracking-wider w-16">
                         Effort
                       </th>
-                      <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                      <th className="px-2 py-1.5 text-left text-xs font-medium text-text-secondary uppercase tracking-wider w-20">
                         Created
                       </th>
-                      <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
+                      <th className="px-2 py-1.5 text-left text-xs font-medium text-text-secondary uppercase tracking-wider w-28">
                         Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {paginatedTasks.map((task) => (
-                      <tr key={task.id} className="hover:bg-gray-50 h-10">
+                      <tr key={task.id} className="hover:bg-surface h-10">
                         <td className="px-2 py-1.5 whitespace-nowrap">
                           <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${
-                            task.status === 'Done' ? 'bg-green-100 text-green-800' :
-                            task.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
-                            task.status === 'Blocked' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
+                            task.status === 'Done' ? 'bg-green-500/10 text-green-600 dark:text-green-300' :
+                            task.status === 'In Progress' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-300' :
+                            task.status === 'Blocked' ? 'bg-red-500/10 text-red-600 dark:text-red-300' :
+                            'bg-surface-hover text-text-primary'
                           }`}>
                             {task.status === 'In Progress' ? 'In Progress' : task.status}
                           </span>
                         </td>
                         <td className="px-2 py-1.5">
-                          <div className="text-sm text-gray-900 max-w-64 truncate" title={task.description}>
+                          <div className="text-sm text-text-primary max-w-64 truncate" title={task.description}>
                             {task.description}
                           </div>
                         </td>
                         <td className="px-2 py-1.5">
                           {task.work_item ? (
                             <div>
-                              <div className="text-sm text-gray-900 font-medium truncate" title={task.work_item.name}>
+                              <div className="text-sm text-text-primary font-medium truncate" title={task.work_item.name}>
                                 {task.work_item.name}
                               </div>
                               <span className={`inline-block mt-0.5 px-1 py-0.5 text-xs font-medium rounded ${
-                                task.work_item.source_type === 'OKR' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                                task.work_item.source_type === 'OKR' ? 'bg-primary/10 text-primary' : 'bg-green-500/10 text-green-600 dark:text-green-300'
                               }`}>
                                 {task.work_item.source_type}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-sm text-gray-500">-</span>
+                            <span className="text-sm text-text-secondary">-</span>
                           )}
                         </td>
                         <td className="px-2 py-1.5 whitespace-nowrap">
                           {task.effort_hours ? (
-                            <div className="flex items-center text-sm text-gray-900">
+                            <div className="flex items-center text-sm text-text-primary">
                               <Clock size={10} className="mr-1" />
                               {task.effort_hours}h
                             </div>
                           ) : (
-                            <span className="text-xs text-gray-500">-</span>
+                            <span className="text-xs text-text-secondary">-</span>
                           )}
                         </td>
-                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-500">
+                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-text-secondary">
                           {new Date(task.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-2 py-1.5 whitespace-nowrap">
                           <select
                             value={task.status}
                             onChange={(e) => handleUpdateTaskStatus(task.id, e.target.value as Task['status'])}
-                            className="px-1.5 py-0.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="px-1.5 py-0.5 border border-border rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary"
                           >
                             <option value="Not Started">Not Started</option>
                             <option value="In Progress">In Progress</option>
@@ -350,20 +350,20 @@ export const TasksPage: React.FC = () => {
               </div>
 
               {/* Ultra-Compact Pagination */}
-              <div className="px-2 py-1.5 border-t border-gray-200 bg-gray-50">
+              <div className="px-2 py-1.5 border-t border-border bg-surface">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <select
                       value={pageSize}
                       onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                      className="px-1.5 py-0.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                      className="px-1.5 py-0.5 border border-border rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary"
                     >
                       <option value={5}>5</option>
                       <option value={10}>10</option>
                       <option value={25}>25</option>
                       <option value={50}>50</option>
                     </select>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-text-secondary">
                       {startIndex + 1}-{Math.min(endIndex, sortedTasks.length)} / {sortedTasks.length}
                     </span>
                   </div>
@@ -373,7 +373,7 @@ export const TasksPage: React.FC = () => {
                       <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className="px-1.5 py-0.5 border border-gray-300 rounded text-xs text-gray-500 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-1.5 py-0.5 border border-border rounded text-xs text-text-secondary hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         ‹
                       </button>
@@ -398,7 +398,7 @@ export const TasksPage: React.FC = () => {
                               className={`px-1.5 py-0.5 border rounded text-xs min-w-[22px] ${
                                 pageNum === currentPage
                                   ? 'bg-primary text-white border-primary'
-                                  : 'border-gray-300 text-gray-700 hover:bg-white'
+                                  : 'border-border text-text-primary hover:bg-surface'
                               }`}
                             >
                               {pageNum}
@@ -407,10 +407,10 @@ export const TasksPage: React.FC = () => {
                         })}
                         {totalPages > 5 && currentPage < totalPages - 2 && (
                           <>
-                            <span className="px-0.5 text-xs text-gray-500">…</span>
+                            <span className="px-0.5 text-xs text-text-secondary">…</span>
                             <button
                               onClick={() => handlePageChange(totalPages)}
-                              className="px-1.5 py-0.5 border border-gray-300 rounded text-xs text-gray-700 hover:bg-white"
+                              className="px-1.5 py-0.5 border border-border rounded text-xs text-text-primary hover:bg-surface"
                             >
                               {totalPages}
                             </button>
@@ -421,7 +421,7 @@ export const TasksPage: React.FC = () => {
                       <button
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className="px-1.5 py-0.5 border border-gray-300 rounded text-xs text-gray-500 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-1.5 py-0.5 border border-border rounded text-xs text-text-secondary hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         ›
                       </button>

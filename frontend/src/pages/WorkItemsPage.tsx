@@ -216,7 +216,7 @@ export const WorkItemsPage: React.FC = () => {
 
         {workItems.length === 0 && (
           <div className="text-center py-12">
-            <ClipboardList className="mx-auto text-gray-400" size={48} />
+            <ClipboardList className="mx-auto text-text-secondary/40 dark:text-text-secondary/30" size={48} />
             <h3 className="mt-4 text-lg font-medium text-text-primary">No work items yet</h3>
             <p className="mt-2 text-text-secondary">Create work items from your OKRs or BAU activities</p>
           </div>

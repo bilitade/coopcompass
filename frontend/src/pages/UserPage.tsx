@@ -134,13 +134,13 @@ export const UserPage: React.FC = () => {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'executive':
-        return 'bg-purple-500/10 text-purple-600';
+        return 'bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300';
       case 'lead':
-        return 'bg-blue-500/10 text-blue-600';
+        return 'bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300';
       case 'member':
-        return 'bg-green-500/10 text-green-600';
+        return 'bg-green-500/10 dark:bg-green-500/20 text-green-600 dark:text-green-300';
       default:
-        return 'bg-gray-500/10 text-gray-600';
+        return 'bg-gray-500/10 dark:bg-gray-500/20 text-gray-600 dark:text-gray-300';
     }
   };
 

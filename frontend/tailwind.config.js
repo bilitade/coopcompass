@@ -11,7 +11,7 @@ export default {
         border: "rgb(var(--color-border) / <alpha-value>)",
         background: "rgb(var(--color-background) / <alpha-value>)",
         surface: "rgb(var(--color-surface) / <alpha-value>)",
-        "surface-highlight": "rgb(var(--color-surface-hover) / <alpha-value>)",
+        "surface-hover": "rgb(var(--color-surface-hover) / <alpha-value>)",
         primary: {
           DEFAULT: "rgb(var(--color-primary) / <alpha-value>)",
           foreground: "#ffffff",

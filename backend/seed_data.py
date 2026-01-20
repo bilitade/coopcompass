@@ -50,17 +50,21 @@ def seed_demo_data():
         
         print("✓ Cleared existing data")
         
-        # Create team
-        team = Team(name="Engineering Team")
-        db.add(team)
+        # Create teams
+        team1 = Team(name="Engineering Team")
+        team2 = Team(name="Product Team")
+        db.add(team1)
+        db.add(team2)
         db.commit()
-        db.refresh(team)
-        print(f"✓ Created team: {team.name} (ID: {team.id})")
+        db.refresh(team1)
+        db.refresh(team2)
+        print(f"✓ Created team: {team1.name} (ID: {team1.id})")
+        print(f"✓ Created team: {team2.name} (ID: {team2.id})")
         
-        # Create users
-        users = [
+        # Create users for team 1
+        team1_users = [
             User(
-                team_id=team.id,
+                team_id=team1.id,
                 name="Sarah Chen",
                 email="sarah@bank.com",
                 role="lead",
@@ -68,7 +72,7 @@ def seed_demo_data():
                 is_active=True
             ),
             User(
-                team_id=team.id,
+                team_id=team1.id,
                 name="John Smith",
                 email="john@bank.com",
                 role="member",
@@ -76,35 +80,61 @@ def seed_demo_data():
                 is_active=True
             ),
             User(
-                team_id=team.id,
+                team_id=team1.id,
                 name="Mike Johnson",
                 email="mike@bank.com",
                 role="member",
                 password_hash=hash_password("password123"),
                 is_active=True
             ),
+        ]
+        
+        # Create users for team 2
+        team2_users = [
             User(
-                team_id=team.id,
+                team_id=team2.id,
                 name="Emily Davis",
                 email="emily@bank.com",
+                role="lead",
+                password_hash=hash_password("password123"),
+                is_active=True
+            ),
+            User(
+                team_id=team2.id,
+                name="Alex Rodriguez",
+                email="alex@bank.com",
+                role="member",
+                password_hash=hash_password("password123"),
+                is_active=True
+            ),
+            User(
+                team_id=team2.id,
+                name="Lisa Wong",
+                email="lisa@bank.com",
                 role="member",
                 password_hash=hash_password("password123"),
                 is_active=True
             ),
         ]
         
-        for user in users:
+        all_users = team1_users + team2_users
+        for user in all_users:
             db.add(user)
         db.commit()
-        print(f"✓ Created {len(users)} users")
+        print(f"✓ Created {len(all_users)} users (3 in {team1.name}, 3 in {team2.name})")
         
-        for user in users:
+        for user in all_users:
             db.refresh(user)
         
-        sarah = users[0]
-        john = users[1]
-        mike = users[2]
-        emily = users[3]
+        # Assign users to variables for easier reference
+        sarah = team1_users[0]
+        john = team1_users[1]
+        mike = team1_users[2]
+        emily = team2_users[0]
+        alex = team2_users[1]
+        lisa = team2_users[2]
+        
+        team = team1  # Use team1 for the rest of the seeding
         
         # Create OKR
         okr = OKR(
@@ -364,12 +394,249 @@ def seed_demo_data():
         db.commit()
         print(f"✓ Created {len(tasks)} tasks")
         
+        # ===== Seed data for team 2 (Product Team) =====
+        print("\n--- Seeding Product Team ---")
+        
+        # Create OKR for team 2
+        okr2 = OKR(
+            team_id=team2.id,
+            quarter="Q1 2026",
+            objective="Launch Mobile App and Improve User Experience",
+            is_active=True
+        )
+        db.add(okr2)
+        db.commit()
+        db.refresh(okr2)
+        print(f"✓ Created OKR: {okr2.objective}")
+        
+        # Create Key Results for team 2
+        key_results2 = [
+            KeyResult(
+                okr_id=okr2.id,
+                description="Launch iOS and Android apps",
+                target_value=Decimal("2"),
+                current_value=Decimal("1"),
+                unit="apps"
+            ),
+            KeyResult(
+                okr_id=okr2.id,
+                description="Achieve 4.5+ star rating on app stores",
+                target_value=Decimal("4.5"),
+                current_value=Decimal("3.8"),
+                unit="stars"
+            ),
+            KeyResult(
+                okr_id=okr2.id,
+                description="Reach 10K monthly active users",
+                target_value=Decimal("10000"),
+                current_value=Decimal("6500"),
+                unit="users"
+            ),
+        ]
+        
+        for kr in key_results2:
+            db.add(kr)
+        db.commit()
+        print(f"✓ Created {len(key_results2)} key results")
+        
+        for kr in key_results2:
+            db.refresh(kr)
+        
+        # Create BAU Activities for team 2
+        bau_activities2 = [
+            BAUActivity(
+                team_id=team2.id,
+                name="Customer Support",
+                description="Handle customer issues and feedback",
+                is_active=True
+            ),
+            BAUActivity(
+                team_id=team2.id,
+                name="Analytics & Reporting",
+                description="Track metrics and generate reports",
+                is_active=True
+            ),
+        ]
+        
+        for bau in bau_activities2:
+            db.add(bau)
+        db.commit()
+        print(f"✓ Created {len(bau_activities2)} BAU activities")
+        
+        for bau in bau_activities2:
+            db.refresh(bau)
+        
+        # Create BAU Metrics for team 2
+        support_bau = bau_activities2[0]
+        analytics_bau = bau_activities2[1]
+        
+        metrics2 = [
+            BAUMetric(
+                bau_activity_id=support_bau.id,
+                name="Response Time",
+                target_value=Decimal("2"),
+                current_value=Decimal("2.5"),
+                unit="hours",
+                weight=Decimal("0.5"),
+                is_higher_better=False
+            ),
+            BAUMetric(
+                bau_activity_id=support_bau.id,
+                name="Customer Satisfaction",
+                target_value=Decimal("90"),
+                current_value=Decimal("85"),
+                unit="%",
+                weight=Decimal("0.5"),
+                is_higher_better=True
+            ),
+            BAUMetric(
+                bau_activity_id=analytics_bau.id,
+                name="Report Accuracy",
+                target_value=Decimal("99"),
+                current_value=Decimal("98.5"),
+                unit="%",
+                weight=Decimal("0.6"),
+                is_higher_better=True
+            ),
+            BAUMetric(
+                bau_activity_id=analytics_bau.id,
+                name="Report Generation Time",
+                target_value=Decimal("5"),
+                current_value=Decimal("6"),
+                unit="minutes",
+                weight=Decimal("0.4"),
+                is_higher_better=False
+            ),
+        ]
+        
+        for metric in metrics2:
+            db.add(metric)
+        db.commit()
+        print(f"✓ Created {len(metrics2)} BAU metrics")
+        
+        for metric in metrics2:
+            db.refresh(metric)
+        
+        # Create Work Items for team 2
+        work_items2 = [
+            WorkItem(
+                team_id=team2.id,
+                name="iOS app development",
+                description="Develop and launch iOS application",
+                source_type="OKR",
+                source_id=key_results2[0].id,
+                owner_id=emily.id,
+                month="2026-01"
+            ),
+            WorkItem(
+                team_id=team2.id,
+                name="Android app development",
+                description="Develop and launch Android application",
+                source_type="OKR",
+                source_id=key_results2[0].id,
+                owner_id=alex.id,
+                month="2026-01"
+            ),
+            WorkItem(
+                team_id=team2.id,
+                name="Handle customer tickets",
+                description="Process and resolve customer support tickets",
+                source_type="BAU",
+                source_id=support_bau.id,
+                owner_id=lisa.id,
+                month="2026-01"
+            ),
+        ]
+        
+        for wi in work_items2:
+            db.add(wi)
+        db.commit()
+        print(f"✓ Created {len(work_items2)} work items")
+        
+        for wi in work_items2:
+            db.refresh(wi)
+        
+        # Create Weekly Priorities for team 2
+        priorities2 = [
+            WeeklyPriority(
+                work_item_id=work_items2[0].id,
+                week=current_week,
+                priority=1
+            ),
+            WeeklyPriority(
+                work_item_id=work_items2[1].id,
+                week=current_week,
+                priority=2
+            ),
+        ]
+        
+        for p in priorities2:
+            db.add(p)
+        db.commit()
+        print(f"✓ Created {len(priorities2)} weekly priorities")
+        
+        # Create Tasks for team 2
+        tasks2 = [
+            Task(
+                work_item_id=work_items2[0].id,
+                description="Design iOS UI/UX",
+                assignee_id=emily.id,
+                status="Done",
+                effort_hours=20,
+                completed_at=datetime.utcnow() - timedelta(days=5)
+            ),
+            Task(
+                work_item_id=work_items2[0].id,
+                description="Implement core iOS features",
+                assignee_id=emily.id,
+                status="In Progress",
+                effort_hours=30
+            ),
+            Task(
+                work_item_id=work_items2[0].id,
+                description="iOS testing and QA",
+                assignee_id=alex.id,
+                status="Not Started",
+                effort_hours=15
+            ),
+            Task(
+                work_item_id=work_items2[1].id,
+                description="Setup Android project",
+                assignee_id=alex.id,
+                status="Done",
+                effort_hours=10,
+                completed_at=datetime.utcnow() - timedelta(days=4)
+            ),
+            Task(
+                work_item_id=work_items2[1].id,
+                description="Implement Android features",
+                assignee_id=alex.id,
+                status="In Progress",
+                effort_hours=25
+            ),
+            Task(
+                work_item_id=work_items2[2].id,
+                description="Review customer tickets",
+                assignee_id=lisa.id,
+                status="In Progress",
+                effort_hours=8
+            ),
+        ]
+        
+        for task in tasks2:
+            db.add(task)
+        db.commit()
+        print(f"✓ Created {len(tasks2)} tasks for Product Team")
+        
         db.commit()
         print("\n✅ Demo data seeded successfully!")
         print(f"\nYou can login with:")
-        print(f"  Email: sarah@bank.com")
-        print(f"  Password: password123")
-        print(f"\n  Role: lead")
+        print(f"\n  Engineering Team (lead):")
+        print(f"    Email: sarah@bank.com")
+        print(f"    Password: password123")
+        print(f"\n  Product Team (lead):")
+        print(f"    Email: emily@bank.com")
+        print(f"    Password: password123")
         
     except Exception as e:
         db.rollback()

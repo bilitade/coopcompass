@@ -6,7 +6,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from contextlib import asynccontextmanager
 from app.database import engine
 from app import models
-from app.routers import auth, teams, okrs, bau, work_items, planning_dashboard
+from app.routers import auth, teams, okrs, bau, work_items, planning_dashboard, users
 
 # Create tables if database is available (lazy initialization)
 try:
@@ -66,6 +66,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router)
+app.include_router(users.router)
 app.include_router(teams.router)
 app.include_router(okrs.router)
 app.include_router(bau.router)

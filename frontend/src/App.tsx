@@ -10,6 +10,7 @@ import { WorkItemsPage } from './pages/WorkItemsPage';
 import { TasksPage } from './pages/TasksPage';
 import { PriorityPage } from './pages/PriorityPage';
 import { TeamPage } from './pages/TeamPage';
+import { UserPage } from './pages/UserPage';
 
 function App() {
   return (
@@ -50,6 +51,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <TeamPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute>
+                <UserPage />
               </ProtectedRoute>
             }
           />

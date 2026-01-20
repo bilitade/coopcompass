@@ -20,6 +20,14 @@ class UserCreate(UserBase):
     password: str = Field(..., min_length=8)
 
 
+class UserUpdate(BaseModel):
+    """User update schema."""
+    name: Optional[str] = Field(None, min_length=1)
+    email: Optional[EmailStr] = None
+    role: Optional[str] = Field(None, pattern="^(member|lead|executive)$")
+    is_active: Optional[bool] = None
+
+
 class UserResponse(UserBase):
     """User response schema."""
     id: int

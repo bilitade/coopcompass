@@ -208,3 +208,130 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
         "updated_at": datetime.utcnow()
     }
 
+
+def get_department_dashboard(db: Session, department_id: int) -> dict:
+    """Get complete dashboard data for a department (director view)."""
+    # Get all teams in department
+    teams = db.query(models.Team).filter(
+        models.Team.department_id == department_id
+    ).all()
+    
+    total_teams = len(teams)
+    total_members = 0
+    total_okr_progress = 0.0
+    total_bau_health = 0.0
+    team_count_with_data = 0
+    
+    teams_data = []
+    
+    for team in teams:
+        # Get team members
+        members = db.query(models.User).filter(
+            models.User.team_id == team.id
+        ).all()
+        total_members += len(members)
+        
+        # Get team dashboard metrics
+        team_dashboard = get_team_dashboard(db, team.id)
+        
+        if team_dashboard["okr_progress"] > 0 or team_dashboard["bau_health"] > 0:
+            team_count_with_data += 1
+            total_okr_progress += team_dashboard["okr_progress"]
+            total_bau_health += team_dashboard["bau_health"]
+        
+        teams_data.append({
+            "team_id": team.id,
+            "team_name": team.name,
+            "members_count": len(members),
+            "okr_progress": team_dashboard["okr_progress"],
+            "bau_health": team_dashboard["bau_health"]
+        })
+    
+    avg_okr_progress = (
+        total_okr_progress / team_count_with_data
+        if team_count_with_data > 0 else 0.0
+    )
+    avg_bau_health = (
+        total_bau_health / team_count_with_data
+        if team_count_with_data > 0 else 0.0
+    )
+    
+    return {
+        "department_id": department_id,
+        "total_teams": total_teams,
+        "total_members": total_members,
+        "average_okr_progress": round(avg_okr_progress, 2),
+        "average_bau_health": round(avg_bau_health, 2),
+        "teams": teams_data,
+        "updated_at": datetime.utcnow()
+    }
+
+
+def get_organization_dashboard(db: Session) -> dict:
+    """Get complete dashboard data for the organization (executive view)."""
+    # Get all departments
+    departments = db.query(models.Department).all()
+    
+    total_departments = len(departments)
+    total_teams = 0
+    total_members = 0
+    total_directors = 0
+    total_okr_progress = 0.0
+    total_bau_health = 0.0
+    dept_count_with_data = 0
+    
+    departments_data = []
+    
+    for dept in departments:
+        # Count directors
+        if dept.director_id:
+            total_directors += 1
+        
+        # Get department dashboard
+        dept_dashboard = get_department_dashboard(db, dept.id)
+        
+        total_teams += dept_dashboard["total_teams"]
+        total_members += dept_dashboard["total_members"]
+        
+        if dept_dashboard["average_okr_progress"] > 0 or dept_dashboard["average_bau_health"] > 0:
+            dept_count_with_data += 1
+            total_okr_progress += dept_dashboard["average_okr_progress"]
+            total_bau_health += dept_dashboard["average_bau_health"]
+        
+        # Get director name if director_id exists
+        director_name = None
+        if dept.director_id:
+            director = db.query(models.User).filter(models.User.id == dept.director_id).first()
+            if director:
+                director_name = director.name
+        
+        departments_data.append({
+            "department_id": dept.id,
+            "department_name": dept.name,
+            "director_name": director_name,
+            "teams_count": dept_dashboard["total_teams"],
+            "members_count": dept_dashboard["total_members"],
+            "okr_progress": dept_dashboard["average_okr_progress"],
+            "bau_health": dept_dashboard["average_bau_health"]
+        })
+    
+    avg_okr_progress = (
+        total_okr_progress / dept_count_with_data
+        if dept_count_with_data > 0 else 0.0
+    )
+    avg_bau_health = (
+        total_bau_health / dept_count_with_data
+        if dept_count_with_data > 0 else 0.0
+    )
+    
+    return {
+        "total_departments": total_departments,
+        "total_teams": total_teams,
+        "total_members": total_members,
+        "total_directors": total_directors,
+        "average_okr_progress": round(avg_okr_progress, 2),
+        "average_bau_health": round(avg_bau_health, 2),
+        "departments": departments_data,
+        "updated_at": datetime.utcnow()
+    }
+

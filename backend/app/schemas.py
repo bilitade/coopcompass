@@ -12,7 +12,7 @@ class UserBase(BaseModel):
     """Base user schema."""
     name: str
     email: EmailStr
-    role: str = Field(..., pattern="^(member|lead|executive)$")
+    role: str = Field(..., pattern="^(member|lead|director|executive|admin)$")
 
 
 class UserCreate(UserBase):
@@ -24,7 +24,7 @@ class UserUpdate(BaseModel):
     """User update schema."""
     name: Optional[str] = Field(None, min_length=1)
     email: Optional[EmailStr] = None
-    role: Optional[str] = Field(None, pattern="^(member|lead|executive)$")
+    role: Optional[str] = Field(None, pattern="^(member|lead|director|executive)$")
     is_active: Optional[bool] = None
 
 
@@ -91,12 +91,14 @@ class OAuth2TokenResponse(BaseModel):
 class TeamCreate(BaseModel):
     """Team creation schema."""
     name: str = Field(..., min_length=1)
+    department_id: Optional[int] = None
 
 
 class TeamResponse(BaseModel):
     """Team response schema."""
     id: int
     name: str
+    department_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 
@@ -107,11 +109,50 @@ class TeamResponse(BaseModel):
 class TeamUpdate(BaseModel):
     """Team update schema."""
     name: Optional[str] = Field(None, min_length=1)
+    department_id: Optional[int] = None
 
 
 class TeamDetailResponse(TeamResponse):
     """Team detail response with users."""
     users: List[UserResponse] = []
+
+
+# ============ Department Schemas ============
+
+class DepartmentCreate(BaseModel):
+    """Department creation schema."""
+    name: str = Field(..., min_length=1)
+    description: Optional[str] = None
+    director_id: Optional[int] = None
+
+
+class DepartmentUpdate(BaseModel):
+    """Department update schema."""
+    name: Optional[str] = Field(None, min_length=1)
+    description: Optional[str] = None
+    director_id: Optional[int] = None
+
+
+class DepartmentResponse(BaseModel):
+    """Department response schema."""
+    id: int
+    name: str
+    description: Optional[str]
+    director_id: Optional[int]
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class DepartmentDetailResponse(DepartmentResponse):
+    """Department detail response with teams and director info."""
+    teams: List[TeamResponse] = []
+    director: Optional[UserResponse] = None
+
+    class Config:
+        from_attributes = True
 
 
 # ============ OKR/KR Schemas ============
@@ -443,4 +484,47 @@ class PerformanceTrendResponse(BaseModel):
     date: str
     okr_progress: float = Field(..., ge=0, le=100)
     bau_health: float = Field(..., ge=0, le=100)
+
+
+class TeamDashboardSummaryResponse(BaseModel):
+    """Team summary for department/organization dashboards."""
+    team_id: int
+    team_name: str
+    members_count: int
+    okr_progress: float = Field(..., ge=0, le=100)
+    bau_health: float = Field(..., ge=0, le=100)
+
+
+class DepartmentDashboardResponse(BaseModel):
+    """Department dashboard response."""
+    department_id: int
+    total_teams: int
+    total_members: int
+    average_okr_progress: float = Field(..., ge=0, le=100)
+    average_bau_health: float = Field(..., ge=0, le=100)
+    teams: List[TeamDashboardSummaryResponse] = []
+    updated_at: datetime
+
+
+class DepartmentSummaryResponse(BaseModel):
+    """Department summary for organization dashboard."""
+    department_id: int
+    department_name: str
+    director_name: Optional[str] = None
+    teams_count: int
+    members_count: int
+    okr_progress: float = Field(..., ge=0, le=100)
+    bau_health: float = Field(..., ge=0, le=100)
+
+
+class OrganizationDashboardResponse(BaseModel):
+    """Organization (executive) dashboard response."""
+    total_departments: int
+    total_teams: int
+    total_members: int
+    total_directors: int
+    average_okr_progress: float = Field(..., ge=0, le=100)
+    average_bau_health: float = Field(..., ge=0, le=100)
+    departments: List[DepartmentSummaryResponse] = []
+    updated_at: datetime
 

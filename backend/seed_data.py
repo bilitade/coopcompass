@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
-from app.models import Base, Team, User, OKR, KeyResult, BAUActivity, BAUMetric, WorkItem, Task, WeeklyPriority
+from app.models import Base, Team, User, OKR, KeyResult, BAUActivity, BAUMetric, WorkItem, Task, WeeklyPriority, Department
 from app.auth import hash_password
 
 # Load environment variables
@@ -46,13 +46,31 @@ def seed_demo_data():
         db.query(BAUActivity).delete()
         db.query(User).delete()
         db.query(Team).delete()
+        db.query(Department).delete()
         db.commit()
         
         print("✓ Cleared existing data")
         
-        # Create teams
-        team1 = Team(name="Engineering Team")
-        team2 = Team(name="Product Team")
+        # Create departments
+        dept1 = Department(
+            name="Engineering",
+            description="Engineering and Infrastructure Department"
+        )
+        dept2 = Department(
+            name="Product",
+            description="Product Development Department"
+        )
+        db.add(dept1)
+        db.add(dept2)
+        db.commit()
+        db.refresh(dept1)
+        db.refresh(dept2)
+        print(f"✓ Created department: {dept1.name} (ID: {dept1.id})")
+        print(f"✓ Created department: {dept2.name} (ID: {dept2.id})")
+        
+        # Create teams with department assignment
+        team1 = Team(name="Engineering Team", department_id=dept1.id)
+        team2 = Team(name="Product Team", department_id=dept2.id)
         db.add(team1)
         db.add(team2)
         db.commit()
@@ -89,6 +107,22 @@ def seed_demo_data():
             ),
         ]
         
+        # Create director for Engineering department
+        eng_director = User(
+            team_id=None,
+            name="Dr. James Wilson",
+            email="james@bank.com",
+            role="director",
+            password_hash=hash_password("password123"),
+            is_active=True
+        )
+        db.add(eng_director)
+        db.commit()
+        db.refresh(eng_director)
+        dept1.director_id = eng_director.id
+        db.commit()
+        print(f"✓ Assigned director: {eng_director.name} to {dept1.name}")
+        
         # Create users for team 2
         team2_users = [
             User(
@@ -116,6 +150,48 @@ def seed_demo_data():
                 is_active=True
             ),
         ]
+        
+        # Create director for Product department
+        prod_director = User(
+            team_id=None,
+            name="Dr. Rachel Anderson",
+            email="rachel@bank.com",
+            role="director",
+            password_hash=hash_password("password123"),
+            is_active=True
+        )
+        db.add(prod_director)
+        db.commit()
+        db.refresh(prod_director)
+        dept2.director_id = prod_director.id
+        db.commit()
+        print(f"✓ Assigned director: {prod_director.name} to {dept2.name}")
+        
+        # Create executive user
+        executive = User(
+            team_id=None,
+            name="CEO - Mark Thompson",
+            email="mark@bank.com",
+            role="executive",
+            password_hash=hash_password("password123"),
+            is_active=True
+        )
+        db.add(executive)
+        db.commit()
+        print(f"✓ Created executive: {executive.name}")
+        
+        # Create admin user
+        admin = User(
+            team_id=None,
+            name="System Administrator",
+            email="admin@bank.com",
+            role="admin",
+            password_hash=hash_password("password123"),
+            is_active=True
+        )
+        db.add(admin)
+        db.commit()
+        print(f"✓ Created admin: {admin.name}")
         
         all_users = team1_users + team2_users
         for user in all_users:
@@ -629,12 +705,23 @@ def seed_demo_data():
         print(f"✓ Created {len(tasks2)} tasks for Product Team")
         
         db.commit()
-        print("\n✅ Demo data seeded successfully!")
         print(f"\nYou can login with:")
-        print(f"\n  Engineering Team (lead):")
+        print(f"\n  Administrator:")
+        print(f"    Email: admin@bank.com")
+        print(f"    Password: password123")
+        print(f"\n  Director - Engineering:")
+        print(f"    Email: james@bank.com")
+        print(f"    Password: password123")
+        print(f"\n  Director - Product:")
+        print(f"    Email: rachel@bank.com")
+        print(f"    Password: password123")
+        print(f"\n  Executive/CEO:")
+        print(f"    Email: mark@bank.com")
+        print(f"    Password: password123")
+        print(f"\n  Team Lead - Engineering:")
         print(f"    Email: sarah@bank.com")
         print(f"    Password: password123")
-        print(f"\n  Product Team (lead):")
+        print(f"\n  Team Lead - Product:")
         print(f"    Email: emily@bank.com")
         print(f"    Password: password123")
         

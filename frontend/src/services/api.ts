@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance, type AxiosError } from 'axios';
 import type {
   User, UserCreate, UserLogin, TokenResponse,
-  Team, TeamDetail,
+  Department, DepartmentDetail, Team, TeamDetail,
   OKR, OKRDetail, OKRCreate, KeyResultCreate, KeyResult, OKRProgress, KRProgress,
   BAUActivity, BAUActivityDetail, BAUActivityCreate, BAUMetric, BAUMetricCreate, BAUHealth,
   WorkItem, WorkItemDetail, WorkItemCreate,
@@ -66,14 +66,44 @@ class ApiService {
     await this.client.post('/api/auth/logout');
   }
 
+  // Department endpoints
+  async getDepartments(): Promise<Department[]> {
+    const response = await this.client.get<Department[]>('/api/departments');
+    return response.data;
+  }
+
+  async getDepartment(deptId: number): Promise<DepartmentDetail> {
+    const response = await this.client.get<DepartmentDetail>(`/api/departments/${deptId}`);
+    return response.data;
+  }
+
+  async getDepartmentTeams(deptId: number): Promise<Team[]> {
+    const response = await this.client.get<Team[]>(`/api/departments/${deptId}/teams`);
+    return response.data;
+  }
+
+  async createDepartment(data: { name: string; description?: string; director_id?: number }): Promise<Department> {
+    const response = await this.client.post<Department>('/api/departments', data);
+    return response.data;
+  }
+
+  async updateDepartment(deptId: number, data: { name?: string; description?: string; director_id?: number }): Promise<Department> {
+    const response = await this.client.put<Department>(`/api/departments/${deptId}`, data);
+    return response.data;
+  }
+
+  async deleteDepartment(deptId: number): Promise<void> {
+    await this.client.delete(`/api/departments/${deptId}`);
+  }
+
   // Team endpoints
   async getTeams(): Promise<Team[]> {
     const response = await this.client.get<Team[]>('/api/teams');
     return response.data;
   }
 
-  async createTeam(name: string): Promise<Team> {
-    const response = await this.client.post<Team>('/api/teams', { name });
+  async createTeam(data: { name: string; department_id?: number }): Promise<Team> {
+    const response = await this.client.post<Team>('/api/teams', data);
     return response.data;
   }
 
@@ -101,7 +131,7 @@ class ApiService {
     await this.client.delete(`/api/teams/${teamId}/users/${userId}`);
   }
 
-  async updateTeam(teamId: number, data: { name: string }): Promise<Team> {
+  async updateTeam(teamId: number, data: { name?: string; department_id?: number }): Promise<Team> {
     const response = await this.client.put<Team>(`/api/teams/${teamId}`, data);
     return response.data;
   }
@@ -322,6 +352,16 @@ class ApiService {
 
   async getPerformanceTrend(teamId: number): Promise<PerformanceTrend[]> {
     const response = await this.client.get<PerformanceTrend[]>(`/api/teams/${teamId}/performance`);
+    return response.data;
+  }
+
+  async getDepartmentDashboard(departmentId: number): Promise<any> {
+    const response = await this.client.get<any>(`/api/departments/${departmentId}/dashboard`);
+    return response.data;
+  }
+
+  async getOrganizationDashboard(): Promise<any> {
+    const response = await this.client.get<any>(`/api/organization/dashboard`);
     return response.data;
   }
 }

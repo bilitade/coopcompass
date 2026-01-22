@@ -3,7 +3,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  role: 'member' | 'lead' | 'executive';
+  role: 'member' | 'lead' | 'director' | 'executive' | 'admin';
   team_id: number | null;
   team_name?: string;
   is_active: boolean;
@@ -14,7 +14,7 @@ export interface User {
 export interface UserCreate {
   name: string;
   email: string;
-  role: 'member' | 'lead' | 'executive';
+  role: 'member' | 'lead' | 'director' | 'executive' | 'admin';
   password: string;
 }
 
@@ -29,10 +29,26 @@ export interface TokenResponse {
   user: User;
 }
 
+// Department types
+export interface Department {
+  id: number;
+  name: string;
+  description?: string | null;
+  director_id?: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DepartmentDetail extends Department {
+  teams: Team[];
+  director?: User | null;
+}
+
 // Team types
 export interface Team {
   id: number;
   name: string;
+  department_id?: number | null;
   created_at: string;
   updated_at: string;
 }

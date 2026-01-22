@@ -81,7 +81,7 @@ export const TeamPage: React.FC = () => {
         setSuccess('Team updated successfully');
       } else {
         // Create team
-        await api.createTeam(teamForm.name);
+        await api.createTeam({ name: teamForm.name });
         setSuccess('Team created successfully');
       }
       setShowTeamModal(false);

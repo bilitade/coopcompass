@@ -5,7 +5,15 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models, schemas
 from app.utils.dependencies import get_current_user, get_current_team_lead
-from app.calculations import get_team_dashboard, calculate_okr_progress, calculate_bau_health, calculate_work_item_progress, get_current_week
+from app.calculations import (
+    get_team_dashboard, 
+    get_department_dashboard,
+    get_organization_dashboard,
+    calculate_okr_progress, 
+    calculate_bau_health, 
+    calculate_work_item_progress, 
+    get_current_week
+)
 from datetime import datetime
 
 router = APIRouter(prefix="/api", tags=["planning", "dashboard"])
@@ -171,4 +179,77 @@ def get_performance_trend(
             "bau_health": current_data["bau_health"]
         }
     ]
+
+
+@router.get("/departments/{department_id}/dashboard", response_model=schemas.DepartmentDashboardResponse)
+def get_department_dashboard_endpoint(
+    department_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Get department dashboard with all teams performance metrics."""
+    # Check department exists
+    department = db.query(models.Department).filter(models.Department.id == department_id).first()
+    if not department:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Department not found"
+        )
+    
+    dashboard_data = get_department_dashboard(db, department_id)
+    
+    return schemas.DepartmentDashboardResponse(
+        department_id=dashboard_data["department_id"],
+        total_teams=dashboard_data["total_teams"],
+        total_members=dashboard_data["total_members"],
+        average_okr_progress=dashboard_data["average_okr_progress"],
+        average_bau_health=dashboard_data["average_bau_health"],
+        teams=[
+            schemas.TeamDashboardSummaryResponse(
+                team_id=t["team_id"],
+                team_name=t["team_name"],
+                members_count=t["members_count"],
+                okr_progress=t["okr_progress"],
+                bau_health=t["bau_health"]
+            ) for t in dashboard_data["teams"]
+        ],
+        updated_at=dashboard_data["updated_at"]
+    )
+
+
+@router.get("/organization/dashboard", response_model=schemas.OrganizationDashboardResponse)
+def get_organization_dashboard_endpoint(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """Get organization (executive) dashboard with all departments and teams."""
+    # Check if user is executive or admin
+    if current_user.role not in ['executive', 'admin']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only executives can access organization dashboard"
+        )
+    
+    dashboard_data = get_organization_dashboard(db)
+    
+    return schemas.OrganizationDashboardResponse(
+        total_departments=dashboard_data["total_departments"],
+        total_teams=dashboard_data["total_teams"],
+        total_members=dashboard_data["total_members"],
+        total_directors=dashboard_data["total_directors"],
+        average_okr_progress=dashboard_data["average_okr_progress"],
+        average_bau_health=dashboard_data["average_bau_health"],
+        departments=[
+            schemas.DepartmentSummaryResponse(
+                department_id=d["department_id"],
+                department_name=d["department_name"],
+                director_name=d["director_name"],
+                teams_count=d["teams_count"],
+                members_count=d["members_count"],
+                okr_progress=d["okr_progress"],
+                bau_health=d["bau_health"]
+            ) for d in dashboard_data["departments"]
+        ],
+        updated_at=dashboard_data["updated_at"]
+    )
 

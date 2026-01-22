@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard,
   Target,
@@ -10,7 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
-  UsersRound,
+  Building2,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -22,17 +23,38 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isCollapsed, toggleCollapse }) => {
   const location = useLocation();
+  const { user } = useAuth();
 
-  const navItems = [
-    { label: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
-    { label: 'Teams', path: '/teams', icon: <UsersRound size={20} /> },
+  const baseNavItems = [
+    { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
+    { label: 'My Team', path: '/my-team', icon: <Building2 size={20} /> },
+  ];
+
+  const roleSpecificItems = [];
+
+  // Add role-specific navigation
+  if (user?.role === 'director') {
+    roleSpecificItems.push(
+      { label: 'Organization', path: '/departments', icon: <Building2 size={20} /> }
+    );
+  } else if (user?.role === 'executive') {
+    roleSpecificItems.push(
+      { label: 'Organization', path: '/departments', icon: <Building2 size={20} /> }
+    );
+  }
+
+  const commonNavItems = [
     { label: 'Users', path: '/users', icon: <Users size={20} /> },
+    { label: 'Manage Departments', path: '/manage-departments', icon: <Building2 size={20} /> },
+    { label: 'Manage Teams', path: '/manage-teams', icon: <Users size={20} /> },
     { label: 'OKRs', path: '/okrs', icon: <Target size={20} /> },
     { label: 'BAU', path: '/bau', icon: <Activity size={20} /> },
     { label: 'Monthly Headsup', path: '/work-items', icon: <ClipboardList size={20} /> },
     { label: 'Weekly Priority', path: '/weekly-priority', icon: <Calendar size={20} /> },
     { label: 'Tasks', path: '/tasks', icon: <CheckSquare size={20} /> }
   ];
+
+  const navItems = [...baseNavItems, ...roleSpecificItems, ...commonNavItems];
 
   const isActive = (path: string): boolean => {
     return location.pathname === path;

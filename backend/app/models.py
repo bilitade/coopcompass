@@ -8,16 +8,39 @@ from datetime import datetime
 Base = declarative_base()
 
 
+class Department(Base):
+    """Departments table."""
+    __tablename__ = "departments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False, unique=True)
+    description = Column(Text)
+    director_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    teams = relationship("Team", back_populates="department")
+    director = relationship("User", foreign_keys=[director_id])
+
+    __table_args__ = (
+        Index("idx_departments_name", "name"),
+        Index("idx_departments_director", "director_id"),
+    )
+
+
 class Team(Base):
     """Teams table."""
     __tablename__ = "teams"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
+    department_id = Column(Integer, ForeignKey("departments.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
+    department = relationship("Department", back_populates="teams")
     users = relationship("User", back_populates="team")
     okrs = relationship("OKR", back_populates="team", cascade="all, delete-orphan")
     bau_activities = relationship("BAUActivity", back_populates="team", cascade="all, delete-orphan")
@@ -44,7 +67,7 @@ class User(Base):
     assigned_tasks = relationship("Task", foreign_keys="Task.assignee_id", back_populates="assignee")
 
     __table_args__ = (
-        CheckConstraint("role IN ('member', 'lead', 'executive')"),
+        CheckConstraint("role IN ('member', 'lead', 'director', 'executive', 'admin')"),
         Index("idx_users_team", "team_id"),
         Index("idx_users_email", "email"),
     )

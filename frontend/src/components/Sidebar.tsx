@@ -12,6 +12,8 @@ import {
   ChevronRight,
   Users,
   Building2,
+  Settings,
+  Layers,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -25,36 +27,67 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isCollapsed
   const location = useLocation();
   const { user } = useAuth();
 
-  const baseNavItems = [
-    { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
-    { label: 'My Team', path: '/my-team', icon: <Building2 size={20} /> },
-  ];
+  // Role-based navigation configuration
+  const getNavigationItems = () => {
+    if (!user) return [];
 
-  const roleSpecificItems = [];
+    const { role } = user;
 
-  // Add role-specific navigation
-  if (user?.role === 'director') {
-    roleSpecificItems.push(
-      { label: 'Organization', path: '/departments', icon: <Building2 size={20} /> }
-    );
-  } else if (user?.role === 'executive') {
-    roleSpecificItems.push(
-      { label: 'Organization', path: '/departments', icon: <Building2 size={20} /> }
-    );
-  }
+    // LEAD - Manages own team: OKRs, BAU, Work Items, Priorities, Tasks
+    if (role === 'lead') {
+      return [
+        { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
+        { label: 'My Team', path: '/my-team', icon: <Users size={20} /> },
+        { label: 'OKRs', path: '/okrs', icon: <Target size={20} /> },
+        { label: 'BAU Activities', path: '/bau', icon: <Activity size={20} /> },
+        { label: 'Work Items', path: '/work-items', icon: <ClipboardList size={20} /> },
+        { label: 'Weekly Priorities', path: '/weekly-priority', icon: <Calendar size={20} /> },
+        { label: 'Tasks', path: '/tasks', icon: <CheckSquare size={20} /> },
+      ];
+    }
 
-  const commonNavItems = [
-    { label: 'Users', path: '/users', icon: <Users size={20} /> },
-    { label: 'Manage Departments', path: '/manage-departments', icon: <Building2 size={20} /> },
-    { label: 'Manage Teams', path: '/manage-teams', icon: <Users size={20} /> },
-    { label: 'OKRs', path: '/okrs', icon: <Target size={20} /> },
-    { label: 'BAU', path: '/bau', icon: <Activity size={20} /> },
-    { label: 'Monthly Headsup', path: '/work-items', icon: <ClipboardList size={20} /> },
-    { label: 'Weekly Priority', path: '/weekly-priority', icon: <Calendar size={20} /> },
-    { label: 'Tasks', path: '/tasks', icon: <CheckSquare size={20} /> }
-  ];
+    // DIRECTOR - Views department teams and performance (read-only)
+    if (role === 'director') {
+      return [
+        { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
+        { label: 'My Department', path: '/departments', icon: <Building2 size={20} /> },
+        { label: 'OKRs Overview', path: '/director/okrs', icon: <Target size={20} /> },
+        { label: 'BAU Overview', path: '/director/bau', icon: <Activity size={20} /> },
+      ];
+    }
 
-  const navItems = [...baseNavItems, ...roleSpecificItems, ...commonNavItems];
+    // EXECUTIVE - Organization-wide view (read-only)
+    if (role === 'executive') {
+      return [
+        { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
+        { label: 'Organization', path: '/departments', icon: <Building2 size={20} /> },
+        { label: 'OKRs Overview', path: '/executive/okrs', icon: <Target size={20} /> },
+        { label: 'BAU Overview', path: '/executive/bau', icon: <Activity size={20} /> },
+      ];
+    }
+
+    // ADMIN - System management and full visibility
+    if (role === 'admin') {
+      return [
+        { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
+        { label: 'Users', path: '/users', icon: <Users size={20} /> },
+        { label: 'Departments', path: '/manage-departments', icon: <Building2 size={20} /> },
+        { label: 'Teams', path: '/manage-teams', icon: <Layers size={20} /> },
+        { label: 'Organization View', path: '/departments', icon: <Building2 size={20} /> },
+        { label: 'OKRs Overview', path: '/executive/okrs', icon: <Target size={20} /> },
+        { label: 'BAU Overview', path: '/executive/bau', icon: <Activity size={20} /> },
+      ];
+    }
+
+    // MEMBER - Basic view (team dashboard and personal tasks)
+    return [
+      { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
+      { label: 'My Team', path: '/my-team', icon: <Users size={20} /> },
+      { label: 'My Tasks', path: '/tasks', icon: <CheckSquare size={20} /> },
+    ];
+  };
+
+  const navItems = getNavigationItems();
 
   const isActive = (path: string): boolean => {
     return location.pathname === path;
@@ -76,28 +109,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isCollapsed
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         } ${isCollapsed ? 'w-20' : 'w-64'}`}
       >
-        <div className="flex-1 py-4 space-y-1.5">
-          {navItems.map((item) => {
-            const active = isActive(item.path);
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setIsOpen(false)}
-                className={`flex items-center space-x-3 px-4 py-3 mx-2 rounded-xl transition-all duration-200 group font-medium ${
-                  active
-                    ? 'bg-primary/10 text-primary shadow-sm shadow-primary/5'
-                    : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
-                } ${isCollapsed ? 'justify-center px-2' : ''}`}
-                title={isCollapsed ? item.label : ''}
-              >
-                <span className={`${active ? 'text-primary' : 'text-text-secondary group-hover:text-primary transition-colors'}`}>
-                  {item.icon}
-                </span>
-                {!isCollapsed && <span>{item.label}</span>}
-              </Link>
-            );
-          })}
+        <div className="flex-1 py-4">
+          <div className="space-y-1">
+            {navItems.map((item) => {
+              const active = isActive(item.path);
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center space-x-3 px-4 py-3 mx-2 rounded-xl transition-all duration-200 group font-medium ${
+                    active
+                      ? 'bg-primary/10 text-primary shadow-sm shadow-primary/5'
+                      : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
+                  } ${isCollapsed ? 'justify-center px-2' : ''}`}
+                  title={isCollapsed ? item.label : ''}
+                >
+                  <span className={`${active ? 'text-primary' : 'text-text-secondary group-hover:text-primary transition-colors'}`}>
+                    {item.icon}
+                  </span>
+                  {!isCollapsed && <span>{item.label}</span>}
+                </Link>
+              );
+            })}
+          </div>
         </div>
 
         {/* Collapse Toggle Button (Desktop Only) */}

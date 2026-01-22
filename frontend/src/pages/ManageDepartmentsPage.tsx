@@ -168,7 +168,6 @@ export const ManageDepartmentsPage: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Manage Departments</h1>
-            <p className="text-lg text-text-secondary">Create, update, and delete departments</p>
           </div>
           <button
             onClick={handleAdd}

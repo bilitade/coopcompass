@@ -4,7 +4,8 @@ import { api } from '../services/api';
 import { Layout } from '../components/Layout';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { Alert } from '../components/Alert';
-import { ArrowLeft, Building2, Users, TrendingUp, Activity } from 'lucide-react';
+import { Breadcrumb } from '../components/Breadcrumb';
+import { Building2, Users, TrendingUp, Activity, ArrowRight } from 'lucide-react';
 
 export const DepartmentDetailViewPage: React.FC = () => {
   const { departmentId } = useParams<{ departmentId: string }>();
@@ -70,24 +71,33 @@ export const DepartmentDetailViewPage: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Back Button & Header */}
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="p-2 hover:bg-surface rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold mb-2">{department.name}</h1>
-            {department.director && (
-              <p className="text-lg text-text-secondary">
-                Director: <span className="font-semibold">{department.director.name}</span>
-              </p>
-            )}
-            {department.description && (
-              <p className="text-text-secondary mt-2">{department.description}</p>
-            )}
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb 
+          items={[
+            { label: 'Organization', path: '/departments' },
+            { label: department.name }
+          ]} 
+        />
+
+        {/* Department Header */}
+        <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-6">
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/70 rounded-xl flex items-center justify-center shadow-lg">
+              <Building2 className="text-white" size={32} />
+            </div>
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold mb-2 text-text-primary">{department.name}</h1>
+              {department.director && (
+                <p className="text-lg text-text-secondary flex items-center gap-2">
+                  <Users size={18} />
+                  Director: <span className="font-semibold">{department.director.name}</span>
+                  <span className="text-sm">({department.director.email})</span>
+                </p>
+              )}
+              {department.description && (
+                <p className="text-text-secondary mt-3 text-base">{department.description}</p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -136,7 +146,12 @@ export const DepartmentDetailViewPage: React.FC = () => {
 
         {/* Teams Grid */}
         <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
-          <h2 className="text-2xl font-bold mb-6">Department Teams</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Users className="w-6 h-6" />
+              Department Teams ({dashboardData.total_teams})
+            </h2>
+          </div>
 
           {dashboardData.teams && dashboardData.teams.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -144,58 +159,76 @@ export const DepartmentDetailViewPage: React.FC = () => {
                 <div
                   key={team.team_id}
                   onClick={() => handleTeamClick(team.team_id)}
-                  className="border border-border rounded-lg p-4 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer"
+                  className="border-2 border-border rounded-xl p-5 hover:border-primary hover:shadow-xl transition-all cursor-pointer group bg-surface-hover"
                 >
-                  <h3 className="text-lg font-semibold mb-3">{team.team_name}</h3>
-                  
-                  <div className="space-y-3 text-sm">
-                    <p className="text-text-secondary">
-                      <span className="font-semibold">{team.members_count}</span> members
-                    </p>
-
-                    {/* OKR Progress */}
-                    <div>
-                      <div className="flex justify-between mb-1 text-text-secondary">
-                        <span>OKR Progress</span>
-                        <span className="font-semibold">{team.okr_progress.toFixed(1)}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full transition-all"
-                          style={{ width: `${team.okr_progress}%` }}
-                        />
-                      </div>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold mb-1 group-hover:text-primary transition-colors">
+                        {team.team_name}
+                      </h3>
+                      <p className="text-sm text-text-secondary flex items-center gap-1">
+                        <Users size={14} />
+                        <span className="font-semibold">{team.members_count}</span> members
+                      </p>
                     </div>
+                    <ArrowRight className="w-5 h-5 text-text-secondary group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                  </div>
 
-                    {/* BAU Health */}
-                    <div>
-                      <div className="flex justify-between mb-1 text-text-secondary">
-                        <span>BAU Health</span>
-                        <span className="font-semibold">{team.bau_health.toFixed(1)}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full transition-all ${
-                            team.bau_health >= 90
-                              ? 'bg-green-600'
-                              : team.bau_health >= 70
-                              ? 'bg-yellow-600'
-                              : 'bg-red-600'
-                          }`}
-                          style={{ width: `${team.bau_health}%` }}
-                        />
-                      </div>
+                  {/* OKR Progress */}
+                  <div className="mb-3">
+                    <div className="flex justify-between mb-1.5 text-sm">
+                      <span className="text-text-secondary flex items-center gap-1">
+                        <TrendingUp size={14} />
+                        OKR Progress
+                      </span>
+                      <span className="font-bold text-blue-600">{team.okr_progress.toFixed(1)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                      <div
+                        className="bg-blue-600 h-2.5 rounded-full transition-all"
+                        style={{ width: `${team.okr_progress}%` }}
+                      />
                     </div>
                   </div>
 
-                  <button className="mt-4 w-full px-3 py-2 bg-primary text-white rounded text-sm font-medium hover:bg-primary/90 transition-colors">
-                    View Details
-                  </button>
+                  {/* BAU Health */}
+                  <div>
+                    <div className="flex justify-between mb-1.5 text-sm">
+                      <span className="text-text-secondary flex items-center gap-1">
+                        <Activity size={14} />
+                        BAU Health
+                      </span>
+                      <span className={`font-bold ${
+                        team.bau_health >= 90
+                          ? 'text-green-600'
+                          : team.bau_health >= 70
+                          ? 'text-yellow-600'
+                          : 'text-red-600'
+                      }`}>
+                        {team.bau_health.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                      <div
+                        className={`h-2.5 rounded-full transition-all ${
+                          team.bau_health >= 90
+                            ? 'bg-green-600'
+                            : team.bau_health >= 70
+                            ? 'bg-yellow-600'
+                            : 'bg-red-600'
+                        }`}
+                        style={{ width: `${team.bau_health}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-text-secondary">No teams in this department</p>
+            <div className="text-center py-12">
+              <Users className="w-16 h-16 text-text-secondary mx-auto mb-4" />
+              <p className="text-text-secondary text-lg">No teams in this department</p>
+            </div>
           )}
         </div>
       </div>

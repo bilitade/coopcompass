@@ -5,7 +5,8 @@ import { api } from '../services/api';
 import { Layout } from '../components/Layout';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { Alert } from '../components/Alert';
-import { Building2, Users, TrendingUp, ArrowRight } from 'lucide-react';
+import { Breadcrumb } from '../components/Breadcrumb';
+import { Building2, Users, TrendingUp, ArrowRight, Activity, BarChart3 } from 'lucide-react';
 
 interface Department {
   id: number;
@@ -51,32 +52,32 @@ export const DepartmentsPage: React.FC = () => {
       const allDepartments = await api.getDepartments();
       setDepartments(allDepartments);
 
-      // Calculate stats for each department
+      // Fetch real stats from department dashboard API
       const statsMap = new Map<number, DepartmentStats>();
       
       for (const dept of allDepartments) {
-        const deptTeams = await api.getDepartmentTeams(dept.id);
-        let totalMembers = 0;
-        let totalOKRProgress = 0;
-        let totalBAUHealth = 0;
-        let teamCount = 0;
-
-        for (const team of deptTeams) {
-          const teamResponse = await api.getTeam(team.id);
-          if (teamResponse.users) {
-            totalMembers += teamResponse.users.length;
-          }
-          // TODO: Get OKR and BAU data for team if available
-          teamCount++;
+        try {
+          // Get department dashboard with real metrics
+          const deptDashboard = await api.getDepartmentDashboard(dept.id);
+          
+          statsMap.set(dept.id, {
+            departmentId: dept.id,
+            totalTeams: deptDashboard.total_teams || 0,
+            totalMembers: deptDashboard.total_members || 0,
+            averageOKRProgress: deptDashboard.average_okr_progress || 0,
+            averageBAUHealth: deptDashboard.average_bau_health || 0,
+          });
+        } catch (deptErr) {
+          console.error(`Error fetching dashboard for dept ${dept.id}:`, deptErr);
+          // Set defaults if dashboard fetch fails
+          statsMap.set(dept.id, {
+            departmentId: dept.id,
+            totalTeams: 0,
+            totalMembers: 0,
+            averageOKRProgress: 0,
+            averageBAUHealth: 0,
+          });
         }
-
-        statsMap.set(dept.id, {
-          departmentId: dept.id,
-          totalTeams: deptTeams.length,
-          totalMembers: totalMembers,
-          averageOKRProgress: totalOKRProgress / (teamCount || 1),
-          averageBAUHealth: totalBAUHealth / (teamCount || 1),
-        });
       }
 
       setStats(statsMap);
@@ -88,10 +89,11 @@ export const DepartmentsPage: React.FC = () => {
     }
   };
 
-  if (!user || user.role !== 'executive') {
+  // Allow executives, directors, and admins to view departments
+  if (!user || !['executive', 'director', 'admin'].includes(user.role)) {
     return (
       <Layout>
-        <Alert type="error" message="This page is only accessible to executives." />
+        <Alert type="error" message="This page is only accessible to executives, directors, and admins." />
       </Layout>
     );
   }
@@ -111,12 +113,12 @@ export const DepartmentsPage: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-6">
+        {/* Breadcrumb */}
+        <Breadcrumb items={[{ label: 'Organization' }]} />
+
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Organization</h1>
-          <p className="text-lg text-text-secondary">
-            View all departments and their performance metrics
-          </p>
+          <h1 className="text-3xl font-bold mb-2">Organization Overview</h1>
         </div>
 
         {/* Summary Cards */}
@@ -170,70 +172,91 @@ export const DepartmentsPage: React.FC = () => {
 
         {/* Departments Grid */}
         <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
-          <h2 className="text-2xl font-bold mb-6">Departments</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold">All Departments</h2>
+          </div>
 
           {departments.length === 0 ? (
-            <p className="text-text-secondary">No departments found.</p>
+            <div className="text-center py-12">
+              <Building2 className="w-16 h-16 text-text-secondary mx-auto mb-4" />
+              <p className="text-text-secondary text-lg">No departments found</p>
+            </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {departments.map((dept) => {
                 const deptStats = stats.get(dept.id);
                 return (
                   <div
                     key={dept.id}
-                    className="bg-surface-hover border border-border rounded-lg p-6 transition-all hover:border-primary/50 cursor-pointer group"
-                    onClick={() => navigate(`/departments/${dept.id}`)}
+                    className="bg-surface-hover border-2 border-border rounded-xl p-6 transition-all hover:border-primary hover:shadow-xl cursor-pointer group"
+                    onClick={() => navigate(`/dashboard/department/${dept.id}`)}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                            <Building2 className="text-primary" size={24} />
-                          </div>
-                          <div>
-                            <h3 className="text-xl font-semibold text-text-primary">{dept.name}</h3>
-                            {dept.director && (
-                              <p className="text-sm text-text-secondary">
-                                Director: {dept.director.name}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <p className="text-text-secondary mb-4">
-                          {dept.description || 'No description provided'}
-                        </p>
+                    {/* Department Header */}
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary/70 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                        <Building2 className="text-white" size={28} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-xl font-bold text-text-primary mb-1 group-hover:text-primary transition-colors truncate">
+                          {dept.name}
+                        </h3>
+                        {dept.director && (
+                          <p className="text-sm text-text-secondary flex items-center gap-1">
+                            <Users size={14} />
+                            Director: <span className="font-semibold">{dept.director.name}</span>
+                          </p>
+                        )}
+                      </div>
+                      <ArrowRight className="w-6 h-6 text-text-secondary group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
+                    </div>
 
-                        {/* Department Stats */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div className="bg-surface rounded p-3">
-                            <p className="text-xs text-text-secondary">Teams</p>
-                            <p className="text-lg font-bold text-text-primary">
-                              {deptStats?.totalTeams || 0}
-                            </p>
-                          </div>
-                          <div className="bg-surface rounded p-3">
-                            <p className="text-xs text-text-secondary">Members</p>
-                            <p className="text-lg font-bold text-text-primary">
-                              {deptStats?.totalMembers || 0}
-                            </p>
-                          </div>
-                          <div className="bg-surface rounded p-3">
-                            <p className="text-xs text-text-secondary">Avg OKR</p>
-                            <p className="text-lg font-bold text-text-primary">
-                              {deptStats?.averageOKRProgress.toFixed(0) || '0'}%
-                            </p>
-                          </div>
-                          <div className="bg-surface rounded p-3">
-                            <p className="text-xs text-text-secondary">Avg BAU</p>
-                            <p className="text-lg font-bold text-text-primary">
-                              {deptStats?.averageBAUHealth.toFixed(0) || '0'}%
-                            </p>
-                          </div>
+                    {/* Description */}
+                    {dept.description && (
+                      <p className="text-sm text-text-secondary mb-4 line-clamp-2">
+                        {dept.description}
+                      </p>
+                    )}
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-surface border border-border rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <BarChart3 size={14} className="text-primary" />
+                          <p className="text-xs font-medium text-text-secondary">Teams</p>
                         </div>
+                        <p className="text-2xl font-bold text-text-primary">
+                          {deptStats?.totalTeams || 0}
+                        </p>
+                      </div>
+                      
+                      <div className="bg-surface border border-border rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Users size={14} className="text-primary" />
+                          <p className="text-xs font-medium text-text-secondary">Members</p>
+                        </div>
+                        <p className="text-2xl font-bold text-text-primary">
+                          {deptStats?.totalMembers || 0}
+                        </p>
                       </div>
 
-                      <div className="flex-shrink-0 ml-4 text-text-secondary group-hover:text-primary transition-colors">
-                        <ArrowRight size={24} />
+                      <div className="bg-surface border border-border rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <TrendingUp size={14} className="text-blue-600" />
+                          <p className="text-xs font-medium text-text-secondary">OKR Progress</p>
+                        </div>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {deptStats?.averageOKRProgress.toFixed(0) || '0'}%
+                        </p>
+                      </div>
+
+                      <div className="bg-surface border border-border rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Activity size={14} className="text-green-600" />
+                          <p className="text-xs font-medium text-text-secondary">BAU Health</p>
+                        </div>
+                        <p className="text-2xl font-bold text-green-600">
+                          {deptStats?.averageBAUHealth.toFixed(0) || '0'}%
+                        </p>
                       </div>
                     </div>
                   </div>

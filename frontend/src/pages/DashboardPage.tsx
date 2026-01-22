@@ -5,7 +5,26 @@ import { api } from '../services/api';
 import { Layout } from '../components/Layout';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { Alert } from '../components/Alert';
-import { Building2, Users, TrendingUp, Activity, BarChart3 } from 'lucide-react';
+import { Building2, Users, TrendingUp, Activity, BarChart3, Shield } from 'lucide-react';
+
+// Role indicator component
+const RoleIndicator: React.FC<{ role: string }> = ({ role }) => {
+  const roleColors: { [key: string]: { bg: string; text: string; icon: string } } = {
+    lead: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-300', icon: 'Team Lead' },
+    director: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-300', icon: 'Director' },
+    executive: { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-300', icon: 'Executive' },
+    admin: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-300', icon: 'Administrator' },
+  };
+
+  const config = roleColors[role] || { bg: 'bg-gray-100', text: 'text-gray-700', icon: 'User' };
+
+  return (
+    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${config.bg} ${config.text}`}>
+      <Shield size={16} />
+      <span className="text-sm font-semibold capitalize">{config.icon}</span>
+    </div>
+  );
+};
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -99,10 +118,10 @@ export const DashboardPage: React.FC = () => {
         <div className="space-y-6">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Executive Dashboard</h1>
-            <p className="text-lg text-text-secondary">
-              Organization-wide overview and performance metrics
-            </p>
+            <div className="flex items-center gap-4 mb-4">
+              <h1 className="text-3xl font-bold">Executive Dashboard</h1>
+              <RoleIndicator role="executive" />
+            </div>
           </div>
 
           {/* Summary Metrics */}
@@ -255,10 +274,10 @@ export const DashboardPage: React.FC = () => {
         <div className="space-y-6">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Department Dashboard</h1>
-            <p className="text-lg text-text-secondary">
-              Overview of your department teams and performance
-            </p>
+            <div className="flex items-center gap-4 mb-4">
+              <h1 className="text-3xl font-bold">Department Dashboard</h1>
+              <RoleIndicator role="director" />
+            </div>
           </div>
 
           {/* Summary Metrics */}
@@ -380,10 +399,10 @@ export const DashboardPage: React.FC = () => {
         <div className="space-y-6">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Team Dashboard</h1>
-            <p className="text-lg text-text-secondary">
-              Your team's performance and progress
-            </p>
+            <div className="flex items-center gap-4 mb-4">
+              <h1 className="text-3xl font-bold">Team Dashboard</h1>
+              {user?.role === 'lead' && <RoleIndicator role="lead" />}
+            </div>
           </div>
 
           {/* Key Metrics */}

@@ -21,6 +21,10 @@ import { TasksPage } from './pages/TasksPage';
 import { PriorityPage } from './pages/PriorityPage';
 import { TeamPage } from './pages/TeamPage';
 import { UserPage } from './pages/UserPage';
+import { DirectorOKRListPage } from './pages/DirectorOKRListPage';
+import { DirectorBAUListPage } from './pages/DirectorBAUListPage';
+import { ExecutiveOKRListPage } from './pages/ExecutiveOKRListPage';
+import { ExecutiveBAUListPage } from './pages/ExecutiveBAUListPage';
 
 // Root redirect component
 const RootRedirect = () => {
@@ -101,6 +105,38 @@ function App() {
             element={
               <ProtectedRoute>
                 <DepartmentsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/director/okrs"
+            element={
+              <ProtectedRoute>
+                <DirectorOKRListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/director/bau"
+            element={
+              <ProtectedRoute>
+                <DirectorBAUListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/executive/okrs"
+            element={
+              <ProtectedRoute>
+                <ExecutiveOKRListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/executive/bau"
+            element={
+              <ProtectedRoute>
+                <ExecutiveBAUListPage />
               </ProtectedRoute>
             }
           />

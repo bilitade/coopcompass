@@ -1,0 +1,2 @@
+"""Modular plugin-like functionality."""
+

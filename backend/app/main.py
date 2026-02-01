@@ -2,15 +2,16 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPBearer
 from contextlib import asynccontextmanager
-from app.database import engine
-from app import models
-from app.routers import auth, teams, okrs, bau, work_items, planning_dashboard, users, departments
+from app.core.database import engine
+from app.models import Base
+from app.core.config import CORS_ORIGINS
+from app.modules.registry import get_enabled_modules
 
 # Create tables if database is available (lazy initialization)
 try:
-    models.Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 except Exception as e:
     print(f"⚠️  Note: Database connection error (this is OK for development). Error: {str(e)[:100]}")
     print("⚠️  Make sure to configure DATABASE_URL in .env file")
@@ -21,6 +22,8 @@ async def lifespan(app: FastAPI):
     """Application lifecycle management."""
     # Startup
     print("Starting Compass Backend API")
+    enabled_modules = get_enabled_modules()
+    print(f"Enabled modules: {', '.join(enabled_modules)}")
     yield
     # Shutdown
     print("Shutting down Compass Backend API")
@@ -35,7 +38,6 @@ app = FastAPI(
 )
 
 # Simple Bearer authentication for Swagger UI
-from fastapi.security import HTTPBearer
 security = HTTPBearer(
     description="Enter: Bearer [your_jwt_token]. Get token from /api/auth/token or /auth page. Demo: email=sarah@bank.com, password=password123",
     scheme_name="BearerAuth"
@@ -44,13 +46,7 @@ security = HTTPBearer(
 # Add CORS middleware - Allow frontend to access API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",      # Vite dev server
-        "http://localhost:3000",      # Alternative React dev server
-        "http://127.0.0.1:5173",      # Localhost alternative
-        "http://127.0.0.1:3000",      # Localhost alternative
-        "*"                            # Allow all in development
-    ],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=[
@@ -64,15 +60,36 @@ app.add_middleware(
     max_age=3600,  # Cache preflight requests for 1 hour
 )
 
-# Include routers
-app.include_router(auth.router)
-app.include_router(users.router)
-app.include_router(departments.router)
-app.include_router(teams.router)
-app.include_router(okrs.router)
-app.include_router(bau.router)
-app.include_router(work_items.router)
-app.include_router(planning_dashboard.router)
+# Dynamically load and register modules
+def register_modules():
+    """Register all enabled modules."""
+    enabled_modules = get_enabled_modules()
+    module_map = {
+        "auth": ("app.modules.auth.routers", "router"),
+        "users": ("app.modules.users.routers", "router"),
+        "teams": ("app.modules.teams.routers", "router"),
+        "departments": ("app.modules.departments.routers", "router"),
+        "okrs": ("app.modules.okrs.routers", "router"),
+        "bau": ("app.modules.bau.routers", "router"),
+        "work_items": ("app.modules.work_items.routers", "router"),
+        "weekly_priority": ("app.modules.weekly_priority.routers", "router"),
+    }
+    
+    for module_name in enabled_modules:
+        if module_name in module_map:
+            try:
+                module_path, router_name = module_map[module_name]
+                module = __import__(module_path, fromlist=[router_name])
+                router = getattr(module, router_name)
+                app.include_router(router)
+                print(f"✓ Registered module: {module_name}")
+            except ImportError as e:
+                print(f"⚠️  Warning: Could not load module '{module_name}': {e}")
+            except AttributeError as e:
+                print(f"⚠️  Warning: Module '{module_name}' missing router: {e}")
+
+# Register all enabled modules
+register_modules()
 
 
 @app.get("/")
@@ -84,6 +101,7 @@ def root():
         "docs": "/docs",
         "openapi": "/openapi.json",
         "authentication": "/auth",
+        "enabled_modules": get_enabled_modules(),
         "demo_credentials": {
             "email": "sarah@bank.com",
             "password": "password123",
@@ -102,7 +120,7 @@ def root():
 @app.get("/health")
 def health_check():
     """Health check endpoint."""
-    return {"status": "healthy"}
+    return {"status": "healthy", "enabled_modules": get_enabled_modules()}
 
 
 @app.get("/auth")
@@ -239,13 +257,13 @@ def swagger_login(email: str, password: str):
     - token: JWT access token
     - instructions: How to use the token in Swagger UI
     """
-    from app.auth import verify_password, create_access_token
-    from app.database import SessionLocal
-    from app import models
+    from app.core.security import verify_password, create_access_token
+    from app.core.database import SessionLocal
+    from app.models import User
 
     db = SessionLocal()
     try:
-        user = db.query(models.User).filter(models.User.email == email).first()
+        user = db.query(User).filter(User.email == email).first()
 
         if not user or not verify_password(password, user.password_hash):
             return {
@@ -260,7 +278,7 @@ def swagger_login(email: str, password: str):
         if not user.is_active:
             return {"success": False, "error": "User account is inactive"}
 
-        access_token = create_access_token(data={"sub": user.id})
+        access_token = create_access_token(data={"sub": str(user.id)})
 
         return {
             "success": True,
@@ -286,4 +304,3 @@ def swagger_login(email: str, password: str):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

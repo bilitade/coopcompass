@@ -5,9 +5,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
-from app.database import get_db, Base
-from app import models
-from app.auth import hash_password
+from app.core.database import get_db
+from app.models import Base
+# Import models for use in tests
+from app.models import Base, User, Team, OKR, KeyResult, BAUActivity, BAUMetric, WorkItem, Task, WeeklyPriority, Department
+import app.models as models
+from app.core.security import hash_password
 from decimal import Decimal
 
 # Test database setup
@@ -155,7 +158,7 @@ class TestCalculations:
 
     def test_work_item_progress_no_tasks(self, setup_database):
         """Test work item progress with no tasks."""
-        from app.calculations import calculate_work_item_progress
+        from app.modules.work_items.services import calculate_work_item_progress
         
         db = TestingSessionLocal()
         team = models.Team(name="Test Team")
@@ -177,7 +180,7 @@ class TestCalculations:
 
     def test_work_item_progress_with_tasks(self, setup_database):
         """Test work item progress calculation."""
-        from app.calculations import calculate_work_item_progress
+        from app.modules.work_items.services import calculate_work_item_progress
         
         db = TestingSessionLocal()
         team = models.Team(name="Test Team")
@@ -218,7 +221,7 @@ class TestCalculations:
 
     def test_bau_health_calculation(self, setup_database):
         """Test BAU health calculation."""
-        from app.calculations import calculate_bau_health
+        from app.modules.bau.services import calculate_bau_health
         
         db = TestingSessionLocal()
         team = models.Team(name="Test Team")
@@ -249,7 +252,7 @@ class TestCalculations:
 
     def test_bau_health_lower_is_better(self, setup_database):
         """Test BAU health calculation with 'lower is better' metric."""
-        from app.calculations import calculate_bau_health
+        from app.modules.bau.services import calculate_bau_health
         
         db = TestingSessionLocal()
         team = models.Team(name="Test Team")

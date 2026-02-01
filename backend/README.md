@@ -49,29 +49,122 @@ The API will be available at `http://localhost:8000`
 
 ## Project Structure
 
+The backend follows a modular, plugin-like architecture for easy feature management:
+
 ```
 backend/
 ├── app/
-│   ├── main.py                 # FastAPI entry point
-│   ├── database.py             # Database connection & session
-│   ├── models.py               # SQLAlchemy ORM models
-│   ├── schemas.py              # Pydantic validation schemas
-│   ├── auth.py                 # JWT authentication
-│   ├── calculations.py         # Progress & health calculations
-│   ├── routers/
-│   │   ├── auth.py            # Authentication endpoints
-│   │   ├── teams.py           # Team management
-│   │   ├── okrs.py            # OKR management
-│   │   ├── bau.py             # BAU activities & metrics
-│   │   ├── work_items.py      # Work items & tasks
-│   │   └── planning_dashboard.py  # Planning & dashboard
-│   └── utils/
-│       └── dependencies.py    # FastAPI dependencies
+│   ├── main.py                 # FastAPI entry point & module registry
+│   │
+│   ├── core/                   # Core functionality
+│   │   ├── config.py           # Application configuration & settings
+│   │   ├── database.py         # Database connection & session management
+│   │   └── security.py         # JWT authentication & password hashing
+│   │
+│   ├── api/                    # API layer
+│   │   └── v1/
+│   │       └── deps.py         # FastAPI dependencies (auth, permissions)
+│   │
+│   ├── models/                 # Centralized database models
+│   │   ├── base.py             # SQLAlchemy Base
+│   │   └── __init__.py         # Model imports & exports
+│   │
+│   ├── schemas/                 # Centralized Pydantic schemas
+│   │   └── __init__.py         # Schema imports & forward reference resolution
+│   │
+│   ├── services/               # Shared business logic services
+│   │   └── calculations.py     # Utility functions (quarters, weeks)
+│   │
+│   ├── modules/                 # Modular feature modules (plugin-like)
+│   │   ├── registry.py        # Module registry (enable/disable features)
+│   │   │
+│   │   ├── auth/               # Authentication module
+│   │   │   └── routers.py      # Auth endpoints (login, register, token)
+│   │   │
+│   │   ├── users/              # User management module
+│   │   │   ├── models.py       # User model
+│   │   │   ├── schemas.py      # User schemas
+│   │   │   └── routers.py      # User CRUD endpoints
+│   │   │
+│   │   ├── teams/              # Team management module
+│   │   │   ├── models.py       # Team model
+│   │   │   ├── schemas.py      # Team schemas
+│   │   │   └── routers.py      # Team endpoints
+│   │   │
+│   │   ├── departments/       # Department management module
+│   │   │   ├── models.py       # Department model
+│   │   │   ├── schemas.py      # Department schemas
+│   │   │   └── routers.py      # Department endpoints
+│   │   │
+│   │   ├── okrs/               # OKR (Objectives & Key Results) module
+│   │   │   ├── models.py       # OKR & KeyResult models
+│   │   │   ├── schemas.py      # OKR schemas
+│   │   │   ├── services.py    # OKR calculation logic
+│   │   │   └── routers.py      # OKR endpoints
+│   │   │
+│   │   ├── bau/                # BAU (Business As Usual) module
+│   │   │   ├── models.py       # BAU Activity & Metric models
+│   │   │   ├── schemas.py      # BAU schemas
+│   │   │   ├── services.py     # BAU health & execution calculations
+│   │   │   └── routers.py      # BAU endpoints
+│   │   │
+│   │   ├── work_items/         # Work Items & Tasks module
+│   │   │   ├── models.py       # WorkItem, Task, WeeklyPriority models
+│   │   │   ├── schemas.py      # Work item schemas
+│   │   │   ├── services.py     # Work item progress calculations
+│   │   │   └── routers.py      # Work item & task endpoints
+│   │   │
+│   │   └── weekly_priority/    # Weekly Priority & Dashboard module
+│   │       ├── schemas.py      # Dashboard schemas
+│   │       ├── services.py     # Dashboard calculation logic
+│   │       └── routers.py      # Dashboard & priority endpoints
+│   │
+│   ├── routers/                # Backward compatibility shim
+│   │   └── __init__.py         # Router imports from modules
+│   │
+│   └── utils/                  # Backward compatibility shim
+│       └── dependencies.py    # Redirects to api/v1/deps
+│
+├── alembic/                    # Database migrations
+│   └── versions/               # Migration files
+│
 ├── tests/                      # Test suite
-├── requirements.txt
-├── .env.example
-└── README.md
+│   ├── conftest.py            # Pytest configuration & fixtures
+│   └── test_api.py            # API endpoint tests
+│
+├── seed_data.py               # Database seeding script
+├── requirements.txt           # Python dependencies
+├── .env.example              # Environment variables template
+└── README.md                 # This file
 ```
+
+### Module Structure
+
+Each module in `app/modules/` follows a consistent structure:
+- `models.py` - SQLAlchemy database models (if needed)
+- `schemas.py` - Pydantic request/response schemas
+- `services.py` - Business logic & calculations (if needed)
+- `routers.py` - FastAPI route handlers
+- `__init__.py` - Module initialization
+
+### Enabling/Disabling Modules
+
+Modules can be easily enabled or disabled via `app/modules/registry.py`:
+
+```python
+ENABLED_MODULES = [
+    "auth",
+    "users",
+    "teams",
+    "departments",
+    "okrs",
+    "bau",
+    "work_items",
+    "weekly_priority",
+]
+```
+
+To disable a feature, simply remove it from the list or comment it out.
 
 ## API Endpoints
 
@@ -177,17 +270,28 @@ curl -X POST "http://localhost:8000/api/auth/login" \
 
 ## Database Schema
 
-See `models.py` for complete schema. Key tables:
-- `users` - Team members
-- `teams` - Organizations
-- `okrs` - Strategic goals
-- `key_results` - Measurable results for OKRs
-- `bau_activities` - Business as usual activities
-- `bau_metrics` - Operational health metrics
-- `work_items` - Monthly work items
-- `tasks` - Weekly task breakdown
-- `weekly_priorities` - Priority assignment
-- `metric_history` - Historical metric values
+Database models are organized by module in `app/modules/{module}/models.py`. Key tables:
+
+**Core Models:**
+- `users` - Team members (in `modules/users/models.py`)
+- `teams` - Teams (in `modules/teams/models.py`)
+- `departments` - Departments (in `modules/departments/models.py`)
+
+**OKR Models:**
+- `okrs` - Strategic objectives (in `modules/okrs/models.py`)
+- `key_results` - Measurable results for OKRs (in `modules/okrs/models.py`)
+
+**BAU Models:**
+- `bau_activities` - Business as usual activities (in `modules/bau/models.py`)
+- `bau_metrics` - Operational health metrics (in `modules/bau/models.py`)
+- `metric_history` - Historical metric values (in `modules/bau/models.py`)
+
+**Work Management Models:**
+- `work_items` - Monthly work items (in `modules/work_items/models.py`)
+- `tasks` - Task breakdown (in `modules/work_items/models.py`)
+- `weekly_priorities` - Priority assignment (in `modules/work_items/models.py`)
+
+All models are imported centrally via `app/models/__init__.py` for SQLAlchemy relationship resolution.
 
 ## Testing
 
@@ -215,10 +319,18 @@ DEBUG=True
 
 ### Adding a New Endpoint
 
-1. Create or update router in `app/routers/`
-2. Add schema to `app/schemas.py` if needed
-3. Update main.py to include router
-4. Test with Swagger UI at `/docs`
+1. **If adding to existing module:**
+   - Add route to `app/modules/{module_name}/routers.py`
+   - Add schema to `app/modules/{module_name}/schemas.py` if needed
+   - Add business logic to `app/modules/{module_name}/services.py` if needed
+
+2. **If creating a new module:**
+   - Create `app/modules/{module_name}/` directory
+   - Add `models.py`, `schemas.py`, `services.py` (as needed), and `routers.py`
+   - Add module name to `ENABLED_MODULES` in `app/modules/registry.py`
+   - Add router mapping to `register_modules()` in `app/main.py`
+
+3. Test with Swagger UI at `/docs`
 
 ### Database Migrations
 

@@ -61,10 +61,10 @@ export const RegisterPage: React.FC = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <Compass className="text-primary-foreground" size={24} />
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <Compass className="text-primary-foreground" size={18} />
               </div>
-              <span className="text-2xl font-bold text-primary">Compass</span>
+              <span className="text-xl font-bold text-primary">Compass</span>
             </Link>
             <button
               onClick={toggleDarkMode}

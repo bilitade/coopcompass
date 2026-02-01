@@ -50,8 +50,8 @@ export const DashboardPage: React.FC = () => {
       let data;
 
       // Load based on user role
-      if (user.role === 'executive') {
-        // Load organization dashboard
+      if (user.role === 'executive' || user.role === 'admin') {
+        // Load organization dashboard (both executive and admin can view)
         data = await api.getOrganizationDashboard();
       } else if (user.role === 'director') {
         // Load director's department
@@ -111,16 +111,16 @@ export const DashboardPage: React.FC = () => {
     );
   }
 
-  // EXECUTIVE VIEW - Organization Dashboard
-  if (user?.role === 'executive' && !dashboardData.isDepartmentView) {
+  // EXECUTIVE/ADMIN VIEW - Organization Dashboard
+  if ((user?.role === 'executive' || user?.role === 'admin') && !dashboardData.isDepartmentView) {
     return (
       <Layout>
         <div className="space-y-6">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-4 mb-4">
-              <h1 className="text-3xl font-bold">Executive Dashboard</h1>
-              <RoleIndicator role="executive" />
+              <h1 className="text-3xl font-bold">{user?.role === 'admin' ? 'Admin Dashboard' : 'Executive Dashboard'}</h1>
+              <RoleIndicator role={user?.role || 'executive'} />
             </div>
           </div>
 

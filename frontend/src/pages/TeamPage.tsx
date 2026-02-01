@@ -6,7 +6,7 @@ import { Modal } from '../components/Modal';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import type { Team, TeamDetail, User } from '../types';
-import { Plus, Edit2, Trash2, Users, Mail, UserCheck, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Users, Mail, UserCheck, X, Building2 } from 'lucide-react';
 
 export const TeamPage: React.FC = () => {
   const { user } = useAuth();
@@ -242,6 +242,27 @@ export const TeamPage: React.FC = () => {
 
                 {/* Team Info */}
                 <div className="space-y-3 mb-4">
+                  {/* Department */}
+                  {team.department ? (
+                    <div className="flex items-center gap-2 text-sm text-text-secondary">
+                      <Building2 size={16} className="text-primary" />
+                      <span>{team.department.name}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-text-secondary">
+                      <Building2 size={16} className="text-text-secondary/50" />
+                      <span>No department assigned</span>
+                    </div>
+                  )}
+                  
+                  {/* Member Count */}
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-semibold">
+                      {team.users?.length || 0} members
+                    </span>
+                  </div>
+
+                  {/* Created Date */}
                   <div className="flex items-center gap-2 text-sm text-text-secondary">
                     <span className="text-xs">Created:</span>
                     <span>{new Date(team.created_at).toLocaleDateString()}</span>

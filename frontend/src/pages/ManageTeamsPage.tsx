@@ -5,24 +5,7 @@ import { Layout } from '../components/Layout';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { Alert } from '../components/Alert';
 import { Trash2, Edit2, Plus, Users as UsersIcon, Building2 } from 'lucide-react';
-
-interface Team {
-  id: number;
-  name: string;
-  department_id?: number | null;
-  department?: {
-    id: number;
-    name: string;
-  };
-  users?: any[];
-  created_at: string;
-  updated_at: string;
-}
-
-interface Department {
-  id: number;
-  name: string;
-}
+import type { Team, Department } from '../types';
 
 export const ManageTeamsPage: React.FC = () => {
   const { user } = useAuth();

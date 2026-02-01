@@ -55,10 +55,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
             </button>
             
             <Link to="/" className="flex items-center space-x-3 group">
-               <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-primary/25 group-hover:scale-105 transition-all duration-200">
-                <Compass size={24} />
+               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-primary/25 group-hover:scale-105 transition-all duration-200">
+                <Compass size={18} />
               </div>
-              <span className="font-bold text-xl text-text-primary tracking-tight">Compass</span>
+              <span className="font-bold text-lg text-text-primary tracking-tight">Compass</span>
             </Link>
           </div>
 

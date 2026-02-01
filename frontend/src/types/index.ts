@@ -49,6 +49,8 @@ export interface Team {
   id: number;
   name: string;
   department_id?: number | null;
+  department?: Department | null;
+  users?: User[];
   created_at: string;
   updated_at: string;
 }

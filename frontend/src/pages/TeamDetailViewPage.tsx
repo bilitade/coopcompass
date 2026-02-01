@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import { Layout } from '../components/Layout';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { Alert } from '../components/Alert';
 import { Breadcrumb } from '../components/Breadcrumb';
-import { Users, TrendingUp, Activity, Target, Calendar, User as UserIcon } from 'lucide-react';
+import { Users, TrendingUp, Activity, Target, Calendar } from 'lucide-react';
 
 export const TeamDetailViewPage: React.FC = () => {
   const { teamId } = useParams<{ teamId: string }>();
-  const navigate = useNavigate();
   const [team, setTeam] = useState<any>(null);
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);

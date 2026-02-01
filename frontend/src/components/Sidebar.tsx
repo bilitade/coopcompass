@@ -12,7 +12,6 @@ import {
   ChevronRight,
   Users,
   Building2,
-  Settings,
   Layers,
 } from 'lucide-react';
 

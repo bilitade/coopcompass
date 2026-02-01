@@ -129,7 +129,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
         </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <MetricsCard
             label="OKR Progress"
             value={dashboardData.okr_progress}
@@ -140,6 +140,12 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
             label="BAU Health"
             value={dashboardData.bau_health}
             icon={<Activity className="w-12 h-12 text-green-600 dark:text-green-400" />}
+            isPercentage
+          />
+          <MetricsCard
+            label="BAU Execution (OCE)"
+            value={dashboardData.bau_execution || 0}
+            icon={<Activity className="w-12 h-12 text-blue-600 dark:text-blue-400" />}
             isPercentage
           />
         </div>

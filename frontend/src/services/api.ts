@@ -252,6 +252,11 @@ class ApiService {
     return response.data;
   }
 
+  async getBAUExecution(bauId: number): Promise<number> {
+    const response = await this.client.get<number>(`/api/bau/${bauId}/execution`);
+    return response.data;
+  }
+
   async deleteBAUActivity(bauId: number): Promise<void> {
     await this.client.delete(`/api/bau/${bauId}`);
   }

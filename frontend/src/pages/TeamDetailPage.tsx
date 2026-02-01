@@ -23,7 +23,7 @@ interface TeamOKRAnalytics {
 }
 
 interface TeamBAUAnalytics {
-  activities: BAUActivityDetail[];
+  activities: (BAUActivityDetail & { execution?: number })[];
   overallHealth: number;
 }
 
@@ -92,22 +92,34 @@ export const TeamDetailPage: React.FC = () => {
       let totalBAUHealth = 0;
       let bauCount = 0;
 
-      bauActivities.forEach((activity: any) => {
-        if (activity.metrics && activity.metrics.length > 0) {
-          const metricWeights = activity.metrics.reduce((sum: number, m: any) => sum + parseFloat(m.weight || '1'), 0) || 1;
-          const activityHealth =
-            activity.metrics.reduce((sum: number, metric: any) => {
-              const progress = calculateProgress(metric.current_value, metric.target_value);
-              const weight = parseFloat(metric.weight || '1');
-              return sum + progress * (weight / metricWeights);
-            }, 0);
-          totalBAUHealth += activityHealth;
-          bauCount++;
-        }
-      });
+      // Fetch execution for each activity
+      const activitiesWithExecution = await Promise.all(
+        bauActivities.map(async (activity: any) => {
+          let execution = 0;
+          try {
+            execution = await api.getBAUExecution(activity.id);
+          } catch (err) {
+            console.error(`Failed to fetch execution for activity ${activity.id}:`, err);
+          }
+
+          if (activity.metrics && activity.metrics.length > 0) {
+            const metricWeights = activity.metrics.reduce((sum: number, m: any) => sum + parseFloat(m.weight || '1'), 0) || 1;
+            const activityHealth =
+              activity.metrics.reduce((sum: number, metric: any) => {
+                const progress = calculateProgress(metric.current_value, metric.target_value);
+                const weight = parseFloat(metric.weight || '1');
+                return sum + progress * (weight / metricWeights);
+              }, 0);
+            totalBAUHealth += activityHealth;
+            bauCount++;
+          }
+
+          return { ...activity, execution };
+        })
+      );
 
       setBAUAnalytics({
-        activities: bauActivities as any,
+        activities: activitiesWithExecution as any,
         overallHealth: bauCount > 0 ? totalBAUHealth / bauCount : 0,
       });
     } catch (err: any) {
@@ -158,7 +170,7 @@ export const TeamDetailPage: React.FC = () => {
         </div>
 
         {/* Performance Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
@@ -186,6 +198,23 @@ export const TeamDetailPage: React.FC = () => {
                 <p className="text-3xl font-bold mt-2">{bauAnalytics.overallHealth.toFixed(1)}%</p>
               </div>
               <Activity className="w-12 h-12 text-green-600 dark:text-green-400" />
+            </div>
+          </div>
+
+          <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-text-secondary">Overall BAU Execution (OCE)</p>
+                <p className="text-3xl font-bold mt-2">
+                  {bauAnalytics.activities.length > 0
+                    ? (
+                        bauAnalytics.activities.reduce((sum, a) => sum + (a.execution || 0), 0) /
+                        bauAnalytics.activities.length
+                      ).toFixed(1)
+                    : '0.0'}%
+                </p>
+              </div>
+              <Activity className="w-12 h-12 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
         </div>
@@ -326,15 +355,34 @@ export const TeamDetailPage: React.FC = () => {
                         {activity.description && (
                           <p className="text-sm text-text-secondary mt-1">{activity.description}</p>
                         )}
-                        <div className="w-full h-2 bg-border rounded-full mt-3">
-                          <div
-                            className={`h-2 rounded-full transition-all duration-300 ${getHealthColor(activityHealth)}`}
-                            style={{ width: `${Math.min(activityHealth, 100)}%` }}
-                          />
+                        
+                        {/* BAU Health */}
+                        <div className="mt-3">
+                          <div className="flex justify-between mb-1 text-sm">
+                            <span className="text-text-secondary">BAU Health</span>
+                            <span className="font-semibold">{activityHealth.toFixed(0)}%</span>
+                          </div>
+                          <div className="w-full h-2 bg-border rounded-full">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-300 ${getHealthColor(activityHealth)}`}
+                              style={{ width: `${Math.min(activityHealth, 100)}%` }}
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <div className="ml-4 text-right flex-shrink-0">
-                        <p className="text-2xl font-bold">{activityHealth.toFixed(0)}%</p>
+
+                        {/* BAU Execution */}
+                        <div className="mt-3">
+                          <div className="flex justify-between mb-1 text-sm">
+                            <span className="text-text-secondary">BAU Execution (OCE)</span>
+                            <span className="font-semibold">{(activity.execution || 0).toFixed(0)}%</span>
+                          </div>
+                          <div className="w-full h-2 bg-border rounded-full">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-300 ${getHealthColor(activity.execution || 0)}`}
+                              style={{ width: `${Math.min(activity.execution || 0, 100)}%` }}
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
 

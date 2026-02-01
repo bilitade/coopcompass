@@ -12,6 +12,7 @@ export const BAUPage: React.FC = () => {
   const { user } = useAuth();
   const [activities, setActivities] = useState<BAUActivity[]>([]);
   const [selectedActivity, setSelectedActivity] = useState<BAUActivityDetail | null>(null);
+  const [selectedActivityExecution, setSelectedActivityExecution] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -66,7 +67,9 @@ export const BAUPage: React.FC = () => {
   const loadActivityDetail = async (activityId: number) => {
     try {
       const data = await api.getBAUActivity(activityId);
+      const execution = await api.getBAUExecution(activityId);
       setSelectedActivity(data);
+      setSelectedActivityExecution(execution);
     } catch (err: any) {
       setError('Failed to load activity details');
     }
@@ -124,6 +127,7 @@ export const BAUPage: React.FC = () => {
       loadActivities();
       if (selectedActivity?.id === activityId) {
         setSelectedActivity(null);
+        setSelectedActivityExecution(0);
       }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to delete activity');
@@ -326,7 +330,10 @@ export const BAUPage: React.FC = () => {
         {selectedActivity && (
           <Modal
             isOpen={!!selectedActivity}
-            onClose={() => setSelectedActivity(null)}
+            onClose={() => {
+              setSelectedActivity(null);
+              setSelectedActivityExecution(0);
+            }}
             title={selectedActivity.name}
             size="lg"
           >
@@ -334,6 +341,28 @@ export const BAUPage: React.FC = () => {
               {selectedActivity.description && (
                 <p className="text-text-secondary">{selectedActivity.description}</p>
               )}
+
+              {/* BAU Execution */}
+              <div className="bg-surface-hover rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-text-secondary font-medium">BAU Execution (OCE)</span>
+                  <span className="font-semibold text-text-primary">
+                    {selectedActivityExecution.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all ${
+                      selectedActivityExecution >= 90
+                        ? 'bg-green-600'
+                        : selectedActivityExecution >= 70
+                        ? 'bg-yellow-600'
+                        : 'bg-red-600'
+                    }`}
+                    style={{ width: `${selectedActivityExecution}%` }}
+                  />
+                </div>
+              </div>
 
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold text-text-primary">Metrics</h3>

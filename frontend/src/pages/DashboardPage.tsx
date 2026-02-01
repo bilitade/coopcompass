@@ -406,7 +406,7 @@ export const DashboardPage: React.FC = () => {
           </div>
 
           {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
@@ -424,6 +424,16 @@ export const DashboardPage: React.FC = () => {
                   <p className="text-3xl font-bold mt-2">{dashboardData.bau_health.toFixed(1)}%</p>
                 </div>
                 <Activity className="w-12 h-12 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+
+            <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-text-secondary">BAU Execution (OCE)</p>
+                  <p className="text-3xl font-bold mt-2">{(dashboardData.bau_execution || 0).toFixed(1)}%</p>
+                </div>
+                <Activity className="w-12 h-12 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </div>

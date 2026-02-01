@@ -15,6 +15,7 @@ interface BAUWithTeam {
   department_id?: number;
   department_name?: string;
   health: number;
+  execution: number;
   metrics_count: number;
   is_active: boolean;
 }
@@ -59,8 +60,9 @@ export const DirectorBAUListPage: React.FC = () => {
           const teamBAU = await api.getTeamBAUActivities(team.id);
 
           for (const activity of teamBAU) {
-            // Get activity health
+            // Get activity health and execution
             const bauHealth = await api.getBAUHealth(activity.id);
+            const bauExecution = await api.getBAUExecution(activity.id);
 
             allBAU.push({
               activity_id: activity.id,
@@ -70,6 +72,7 @@ export const DirectorBAUListPage: React.FC = () => {
               department_id: directorDept.id,
               department_name: directorDept.name,
               health: bauHealth.health || 0,
+              execution: bauExecution || 0,
               metrics_count: bauHealth.metrics?.length || 0,
               is_active: activity.is_active,
             });
@@ -165,6 +168,12 @@ export const DirectorBAUListPage: React.FC = () => {
                         Health
                       </div>
                     </th>
+                    <th className="text-center py-4 px-4 font-semibold text-text-primary">
+                      <div className="flex items-center justify-center gap-2">
+                        <Activity size={18} />
+                        Execution
+                      </div>
+                    </th>
                     <th className="text-center py-4 px-4 font-semibold text-text-primary">Status</th>
                   </tr>
                 </thead>
@@ -196,6 +205,19 @@ export const DirectorBAUListPage: React.FC = () => {
                           </div>
                           <span className={`font-bold text-sm w-12 text-right ${getHealthColor(activity.health)}`}>
                             {activity.health.toFixed(0)}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                            <div
+                              className={`h-2.5 rounded-full transition-all ${getHealthBgColor(activity.execution)}`}
+                              style={{ width: `${activity.execution}%` }}
+                            />
+                          </div>
+                          <span className={`font-bold text-sm w-12 text-right ${getHealthColor(activity.execution)}`}>
+                            {activity.execution.toFixed(0)}%
                           </span>
                         </div>
                       </td>

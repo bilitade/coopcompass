@@ -142,6 +142,7 @@ def get_dashboard(
         team_id=team_id,
         okr_progress=dashboard_data["okr_progress"],
         bau_health=dashboard_data["bau_health"],
+        bau_execution=dashboard_data.get("bau_execution", 0.0),
         okrs=dashboard_data["okrs"],
         bau_activities=dashboard_data["bau_activities"],
         current_week_priorities=dashboard_data["current_week_priorities"],

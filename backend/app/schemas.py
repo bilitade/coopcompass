@@ -479,6 +479,7 @@ class DashboardResponse(BaseModel):
     team_id: int
     okr_progress: float = Field(..., ge=0, le=100)
     bau_health: float = Field(..., ge=0, le=100)
+    bau_execution: float = Field(..., ge=0, le=100)
     okrs: List[OKRProgressResponse] = []
     bau_activities: List[BAUHealthResponse] = []
     current_week_priorities: List[WeeklyPriorityWithProgressResponse] = []

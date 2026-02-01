@@ -6,6 +6,8 @@ from app.database import get_db
 from app import models, schemas
 from app.utils.dependencies import get_current_user, get_current_team_lead
 from app.calculations import calculate_bau_health
+from app.calculations import calculate_bau_execution
+
 
 router = APIRouter(prefix="/api", tags=["bau"])
 
@@ -365,3 +367,30 @@ def get_metric_history(
     
     return history
 
+@router.get("/bau/{bau_id}/execution", response_model=float)
+def get_bau_execution(
+    bau_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Get BAU team effort (Operational Control Execution, OCE) for a BAU activity.
+    Returns a percentage (0-100).
+    """
+    activity = db.query(models.BAUActivity).filter(models.BAUActivity.id == bau_id).first()
+    
+    if not activity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="BAU activity not found"
+        )
+
+    # Ensure user is in the same team
+    if activity.team_id != current_user.team_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view this BAU activity"
+        )
+
+    execution = calculate_bau_execution(db, bau_id)
+    return execution

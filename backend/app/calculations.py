@@ -92,6 +92,27 @@ def calculate_bau_health(db: Session, bau_activity_id: int) -> float:
     
     return round(weighted_health / total_weight, 2)
 
+def calculate_bau_execution(db: Session, bau_id: int) -> float:
+    """
+    Calculate BAU team effort Operational Control Execution(OCE) as the percentage of completed tasks
+    across all work items linked to the BAU activity.
+    """
+    work_items = db.query(models.WorkItem).filter(
+        models.WorkItem.source_type == "BAU",
+        models.WorkItem.source_id == bau_id
+    ).all()
+
+    if not work_items:
+        return 0.0
+
+    total_tasks = 0
+    completed_tasks = 0
+    for wi in work_items:
+        total_tasks += len(wi.tasks)
+        completed_tasks += sum(1 for t in wi.tasks if t.status == "Done")
+
+    return (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0.0
+
 
 def get_current_quarter() -> str:
     """Get current quarter in Q# YYYY format."""
@@ -149,8 +170,10 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
     ).all()
     
     bau_healths = []
+    bau_executions = []
     for activity in bau_activities:
         health = calculate_bau_health(db, activity.id)
+        execution = calculate_bau_execution(db, activity.id)
         metrics_data = [
             {
                 "id": m.id,
@@ -170,12 +193,19 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
             "activity_id": activity.id,
             "activity_name": activity.name,
             "health": health,
+            "execution": execution,
             "metrics": metrics_data
         })
+        bau_executions.append(execution)
     
     avg_bau_health = (
         sum(b["health"] for b in bau_healths) / len(bau_healths)
         if bau_healths else 0.0
+    )
+    
+    avg_bau_execution = (
+        sum(bau_executions) / len(bau_executions)
+        if bau_executions else 0.0
     )
     
     # Get current week priorities
@@ -202,6 +232,7 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
         "team_id": team_id,
         "okr_progress": okr_progress,
         "bau_health": round(avg_bau_health, 2),
+        "bau_execution": round(avg_bau_execution, 2),
         "okrs": okrs_data,
         "bau_activities": bau_healths,
         "current_week_priorities": current_priorities,

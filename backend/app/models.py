@@ -3,9 +3,14 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Float, Boolean, ForeignKey, CheckConstraint, UniqueConstraint, Index, Numeric, DECIMAL
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 
 Base = declarative_base()
+
+
+def get_utc_now():
+    """Get current UTC time as timezone-aware datetime."""
+    return datetime.now(timezone.utc)
 
 
 class Department(Base):
@@ -16,8 +21,8 @@ class Department(Base):
     name = Column(String(255), nullable=False, unique=True)
     description = Column(Text)
     director_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     # Relationships
     teams = relationship("Team", back_populates="department")
@@ -36,8 +41,8 @@ class Team(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
     department_id = Column(Integer, ForeignKey("departments.id", ondelete="SET NULL"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     # Relationships
     department = relationship("Department", back_populates="teams")
@@ -55,11 +60,12 @@ class User(Base):
     team_id = Column(Integer, ForeignKey("teams.id", ondelete="SET NULL"), nullable=True)
     name = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, nullable=False, index=True)
+    position = Column(String(255), nullable=True)
     role = Column(String(50), nullable=False)
     password_hash = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     # Relationships
     team = relationship("Team", back_populates="users")
@@ -82,8 +88,8 @@ class OKR(Base):
     quarter = Column(String(10), nullable=False)  # e.g., "Q1 2026"
     objective = Column(Text, nullable=False)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     # Relationships
     team = relationship("Team", back_populates="okrs")
@@ -105,8 +111,8 @@ class KeyResult(Base):
     target_value = Column(DECIMAL(10, 2), nullable=False)
     current_value = Column(DECIMAL(10, 2), default=0)
     unit = Column(String(50))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     # Relationships
     okr = relationship("OKR", back_populates="key_results")
@@ -125,8 +131,8 @@ class BAUActivity(Base):
     name = Column(String(255), nullable=False)
     description = Column(Text)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     # Relationships
     team = relationship("Team", back_populates="bau_activities")
@@ -149,8 +155,8 @@ class BAUMetric(Base):
     unit = Column(String(50))
     weight = Column(DECIMAL(3, 2), default=1.0)
     is_higher_better = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     # Relationships
     bau_activity = relationship("BAUActivity", back_populates="metrics")
@@ -174,8 +180,8 @@ class WorkItem(Base):
     source_id = Column(Integer, nullable=False)  # References key_results.id or bau_activities.id
     owner_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     month = Column(String(7), nullable=False)  # e.g., "2026-01"
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     # Relationships
     team = relationship("Team", back_populates="work_items")
@@ -226,8 +232,8 @@ class Task(Base):
     )
     effort_hours = Column(Integer)
     blocked_reason = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)
+    updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
     completed_at = Column(DateTime, nullable=True)
 
     # Relationships
@@ -250,7 +256,7 @@ class MetricHistory(Base):
     id = Column(Integer, primary_key=True, index=True)
     bau_metric_id = Column(Integer, ForeignKey("bau_metrics.id", ondelete="CASCADE"), nullable=False)
     value = Column(DECIMAL(10, 2), nullable=False)
-    recorded_at = Column(DateTime, default=datetime.utcnow)
+    recorded_at = Column(DateTime, default=get_utc_now)
 
     # Relationships
     metric = relationship("BAUMetric", back_populates="metric_history")

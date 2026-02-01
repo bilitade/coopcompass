@@ -2,7 +2,7 @@
 
 import os
 from decimal import Decimal
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
@@ -51,679 +51,644 @@ def seed_demo_data():
         
         print("✓ Cleared existing data")
         
-        # Create departments
-        dept1 = Department(
-            name="Engineering",
-            description="Engineering and Infrastructure Department"
+        # ========================================
+        # CREATE BANKING DEPARTMENTS
+        # ========================================
+        dept_tech = Department(
+            name="Technology & Infrastructure",
+            description="Core banking systems, infrastructure, and digital platforms"
         )
-        dept2 = Department(
-            name="Product",
-            description="Product Development Department"
+        dept_risk = Department(
+            name="Risk & Compliance",
+            description="Risk management, regulatory compliance, and security"
         )
-        db.add(dept1)
-        db.add(dept2)
+        dept_ops = Department(
+            name="Operations",
+            description="Transaction processing, customer operations, and service delivery"
+        )
+        dept_digital = Department(
+            name="Digital Banking",
+            description="Mobile banking, digital channels, and customer experience"
+        )
+        
+        db.add_all([dept_tech, dept_risk, dept_ops, dept_digital])
         db.commit()
-        db.refresh(dept1)
-        db.refresh(dept2)
-        print(f"✓ Created department: {dept1.name} (ID: {dept1.id})")
-        print(f"✓ Created department: {dept2.name} (ID: {dept2.id})")
+        db.refresh(dept_tech)
+        db.refresh(dept_risk)
+        db.refresh(dept_ops)
+        db.refresh(dept_digital)
         
-        # Create teams with department assignment
-        team1 = Team(name="Engineering Team", department_id=dept1.id)
-        team2 = Team(name="Product Team", department_id=dept2.id)
-        db.add(team1)
-        db.add(team2)
+        print(f"✓ Created department: {dept_tech.name} (ID: {dept_tech.id})")
+        print(f"✓ Created department: {dept_risk.name} (ID: {dept_risk.id})")
+        print(f"✓ Created department: {dept_ops.name} (ID: {dept_ops.id})")
+        print(f"✓ Created department: {dept_digital.name} (ID: {dept_digital.id})")
+        
+        # ========================================
+        # CREATE TEAMS
+        # ========================================
+        team_core = Team(name="Core Banking Systems", department_id=dept_tech.id)
+        team_security = Team(name="Cybersecurity", department_id=dept_tech.id)
+        team_compliance = Team(name="Regulatory Compliance", department_id=dept_risk.id)
+        team_fraud = Team(name="Fraud Prevention", department_id=dept_risk.id)
+        team_payments = Team(name="Payment Processing", department_id=dept_ops.id)
+        team_mobile = Team(name="Mobile Banking", department_id=dept_digital.id)
+        
+        db.add_all([team_core, team_security, team_compliance, team_fraud, team_payments, team_mobile])
         db.commit()
-        db.refresh(team1)
-        db.refresh(team2)
-        print(f"✓ Created team: {team1.name} (ID: {team1.id})")
-        print(f"✓ Created team: {team2.name} (ID: {team2.id})")
         
-        # Create users for team 1
-        team1_users = [
-            User(
-                team_id=team1.id,
-                name="Sarah Chen",
-                email="sarah@bank.com",
-                role="lead",
-                password_hash=hash_password("password123"),
-                is_active=True
-            ),
-            User(
-                team_id=team1.id,
-                name="John Smith",
-                email="john@bank.com",
-                role="member",
-                password_hash=hash_password("password123"),
-                is_active=True
-            ),
-            User(
-                team_id=team1.id,
-                name="Mike Johnson",
-                email="mike@bank.com",
-                role="member",
-                password_hash=hash_password("password123"),
-                is_active=True
-            ),
-        ]
+        for team in [team_core, team_security, team_compliance, team_fraud, team_payments, team_mobile]:
+            db.refresh(team)
+            print(f"✓ Created team: {team.name} (ID: {team.id})")
         
-        # Create director for Engineering department
-        eng_director = User(
-            team_id=None,
-            name="Dr. James Wilson",
-            email="james@bank.com",
+        # ========================================
+        # CREATE DIRECTORS
+        # ========================================
+        director_tech = User(
+            name="Michael Chen",
+            email="michael@bank.com",
+            position="Director of Technology & Infrastructure",
             role="director",
             password_hash=hash_password("password123"),
             is_active=True
         )
-        db.add(eng_director)
-        db.commit()
-        db.refresh(eng_director)
-        dept1.director_id = eng_director.id
-        db.commit()
-        print(f"✓ Assigned director: {eng_director.name} to {dept1.name}")
-        
-        # Create users for team 2
-        team2_users = [
-            User(
-                team_id=team2.id,
-                name="Emily Davis",
-                email="emily@bank.com",
-                role="lead",
-                password_hash=hash_password("password123"),
-                is_active=True
-            ),
-            User(
-                team_id=team2.id,
-                name="Alex Rodriguez",
-                email="alex@bank.com",
-                role="member",
-                password_hash=hash_password("password123"),
-                is_active=True
-            ),
-            User(
-                team_id=team2.id,
-                name="Lisa Wong",
-                email="lisa@bank.com",
-                role="member",
-                password_hash=hash_password("password123"),
-                is_active=True
-            ),
-        ]
-        
-        # Create director for Product department
-        prod_director = User(
-            team_id=None,
-            name="Dr. Rachel Anderson",
-            email="rachel@bank.com",
+        director_risk = User(
+            name="Sarah Martinez",
+            email="sarah@bank.com",
+            position="Director of Risk & Compliance",
             role="director",
             password_hash=hash_password("password123"),
             is_active=True
         )
-        db.add(prod_director)
-        db.commit()
-        db.refresh(prod_director)
-        dept2.director_id = prod_director.id
-        db.commit()
-        print(f"✓ Assigned director: {prod_director.name} to {dept2.name}")
+        director_ops = User(
+            name="David Kumar",
+            email="david@bank.com",
+            position="Director of Operations",
+            role="director",
+            password_hash=hash_password("password123"),
+            is_active=True
+        )
+        director_digital = User(
+            name="Jennifer Lee",
+            email="jennifer@bank.com",
+            position="Director of Digital Banking",
+            role="director",
+            password_hash=hash_password("password123"),
+            is_active=True
+        )
         
-        # Create executive user
+        db.add_all([director_tech, director_risk, director_ops, director_digital])
+        db.commit()
+        
+        # Assign directors to departments
+        dept_tech.director_id = director_tech.id
+        dept_risk.director_id = director_risk.id
+        dept_ops.director_id = director_ops.id
+        dept_digital.director_id = director_digital.id
+        db.commit()
+        
+        print(f"✓ Assigned {director_tech.name} to {dept_tech.name}")
+        print(f"✓ Assigned {director_risk.name} to {dept_risk.name}")
+        print(f"✓ Assigned {director_ops.name} to {dept_ops.name}")
+        print(f"✓ Assigned {director_digital.name} to {dept_digital.name}")
+        
+        # ========================================
+        # CREATE EXECUTIVE & ADMIN
+        # ========================================
         executive = User(
-            team_id=None,
-            name="CEO - Mark Thompson",
-            email="mark@bank.com",
+            name="Robert Thompson",
+            email="robert@bank.com",
+            position="Chief Executive Officer",
             role="executive",
             password_hash=hash_password("password123"),
             is_active=True
         )
-        db.add(executive)
-        db.commit()
-        print(f"✓ Created executive: {executive.name}")
-        
-        # Create admin user
         admin = User(
-            team_id=None,
-            name="System Administrator",
+            name="Admin User",
             email="admin@bank.com",
+            position="System Administrator",
             role="admin",
             password_hash=hash_password("password123"),
             is_active=True
         )
-        db.add(admin)
+        db.add_all([executive, admin])
         db.commit()
+        print(f"✓ Created executive: {executive.name} - {executive.position}")
         print(f"✓ Created admin: {admin.name}")
         
-        all_users = team1_users + team2_users
-        for user in all_users:
-            db.add(user)
+        # ========================================
+        # CREATE TEAM MEMBERS
+        # ========================================
+        
+        # Core Banking Systems Team
+        users_core = [
+            User(team_id=team_core.id, name="James Wilson", email="james@bank.com", 
+                 position="Team Lead - Core Systems", role="lead", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_core.id, name="Emma Brown", email="emma@bank.com", 
+                 position="Senior Software Engineer", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_core.id, name="Oliver Davis", email="oliver@bank.com", 
+                 position="Software Engineer", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_core.id, name="Sophia Taylor", email="sophia@bank.com", 
+                 position="Database Administrator", role="member", password_hash=hash_password("password123"), is_active=True),
+        ]
+        
+        # Cybersecurity Team
+        users_security = [
+            User(team_id=team_security.id, name="Alexander Morgan", email="alexander@bank.com", 
+                 position="Security Team Lead", role="lead", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_security.id, name="Isabella Clark", email="isabella@bank.com", 
+                 position="Security Analyst", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_security.id, name="Ethan White", email="ethan@bank.com", 
+                 position="Security Engineer", role="member", password_hash=hash_password("password123"), is_active=True),
+        ]
+        
+        # Regulatory Compliance Team
+        users_compliance = [
+            User(team_id=team_compliance.id, name="Victoria Garcia", email="victoria@bank.com", 
+                 position="Compliance Team Lead", role="lead", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_compliance.id, name="Daniel Martinez", email="daniel@bank.com", 
+                 position="Compliance Officer", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_compliance.id, name="Grace Anderson", email="grace@bank.com", 
+                 position="Regulatory Analyst", role="member", password_hash=hash_password("password123"), is_active=True),
+        ]
+        
+        # Fraud Prevention Team
+        users_fraud = [
+            User(team_id=team_fraud.id, name="Lucas Thompson", email="lucas@bank.com", 
+                 position="Fraud Prevention Lead", role="lead", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_fraud.id, name="Mia Johnson", email="mia@bank.com", 
+                 position="Fraud Analyst", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_fraud.id, name="Noah Williams", email="noah@bank.com", 
+                 position="Risk Analyst", role="member", password_hash=hash_password("password123"), is_active=True),
+        ]
+        
+        # Payment Processing Team
+        users_payments = [
+            User(team_id=team_payments.id, name="Ava Rodriguez", email="ava@bank.com", 
+                 position="Payment Operations Lead", role="lead", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_payments.id, name="William Chen", email="william@bank.com", 
+                 position="Payment Processor", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_payments.id, name="Charlotte Kim", email="charlotte@bank.com", 
+                 position="Operations Specialist", role="member", password_hash=hash_password("password123"), is_active=True),
+        ]
+        
+        # Mobile Banking Team
+        users_mobile = [
+            User(team_id=team_mobile.id, name="Benjamin Lee", email="benjamin@bank.com", 
+                 position="Mobile Team Lead", role="lead", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_mobile.id, name="Amelia Patel", email="amelia@bank.com", 
+                 position="Mobile Developer", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_mobile.id, name="Henry Zhang", email="henry@bank.com", 
+                 position="UX Designer", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_mobile.id, name="Lily Santos", email="lily@bank.com", 
+                 position="QA Engineer", role="member", password_hash=hash_password("password123"), is_active=True),
+        ]
+        
+        all_users = users_core + users_security + users_compliance + users_fraud + users_payments + users_mobile
+        db.add_all(all_users)
         db.commit()
-        print(f"✓ Created {len(all_users)} users (3 in {team1.name}, 3 in {team2.name})")
         
         for user in all_users:
             db.refresh(user)
         
-        # Assign users to variables for easier reference
-        sarah = team1_users[0]
-        john = team1_users[1]
-        mike = team1_users[2]
-        emily = team2_users[0]
-        alex = team2_users[1]
-        lisa = team2_users[2]
+        print(f"✓ Created {len(all_users)} team members across 6 teams")
         
-        team = team1  # Use team1 for the rest of the seeding
+        # ========================================
+        # CREATE OKRs, BAU, WORK ITEMS, AND TASKS
+        # ========================================
         
-        # Create OKR
-        okr = OKR(
-            team_id=team.id,
+        # Get team leads for easy reference
+        james = users_core[0]      # Core Banking Lead
+        alexander = users_security[0]  # Security Lead
+        victoria = users_compliance[0]  # Compliance Lead
+        lucas = users_fraud[0]     # Fraud Lead
+        ava = users_payments[0]    # Payments Lead
+        benjamin = users_mobile[0] # Mobile Lead
+        
+        # Get some members
+        emma = users_core[1]
+        oliver = users_core[2]
+        sophia = users_core[3]
+        isabella = users_security[1]
+        ethan = users_security[2]
+        daniel = users_compliance[1]
+        
+        # === CORE BANKING SYSTEMS TEAM ===
+        print("\n--- Seeding Core Banking Systems Team ---")
+        
+        okr_core = OKR(
+            team_id=team_core.id,
             quarter="Q1 2026",
             objective="Modernize Core Banking Infrastructure",
             is_active=True
         )
-        db.add(okr)
+        db.add(okr_core)
         db.commit()
-        db.refresh(okr)
-        print(f"✓ Created OKR: {okr.objective}")
+        db.refresh(okr_core)
+        print(f"✓ Created OKR: {okr_core.objective}")
         
-        # Create Key Results
-        key_results = [
+        key_results_core = [
             KeyResult(
-                okr_id=okr.id,
-                description="Migrate 5 services to cloud",
+                okr_id=okr_core.id,
+                description="Migrate 5 critical services to cloud",
                 target_value=Decimal("5"),
                 current_value=Decimal("2"),
                 unit="services"
             ),
             KeyResult(
-                okr_id=okr.id,
+                okr_id=okr_core.id,
                 description="Reduce system downtime by 50%",
                 target_value=Decimal("2"),
                 current_value=Decimal("0.8"),
                 unit="hours/month"
             ),
             KeyResult(
-                okr_id=okr.id,
+                okr_id=okr_core.id,
                 description="Deploy new API gateway",
+                target_value=Decimal("100"),
+                current_value=Decimal("65"),
+                unit="%"
+            ),
+        ]
+        db.add_all(key_results_core)
+        db.commit()
+        print(f"✓ Created {len(key_results_core)} key results")
+        
+        for kr in key_results_core:
+            db.refresh(kr)
+        
+        bau_core = [
+            BAUActivity(
+                team_id=team_core.id,
+                name="System Maintenance",
+                description="Regular system updates and maintenance",
+                is_active=True
+            ),
+            BAUActivity(
+                team_id=team_core.id,
+                name="Database Management",
+                description="Database optimization and monitoring",
+                is_active=True
+            ),
+        ]
+        db.add_all(bau_core)
+        db.commit()
+        print(f"✓ Created {len(bau_core)} BAU activities")
+        
+        for bau in bau_core:
+            db.refresh(bau)
+        
+        metrics_core = [
+            BAUMetric(
+                bau_activity_id=bau_core[0].id,
+                name="System Uptime",
+                target_value=Decimal("99.9"),
+                current_value=Decimal("99.7"),
+                unit="%",
+                weight=Decimal("0.6"),
+                is_higher_better=True
+            ),
+            BAUMetric(
+                bau_activity_id=bau_core[0].id,
+                name="Incident Response Time",
+                target_value=Decimal("30"),
+                current_value=Decimal("35"),
+                unit="minutes",
+                weight=Decimal("0.4"),
+                is_higher_better=False
+            ),
+            BAUMetric(
+                bau_activity_id=bau_core[1].id,
+                name="Database Performance",
+                target_value=Decimal("95"),
+                current_value=Decimal("92"),
+                unit="%",
+                weight=Decimal("0.5"),
+                is_higher_better=True
+            ),
+        ]
+        db.add_all(metrics_core)
+        db.commit()
+        print(f"✓ Created {len(metrics_core)} BAU metrics")
+        
+        # === CYBERSECURITY TEAM ===
+        print("\n--- Seeding Cybersecurity Team ---")
+        
+        okr_security = OKR(
+            team_id=team_security.id,
+            quarter="Q1 2026",
+            objective="Enhance Security Posture and Threat Detection",
+            is_active=True
+        )
+        db.add(okr_security)
+        db.commit()
+        db.refresh(okr_security)
+        print(f"✓ Created OKR: {okr_security.objective}")
+        
+        key_results_security = [
+            KeyResult(
+                okr_id=okr_security.id,
+                description="Implement zero-trust architecture",
                 target_value=Decimal("100"),
                 current_value=Decimal("45"),
                 unit="%"
             ),
+            KeyResult(
+                okr_id=okr_security.id,
+                description="Reduce security incidents by 40%",
+                target_value=Decimal("10"),
+                current_value=Decimal("12"),
+                unit="incidents/month"
+            ),
         ]
-        
-        for kr in key_results:
-            db.add(kr)
+        db.add_all(key_results_security)
         db.commit()
-        print(f"✓ Created {len(key_results)} key results")
+        print(f"✓ Created {len(key_results_security)} key results")
         
-        for kr in key_results:
+        for kr in key_results_security:
             db.refresh(kr)
         
-        # Create BAU Activities
-        bau_activities = [
+        bau_security = [
             BAUActivity(
-                team_id=team.id,
-                name="Incident Management",
-                description="Track and manage incidents",
-                is_active=True
-            ),
-            BAUActivity(
-                team_id=team.id,
-                name="System Reliability",
-                description="Monitor system uptime and performance",
+                team_id=team_security.id,
+                name="Threat Monitoring",
+                description="24/7 security threat monitoring and response",
                 is_active=True
             ),
         ]
-        
-        for bau in bau_activities:
-            db.add(bau)
+        db.add_all(bau_security)
         db.commit()
-        print(f"✓ Created {len(bau_activities)} BAU activities")
+        print(f"✓ Created {len(bau_security)} BAU activities")
         
-        for bau in bau_activities:
+        for bau in bau_security:
             db.refresh(bau)
         
-        # Create BAU Metrics
-        incident_bau = bau_activities[0]
-        reliability_bau = bau_activities[1]
-        
-        metrics = [
+        metrics_security = [
             BAUMetric(
-                bau_activity_id=incident_bau.id,
-                name="SLA Adherence",
+                bau_activity_id=bau_security[0].id,
+                name="Threat Detection Rate",
                 target_value=Decimal("95"),
                 current_value=Decimal("93"),
                 unit="%",
-                weight=Decimal("0.5"),
+                weight=Decimal("0.7"),
                 is_higher_better=True
             ),
+        ]
+        db.add_all(metrics_security)
+        db.commit()
+        print(f"✓ Created {len(metrics_security)} BAU metrics")
+        
+        # === MOBILE BANKING TEAM ===
+        print("\n--- Seeding Mobile Banking Team ---")
+        
+        okr_mobile = OKR(
+            team_id=team_mobile.id,
+            quarter="Q1 2026",
+            objective="Launch Next-Gen Mobile Banking App",
+            is_active=True
+        )
+        db.add(okr_mobile)
+        db.commit()
+        db.refresh(okr_mobile)
+        print(f"✓ Created OKR: {okr_mobile.objective}")
+        
+        key_results_mobile = [
+            KeyResult(
+                okr_id=okr_mobile.id,
+                description="Achieve 4.5+ star app rating",
+                target_value=Decimal("4.5"),
+                current_value=Decimal("4.2"),
+                unit="stars"
+            ),
+            KeyResult(
+                okr_id=okr_mobile.id,
+                description="Reach 50K active monthly users",
+                target_value=Decimal("50000"),
+                current_value=Decimal("35000"),
+                unit="users"
+            ),
+        ]
+        db.add_all(key_results_mobile)
+        db.commit()
+        print(f"✓ Created {len(key_results_mobile)} key results")
+        
+        for kr in key_results_mobile:
+            db.refresh(kr)
+        
+        bau_mobile = [
+            BAUActivity(
+                team_id=team_mobile.id,
+                name="App Performance Monitoring",
+                description="Monitor and optimize mobile app performance",
+                is_active=True
+            ),
+        ]
+        db.add_all(bau_mobile)
+        db.commit()
+        print(f"✓ Created {len(bau_mobile)} BAU activities")
+        
+        for bau in bau_mobile:
+            db.refresh(bau)
+        
+        metrics_mobile = [
             BAUMetric(
-                bau_activity_id=incident_bau.id,
-                name="MTTR",
-                target_value=Decimal("30"),
-                current_value=Decimal("35"),
-                unit="minutes",
-                weight=Decimal("0.5"),
+                bau_activity_id=bau_mobile[0].id,
+                name="App Crash Rate",
+                target_value=Decimal("0.5"),
+                current_value=Decimal("0.8"),
+                unit="%",
+                weight=Decimal("0.6"),
                 is_higher_better=False
             ),
             BAUMetric(
-                bau_activity_id=reliability_bau.id,
-                name="Uptime",
-                target_value=Decimal("99.9"),
-                current_value=Decimal("99.8"),
-                unit="%",
-                weight=Decimal("0.6"),
-                is_higher_better=True
-            ),
-            BAUMetric(
-                bau_activity_id=reliability_bau.id,
-                name="Error Rate",
-                target_value=Decimal("0.5"),
-                current_value=Decimal("0.3"),
-                unit="%",
+                bau_activity_id=bau_mobile[0].id,
+                name="App Load Time",
+                target_value=Decimal("2"),
+                current_value=Decimal("2.5"),
+                unit="seconds",
                 weight=Decimal("0.4"),
                 is_higher_better=False
             ),
         ]
-        
-        for metric in metrics:
-            db.add(metric)
+        db.add_all(metrics_mobile)
         db.commit()
-        print(f"✓ Created {len(metrics)} BAU metrics")
+        print(f"✓ Created {len(metrics_mobile)} BAU metrics")
         
-        for metric in metrics:
-            db.refresh(metric)
+        # === WORK ITEMS ===
+        print("\n--- Creating Work Items ---")
         
-        # Create Work Items (monthly)
-        work_items = [
+        current_week = datetime.now(timezone.utc).strftime("%Y-W%U")
+        
+        work_items_core = [
             WorkItem(
-                team_id=team.id,
-                name="Migrate authentication service",
-                description="Move auth service to cloud infrastructure",
+                team_id=team_core.id,
+                name="Migrate authentication service to cloud",
+                description="Move auth service to AWS infrastructure",
                 source_type="OKR",
-                source_id=key_results[0].id,
-                owner_id=sarah.id,
+                source_id=key_results_core[0].id,
+                owner_id=james.id,
                 month="2026-01"
             ),
             WorkItem(
-                team_id=team.id,
-                name="Implement auto-failover",
-                description="Set up automatic failover for critical services",
+                team_id=team_core.id,
+                name="Implement auto-failover system",
+                description="Setup automatic failover for critical services",
                 source_type="OKR",
-                source_id=key_results[1].id,
-                owner_id=sarah.id,
+                source_id=key_results_core[1].id,
+                owner_id=emma.id,
                 month="2026-01"
             ),
             WorkItem(
-                team_id=team.id,
-                name="Deploy security patches",
-                description="Apply monthly security updates",
+                team_id=team_core.id,
+                name="Monthly database optimization",
+                description="Optimize database queries and indexes",
                 source_type="BAU",
-                source_id=incident_bau.id,
-                owner_id=john.id,
-                month="2026-01"
-            ),
-            WorkItem(
-                team_id=team.id,
-                name="System monitoring improvements",
-                description="Enhance monitoring and alerting",
-                source_type="BAU",
-                source_id=reliability_bau.id,
-                owner_id=mike.id,
+                source_id=bau_core[1].id,
+                owner_id=sophia.id,
                 month="2026-01"
             ),
         ]
         
-        for wi in work_items:
-            db.add(wi)
-        db.commit()
-        print(f"✓ Created {len(work_items)} work items")
+        work_items_security = [
+            WorkItem(
+                team_id=team_security.id,
+                name="Deploy zero-trust network controls",
+                description="Implement network segmentation and access controls",
+                source_type="OKR",
+                source_id=key_results_security[0].id,
+                owner_id=alexander.id,
+                month="2026-01"
+            ),
+        ]
         
-        for wi in work_items:
+        work_items_mobile = [
+            WorkItem(
+                team_id=team_mobile.id,
+                name="Optimize app performance",
+                description="Reduce app load time and crash rate",
+                source_type="OKR",
+                source_id=key_results_mobile[0].id,
+                owner_id=benjamin.id,
+                month="2026-01"
+            ),
+        ]
+        
+        all_work_items = work_items_core + work_items_security + work_items_mobile
+        db.add_all(all_work_items)
+        db.commit()
+        print(f"✓ Created {len(all_work_items)} work items")
+        
+        for wi in all_work_items:
             db.refresh(wi)
         
-        # Create Weekly Priorities
-        current_week = datetime.utcnow().strftime("%Y-W%U")
+        # === WEEKLY PRIORITIES ===
         priorities = [
             WeeklyPriority(
-                work_item_id=work_items[0].id,
+                work_item_id=work_items_core[0].id,
                 week=current_week,
                 priority=1
             ),
             WeeklyPriority(
-                work_item_id=work_items[2].id,
+                work_item_id=work_items_security[0].id,
                 week=current_week,
                 priority=1
             ),
         ]
-        
-        for p in priorities:
-            db.add(p)
+        db.add_all(priorities)
         db.commit()
         print(f"✓ Created {len(priorities)} weekly priorities")
         
-        # Create Tasks
-        tasks = [
-            # Migration work item tasks (2 done, 3 not done)
+        # === TASKS ===
+        print("\n--- Creating Tasks ---")
+        
+        tasks_core = [
             Task(
-                work_item_id=work_items[0].id,
-                description="Setup AWS account and infrastructure",
-                assignee_id=john.id,
+                work_item_id=work_items_core[0].id,
+                description="Setup AWS infrastructure",
+                assignee_id=oliver.id,
                 status="Done",
                 effort_hours=8,
-                completed_at=datetime.utcnow() - timedelta(days=3)
+                completed_at=datetime.now(timezone.utc) - timedelta(days=3)
             ),
             Task(
-                work_item_id=work_items[0].id,
-                description="Configure database connectivity",
-                assignee_id=sarah.id,
-                status="Done",
-                effort_hours=6,
-                completed_at=datetime.utcnow() - timedelta(days=2)
-            ),
-            Task(
-                work_item_id=work_items[0].id,
-                description="Migrate user data",
-                assignee_id=mike.id,
+                work_item_id=work_items_core[0].id,
+                description="Configure authentication service",
+                assignee_id=emma.id,
                 status="In Progress",
                 effort_hours=12
             ),
             Task(
-                work_item_id=work_items[0].id,
-                description="Update API endpoints",
-                assignee_id=emily.id,
-                status="Not Started",
-                effort_hours=8
-            ),
-            Task(
-                work_item_id=work_items[0].id,
+                work_item_id=work_items_core[0].id,
                 description="Run integration tests",
-                assignee_id=john.id,
+                assignee_id=sophia.id,
                 status="Not Started",
                 effort_hours=6
             ),
-            # Security patches (1 done, 1 in progress)
             Task(
-                work_item_id=work_items[2].id,
-                description="Review CVE bulletins",
-                assignee_id=john.id,
-                status="Done",
-                effort_hours=4,
-                completed_at=datetime.utcnow() - timedelta(days=1)
-            ),
-            Task(
-                work_item_id=work_items[2].id,
-                description="Apply patches to staging",
-                assignee_id=mike.id,
-                status="In Progress",
-                effort_hours=6
-            ),
-            Task(
-                work_item_id=work_items[2].id,
-                description="Test patches and deploy to production",
-                assignee_id=sarah.id,
-                status="Not Started",
-                effort_hours=4
-            ),
-        ]
-        
-        for task in tasks:
-            db.add(task)
-        db.commit()
-        print(f"✓ Created {len(tasks)} tasks")
-        
-        # ===== Seed data for team 2 (Product Team) =====
-        print("\n--- Seeding Product Team ---")
-        
-        # Create OKR for team 2
-        okr2 = OKR(
-            team_id=team2.id,
-            quarter="Q1 2026",
-            objective="Launch Mobile App and Improve User Experience",
-            is_active=True
-        )
-        db.add(okr2)
-        db.commit()
-        db.refresh(okr2)
-        print(f"✓ Created OKR: {okr2.objective}")
-        
-        # Create Key Results for team 2
-        key_results2 = [
-            KeyResult(
-                okr_id=okr2.id,
-                description="Launch iOS and Android apps",
-                target_value=Decimal("2"),
-                current_value=Decimal("1"),
-                unit="apps"
-            ),
-            KeyResult(
-                okr_id=okr2.id,
-                description="Achieve 4.5+ star rating on app stores",
-                target_value=Decimal("4.5"),
-                current_value=Decimal("3.8"),
-                unit="stars"
-            ),
-            KeyResult(
-                okr_id=okr2.id,
-                description="Reach 10K monthly active users",
-                target_value=Decimal("10000"),
-                current_value=Decimal("6500"),
-                unit="users"
-            ),
-        ]
-        
-        for kr in key_results2:
-            db.add(kr)
-        db.commit()
-        print(f"✓ Created {len(key_results2)} key results")
-        
-        for kr in key_results2:
-            db.refresh(kr)
-        
-        # Create BAU Activities for team 2
-        bau_activities2 = [
-            BAUActivity(
-                team_id=team2.id,
-                name="Customer Support",
-                description="Handle customer issues and feedback",
-                is_active=True
-            ),
-            BAUActivity(
-                team_id=team2.id,
-                name="Analytics & Reporting",
-                description="Track metrics and generate reports",
-                is_active=True
-            ),
-        ]
-        
-        for bau in bau_activities2:
-            db.add(bau)
-        db.commit()
-        print(f"✓ Created {len(bau_activities2)} BAU activities")
-        
-        for bau in bau_activities2:
-            db.refresh(bau)
-        
-        # Create BAU Metrics for team 2
-        support_bau = bau_activities2[0]
-        analytics_bau = bau_activities2[1]
-        
-        metrics2 = [
-            BAUMetric(
-                bau_activity_id=support_bau.id,
-                name="Response Time",
-                target_value=Decimal("2"),
-                current_value=Decimal("2.5"),
-                unit="hours",
-                weight=Decimal("0.5"),
-                is_higher_better=False
-            ),
-            BAUMetric(
-                bau_activity_id=support_bau.id,
-                name="Customer Satisfaction",
-                target_value=Decimal("90"),
-                current_value=Decimal("85"),
-                unit="%",
-                weight=Decimal("0.5"),
-                is_higher_better=True
-            ),
-            BAUMetric(
-                bau_activity_id=analytics_bau.id,
-                name="Report Accuracy",
-                target_value=Decimal("99"),
-                current_value=Decimal("98.5"),
-                unit="%",
-                weight=Decimal("0.6"),
-                is_higher_better=True
-            ),
-            BAUMetric(
-                bau_activity_id=analytics_bau.id,
-                name="Report Generation Time",
-                target_value=Decimal("5"),
-                current_value=Decimal("6"),
-                unit="minutes",
-                weight=Decimal("0.4"),
-                is_higher_better=False
-            ),
-        ]
-        
-        for metric in metrics2:
-            db.add(metric)
-        db.commit()
-        print(f"✓ Created {len(metrics2)} BAU metrics")
-        
-        for metric in metrics2:
-            db.refresh(metric)
-        
-        # Create Work Items for team 2
-        work_items2 = [
-            WorkItem(
-                team_id=team2.id,
-                name="iOS app development",
-                description="Develop and launch iOS application",
-                source_type="OKR",
-                source_id=key_results2[0].id,
-                owner_id=emily.id,
-                month="2026-01"
-            ),
-            WorkItem(
-                team_id=team2.id,
-                name="Android app development",
-                description="Develop and launch Android application",
-                source_type="OKR",
-                source_id=key_results2[0].id,
-                owner_id=alex.id,
-                month="2026-01"
-            ),
-            WorkItem(
-                team_id=team2.id,
-                name="Handle customer tickets",
-                description="Process and resolve customer support tickets",
-                source_type="BAU",
-                source_id=support_bau.id,
-                owner_id=lisa.id,
-                month="2026-01"
-            ),
-        ]
-        
-        for wi in work_items2:
-            db.add(wi)
-        db.commit()
-        print(f"✓ Created {len(work_items2)} work items")
-        
-        for wi in work_items2:
-            db.refresh(wi)
-        
-        # Create Weekly Priorities for team 2
-        priorities2 = [
-            WeeklyPriority(
-                work_item_id=work_items2[0].id,
-                week=current_week,
-                priority=1
-            ),
-            WeeklyPriority(
-                work_item_id=work_items2[1].id,
-                week=current_week,
-                priority=2
-            ),
-        ]
-        
-        for p in priorities2:
-            db.add(p)
-        db.commit()
-        print(f"✓ Created {len(priorities2)} weekly priorities")
-        
-        # Create Tasks for team 2
-        tasks2 = [
-            Task(
-                work_item_id=work_items2[0].id,
-                description="Design iOS UI/UX",
-                assignee_id=emily.id,
-                status="Done",
-                effort_hours=20,
-                completed_at=datetime.utcnow() - timedelta(days=5)
-            ),
-            Task(
-                work_item_id=work_items2[0].id,
-                description="Implement core iOS features",
-                assignee_id=emily.id,
-                status="In Progress",
-                effort_hours=30
-            ),
-            Task(
-                work_item_id=work_items2[0].id,
-                description="iOS testing and QA",
-                assignee_id=alex.id,
-                status="Not Started",
-                effort_hours=15
-            ),
-            Task(
-                work_item_id=work_items2[1].id,
-                description="Setup Android project",
-                assignee_id=alex.id,
+                work_item_id=work_items_core[1].id,
+                description="Design failover architecture",
+                assignee_id=james.id,
                 status="Done",
                 effort_hours=10,
-                completed_at=datetime.utcnow() - timedelta(days=4)
+                completed_at=datetime.now(timezone.utc) - timedelta(days=2)
             ),
             Task(
-                work_item_id=work_items2[1].id,
-                description="Implement Android features",
-                assignee_id=alex.id,
+                work_item_id=work_items_core[1].id,
+                description="Implement failover logic",
+                assignee_id=emma.id,
                 status="In Progress",
-                effort_hours=25
-            ),
-            Task(
-                work_item_id=work_items2[2].id,
-                description="Review customer tickets",
-                assignee_id=lisa.id,
-                status="In Progress",
-                effort_hours=8
+                effort_hours=16
             ),
         ]
         
-        for task in tasks2:
-            db.add(task)
+        tasks_security = [
+            Task(
+                work_item_id=work_items_security[0].id,
+                description="Audit current network architecture",
+                assignee_id=isabella.id,
+                status="Done",
+                effort_hours=12,
+                completed_at=datetime.now(timezone.utc) - timedelta(days=4)
+            ),
+            Task(
+                work_item_id=work_items_security[0].id,
+                description="Implement network segmentation",
+                assignee_id=ethan.id,
+                status="In Progress",
+                effort_hours=20
+            ),
+        ]
+        
+        all_tasks = tasks_core + tasks_security
+        db.add_all(all_tasks)
         db.commit()
-        print(f"✓ Created {len(tasks2)} tasks for Product Team")
+        print(f"✓ Created {len(all_tasks)} tasks")
         
         db.commit()
-        print(f"\nYou can login with:")
-        print(f"\n  Administrator:")
-        print(f"    Email: admin@bank.com")
-        print(f"    Password: password123")
-        print(f"\n  Director - Engineering:")
-        print(f"    Email: james@bank.com")
-        print(f"    Password: password123")
-        print(f"\n  Director - Product:")
-        print(f"    Email: rachel@bank.com")
-        print(f"    Password: password123")
-        print(f"\n  Executive/CEO:")
-        print(f"    Email: mark@bank.com")
-        print(f"    Password: password123")
-        print(f"\n  Team Lead - Engineering:")
-        print(f"    Email: sarah@bank.com")
-        print(f"    Password: password123")
-        print(f"\n  Team Lead - Product:")
-        print(f"    Email: emily@bank.com")
-        print(f"    Password: password123")
+        print(f"\n✅ Database seeded successfully!")
+        print(f"\n{'='*60}")
+        print(f"LOGIN CREDENTIALS (All passwords: password123)")
+        print(f"{'='*60}")
+        print(f"\n👤 EXECUTIVE:")
+        print(f"   Email: robert@bank.com")
+        print(f"   Role: Chief Executive Officer")
+        
+        print(f"\n👤 DIRECTORS:")
+        print(f"   Email: michael@bank.com  (Director of Technology & Infrastructure)")
+        print(f"   Email: sarah@bank.com    (Director of Risk & Compliance)")
+        print(f"   Email: david@bank.com    (Director of Operations)")
+        print(f"   Email: jennifer@bank.com (Director of Digital Banking)")
+        
+        print(f"\n👤 TEAM LEADS:")
+        print(f"   Email: james@bank.com     (Core Banking Systems)")
+        print(f"   Email: alexander@bank.com (Cybersecurity)")
+        print(f"   Email: victoria@bank.com  (Regulatory Compliance)")
+        print(f"   Email: lucas@bank.com     (Fraud Prevention)")
+        print(f"   Email: ava@bank.com       (Payment Processing)")
+        print(f"   Email: benjamin@bank.com  (Mobile Banking)")
+        
+        print(f"\n👤 ADMIN:")
+        print(f"   Email: admin@bank.com")
+        print(f"{'='*60}\n")
         
     except Exception as e:
         db.rollback()

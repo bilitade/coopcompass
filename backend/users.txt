@@ -1,0 +1,175 @@
+================================================================================
+COMPASS SYSTEM - USER DIRECTORY
+================================================================================
+
+EXECUTIVES (C-Suite & VPs)
+--------------------------------------------------------------------------------
+Name:     Robert Thompson
+Email:    robert@bank.com
+Position: Chief Executive Officer
+Status:   Active
+
+DIRECTORS
+--------------------------------------------------------------------------------
+Name:     Michael Chen
+Email:    michael@bank.com
+Position: Director of Technology & Infrastructure
+Status:   Active
+
+Name:     Sarah Martinez
+Email:    sarah@bank.com
+Position: Director of Risk & Compliance
+Status:   Active
+
+Name:     David Kumar
+Email:    david@bank.com
+Position: Director of Operations
+Status:   Active
+
+Name:     Jennifer Lee
+Email:    jennifer@bank.com
+Position: Director of Digital Banking
+Status:   Active
+
+TEAM LEADS
+--------------------------------------------------------------------------------
+Name:     James Wilson
+Email:    james@bank.com
+Position: Team Lead - Core Systems
+Team:     Core Banking Systems
+Status:   Active
+
+Name:     Alexander Morgan
+Email:    alexander@bank.com
+Position: Security Team Lead
+Team:     Cybersecurity
+Status:   Active
+
+Name:     Victoria Garcia
+Email:    victoria@bank.com
+Position: Compliance Team Lead
+Team:     Regulatory Compliance
+Status:   Active
+
+Name:     Lucas Thompson
+Email:    lucas@bank.com
+Position: Fraud Prevention Lead
+Team:     Fraud Prevention
+Status:   Active
+
+Name:     Ava Rodriguez
+Email:    ava@bank.com
+Position: Payment Operations Lead
+Team:     Payment Processing
+Status:   Active
+
+Name:     Benjamin Lee
+Email:    benjamin@bank.com
+Position: Mobile Team Lead
+Team:     Mobile Banking
+Status:   Active
+
+TEAM MEMBERS
+--------------------------------------------------------------------------------
+Name:     Emma Brown
+Email:    emma@bank.com
+Position: Senior Software Engineer
+Team:     Core Banking Systems
+Status:   Active
+
+Name:     Oliver Davis
+Email:    oliver@bank.com
+Position: Software Engineer
+Team:     Core Banking Systems
+Status:   Active
+
+Name:     Sophia Taylor
+Email:    sophia@bank.com
+Position: Database Administrator
+Team:     Core Banking Systems
+Status:   Active
+
+Name:     Isabella Clark
+Email:    isabella@bank.com
+Position: Security Analyst
+Team:     Cybersecurity
+Status:   Active
+
+Name:     Ethan White
+Email:    ethan@bank.com
+Position: Security Engineer
+Team:     Cybersecurity
+Status:   Active
+
+Name:     Daniel Martinez
+Email:    daniel@bank.com
+Position: Compliance Officer
+Team:     Regulatory Compliance
+Status:   Active
+
+Name:     Grace Anderson
+Email:    grace@bank.com
+Position: Regulatory Analyst
+Team:     Regulatory Compliance
+Status:   Active
+
+Name:     Mia Johnson
+Email:    mia@bank.com
+Position: Fraud Analyst
+Team:     Fraud Prevention
+Status:   Active
+
+Name:     Noah Williams
+Email:    noah@bank.com
+Position: Risk Analyst
+Team:     Fraud Prevention
+Status:   Active
+
+Name:     William Chen
+Email:    william@bank.com
+Position: Payment Processor
+Team:     Payment Processing
+Status:   Active
+
+Name:     Charlotte Kim
+Email:    charlotte@bank.com
+Position: Operations Specialist
+Team:     Payment Processing
+Status:   Active
+
+Name:     Amelia Patel
+Email:    amelia@bank.com
+Position: Mobile Developer
+Team:     Mobile Banking
+Status:   Active
+
+Name:     Henry Zhang
+Email:    henry@bank.com
+Position: UX Designer
+Team:     Mobile Banking
+Status:   Active
+
+Name:     Lily Santos
+Email:    lily@bank.com
+Position: QA Engineer
+Team:     Mobile Banking
+Status:   Active
+
+ADMINISTRATORS
+--------------------------------------------------------------------------------
+Name:     Admin User
+Email:    admin@bank.com
+Position: System Administrator
+Status:   Active
+
+================================================================================
+SUMMARY
+================================================================================
+Total Users:      26
+Executives:       1
+Directors:        4
+Team Leads:       6
+Team Members:     14
+Administrators:   1
+================================================================================
+Generated: 2026-01-22 14:55:35

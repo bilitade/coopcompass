@@ -1,5 +1,6 @@
 """Pydantic schemas for request/response validation."""
 
+from __future__ import annotations
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from datetime import datetime
@@ -12,6 +13,7 @@ class UserBase(BaseModel):
     """Base user schema."""
     name: str
     email: EmailStr
+    position: Optional[str] = None
     role: str = Field(..., pattern="^(member|lead|director|executive|admin)$")
 
 
@@ -24,6 +26,7 @@ class UserUpdate(BaseModel):
     """User update schema."""
     name: Optional[str] = Field(None, min_length=1)
     email: Optional[EmailStr] = None
+    position: Optional[str] = None
     role: Optional[str] = Field(None, pattern="^(member|lead|director|executive)$")
     is_active: Optional[bool] = None
 
@@ -33,6 +36,7 @@ class UserResponse(UserBase):
     id: int
     team_id: Optional[int] = None
     team_name: Optional[str] = None
+    position: Optional[str] = None
     is_active: bool
     created_at: datetime
     updated_at: datetime
@@ -99,6 +103,8 @@ class TeamResponse(BaseModel):
     id: int
     name: str
     department_id: Optional[int] = None
+    department: Optional[DepartmentResponse] = None
+    users: Optional[List[UserResponse]] = None
     created_at: datetime
     updated_at: datetime
 
@@ -528,3 +534,8 @@ class OrganizationDashboardResponse(BaseModel):
     departments: List[DepartmentSummaryResponse] = []
     updated_at: datetime
 
+
+# Rebuild models to resolve forward references
+TeamResponse.model_rebuild()
+DepartmentResponse.model_rebuild()
+TeamDetailResponse.model_rebuild()

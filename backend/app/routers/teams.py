@@ -14,8 +14,11 @@ def list_teams(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    """List all teams."""
-    teams = db.query(models.Team).all()
+    """List all teams with department and member information."""
+    teams = db.query(models.Team).options(
+        joinedload(models.Team.department),
+        joinedload(models.Team.users)
+    ).all()
     return teams
 
 
@@ -26,7 +29,10 @@ def create_team(
     current_user: models.User = Depends(get_current_team_lead)
 ):
     """Create a new team."""
-    new_team = models.Team(name=team_data.name)
+    new_team = models.Team(
+        name=team_data.name,
+        department_id=team_data.department_id
+    )
     db.add(new_team)
     db.commit()
     db.refresh(new_team)
@@ -39,8 +45,11 @@ def get_team(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    """Get team details with users."""
-    team = db.query(models.Team).filter(models.Team.id == team_id).first()
+    """Get team details with users and department."""
+    team = db.query(models.Team).filter(models.Team.id == team_id).options(
+        joinedload(models.Team.department),
+        joinedload(models.Team.users)
+    ).first()
     
     if not team:
         raise HTTPException(
@@ -165,6 +174,9 @@ def update_team(
     
     if team_data.name:
         team.name = team_data.name
+    
+    if team_data.department_id is not None:
+        team.department_id = team_data.department_id
     
     db.commit()
     db.refresh(team)

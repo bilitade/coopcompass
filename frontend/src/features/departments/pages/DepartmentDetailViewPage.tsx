@@ -102,7 +102,7 @@ export const DepartmentDetailViewPage: React.FC = () => {
         </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
@@ -140,6 +140,16 @@ export const DepartmentDetailViewPage: React.FC = () => {
                 <p className="text-3xl font-bold mt-2">{dashboardData.average_bau_health.toFixed(1)}%</p>
               </div>
               <Activity className="w-12 h-12 text-green-600 dark:text-green-400" />
+            </div>
+          </div>
+
+          <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-text-secondary">Avg BAU Execution (OCE)</p>
+                <p className="text-3xl font-bold mt-2">{(dashboardData.average_bau_execution || 0).toFixed(1)}%</p>
+              </div>
+              <Activity className="w-12 h-12 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
         </div>
@@ -192,7 +202,7 @@ export const DepartmentDetailViewPage: React.FC = () => {
                   </div>
 
                   {/* BAU Health */}
-                  <div>
+                  <div className="mb-3">
                     <div className="flex justify-between mb-1.5 text-sm">
                       <span className="text-text-secondary flex items-center gap-1">
                         <Activity size={14} />
@@ -221,6 +231,27 @@ export const DepartmentDetailViewPage: React.FC = () => {
                       />
                     </div>
                   </div>
+
+                  {/* BAU Execution */}
+                  {team.bau_execution !== undefined && (
+                    <div>
+                      <div className="flex justify-between mb-1.5 text-sm">
+                        <span className="text-text-secondary flex items-center gap-1">
+                          <Activity size={14} />
+                          BAU Execution (OCE)
+                        </span>
+                        <span className="font-bold text-blue-600">
+                          {team.bau_execution.toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                        <div
+                          className="bg-blue-600 h-2.5 rounded-full transition-all"
+                          style={{ width: `${team.bau_execution}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

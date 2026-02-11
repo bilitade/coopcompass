@@ -59,28 +59,111 @@ Compass is a comprehensive team performance and execution system designed for ba
 
 ### Project Structure
 
+The project follows a **feature-sliced architecture** for better scalability and maintainability.
+
 ```
 coopcompasslatest/
 ├── backend/
 │   ├── app/
-│   │   ├── routers/         # API endpoints
-│   │   ├── models.py        # Database models
-│   │   ├── schemas.py       # Pydantic schemas
-│   │   ├── auth.py          # Authentication
-│   │   ├── calculations.py  # Progress/health calculations
-│   │   └── database.py      # Database connection
-│   └── alembic/             # Database migrations
+│   │   ├── modules/         # Feature modules (domain-driven)
+│   │   │   ├── auth/        # Authentication module
+│   │   │   ├── bau/         # BAU activities & metrics
+│   │   │   ├── departments/ # Department management
+│   │   │   ├── okrs/        # OKR management
+│   │   │   ├── teams/       # Team management
+│   │   │   ├── users/       # User management
+│   │   │   ├── weekly_priority/ # Weekly priorities
+│   │   │   └── work_items/  # Work items & tasks
+│   │   ├── core/            # Core functionality
+│   │   │   ├── config.py    # Configuration
+│   │   │   ├── database.py  # Database connection
+│   │   │   └── security.py  # Security utilities
+│   │   ├── api/             # API versioning
+│   │   ├── models/          # Base models
+│   │   ├── services/        # Shared services
+│   │   │   └── calculations.py # Progress/health calculations
+│   │   ├── utils/           # Utilities
+│   │   └── main.py          # FastAPI application
+│   ├── alembic/             # Database migrations
+│   ├── tests/               # Test suite
+│   └── seed_data.py         # Database seeding script
+│
 ├── frontend/
 │   ├── src/
-│   │   ├── pages/           # Page components
-│   │   ├── components/      # Reusable components
-│   │   ├── services/        # API services
-│   │   ├── context/         # React context
-│   │   └── types.ts         # TypeScript types
+│   │   ├── app/             # Application-level code
+│   │   │   ├── context/     # React contexts (Auth, Theme)
+│   │   │   ├── hooks/       # Custom React hooks
+│   │   │   └── routes.tsx   # Centralized routing
+│   │   ├── features/        # Feature modules
+│   │   │   ├── auth/        # Authentication feature
+│   │   │   │   ├── pages/   # Login, Register, Landing
+│   │   │   │   ├── components/
+│   │   │   │   ├── services/
+│   │   │   │   └── types/
+│   │   │   ├── bau/         # BAU feature
+│   │   │   │   ├── pages/   # BAU pages, Director/Executive lists
+│   │   │   │   └── ...
+│   │   │   ├── dashboard/   # Dashboard feature
+│   │   │   │   ├── pages/   # Role-specific dashboards
+│   │   │   │   └── components/ # UnifiedDashboard
+│   │   │   ├── departments/ # Departments feature
+│   │   │   ├── okrs/        # OKRs feature
+│   │   │   ├── priorities/  # Weekly priorities feature
+│   │   │   ├── teams/       # Teams feature
+│   │   │   ├── users/       # Users feature
+│   │   │   └── workItems/   # Work items & tasks feature
+│   │   └── shared/          # Shared resources
+│   │       ├── components/  # Reusable UI components
+│   │       ├── services/    # API service layer
+│   │       ├── types/       # TypeScript type definitions
+│   │       └── utils/       # Utility functions
 │   └── public/              # Static assets
+│
 ├── Business requirement.md   # Business specifications
 └── implementation.md         # Technical documentation
 ```
+
+#### Architecture Principles
+
+**Backend:**
+- **Modular Design**: Each feature is self-contained with its own models, schemas, routers, and services
+- **Separation of Concerns**: Core functionality separated from business logic
+- **Domain-Driven**: Modules organized by business domain (OKRs, BAU, Teams, etc.)
+
+**Frontend:**
+- **Feature-Sliced Design**: Features are independent modules with their own pages, components, services, and types
+- **Shared Resources**: Common components, services, and types in `shared/` directory
+- **Application Layer**: App-level concerns (routing, context) separated from features
+- **Type Safety**: Centralized type definitions with feature-specific type extensions
+
+#### Feature Modules Overview
+
+**Backend Modules** (`app/modules/`):
+- `auth/` - Authentication and authorization
+- `bau/` - BAU activities, metrics, and health tracking
+- `departments/` - Department management and hierarchy
+- `okrs/` - OKR objectives, key results, and progress tracking
+- `teams/` - Team management and composition
+- `users/` - User management and profiles
+- `weekly_priority/` - Weekly priority setting and tracking
+- `work_items/` - Work items and task management
+
+**Frontend Features** (`src/features/`):
+- `auth/` - Authentication pages (Login, Register, Landing)
+- `bau/` - BAU pages and role-specific list views
+- `dashboard/` - Role-based dashboards (Member, Lead, Director, Executive, Admin)
+- `departments/` - Department listing, detail views, and management
+- `okrs/` - OKR pages and role-specific list views
+- `priorities/` - Weekly priority management and task breakdown
+- `teams/` - Team listing, detail views, and management
+- `users/` - User management interface
+- `workItems/` - Work items and tasks management
+
+Each feature module follows a consistent structure:
+- `pages/` - Page components (route-level components)
+- `components/` - Feature-specific UI components
+- `services/` - API integration and business logic
+- `types/` - TypeScript type definitions for the feature
 
 ## 👥 User Roles
 

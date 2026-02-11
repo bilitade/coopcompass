@@ -35,6 +35,7 @@ class TeamDashboardSummaryResponse(BaseModel):
     members_count: int
     okr_progress: float = Field(..., ge=0, le=100)
     bau_health: float = Field(..., ge=0, le=100)
+    bau_execution: float = Field(..., ge=0, le=100)
 
 
 class DepartmentDashboardResponse(BaseModel):
@@ -44,6 +45,7 @@ class DepartmentDashboardResponse(BaseModel):
     total_members: int
     average_okr_progress: float = Field(..., ge=0, le=100)
     average_bau_health: float = Field(..., ge=0, le=100)
+    average_bau_execution: float = Field(..., ge=0, le=100)
     teams: List[TeamDashboardSummaryResponse] = []
     updated_at: datetime
 
@@ -57,6 +59,7 @@ class DepartmentSummaryResponse(BaseModel):
     members_count: int
     okr_progress: float = Field(..., ge=0, le=100)
     bau_health: float = Field(..., ge=0, le=100)
+    bau_execution: float = Field(..., ge=0, le=100)
 
 
 class OrganizationDashboardResponse(BaseModel):
@@ -67,6 +70,7 @@ class OrganizationDashboardResponse(BaseModel):
     total_directors: int
     average_okr_progress: float = Field(..., ge=0, le=100)
     average_bau_health: float = Field(..., ge=0, le=100)
+    average_bau_execution: float = Field(..., ge=0, le=100)
     departments: List[DepartmentSummaryResponse] = []
     updated_at: datetime
 

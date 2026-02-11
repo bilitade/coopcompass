@@ -34,6 +34,7 @@ interface Team {
 interface DepartmentAnalytics {
   averageOKRProgress: number;
   averageBAUHealth: number;
+  averageBAUExecution?: number;
   teamOKRs: { teamId: number; teamName: string; progress: number }[];
   teamBAUs: { teamId: number; teamName: string; health: number }[];
 }
@@ -110,6 +111,14 @@ export const DepartmentDetailPage: React.FC = () => {
       const departmentTeams = await api.getDepartmentTeams(dept.id);
       setTeams(departmentTeams);
 
+      // Get department dashboard for aggregated metrics
+      let dashboardData = null;
+      try {
+        dashboardData = await api.getDepartmentDashboard(dept.id);
+      } catch (err) {
+        console.warn('Could not fetch department dashboard:', err);
+      }
+
       // Calculate analytics for each team
       const teamOKRs = [];
       const teamBAUs = [];
@@ -146,6 +155,7 @@ export const DepartmentDetailPage: React.FC = () => {
       setAnalytics({
         averageOKRProgress: teamOKRs.length > 0 ? totalOKRProgress / teamOKRs.length : 0,
         averageBAUHealth: teamBAUs.length > 0 ? totalBAUHealth / teamBAUs.length : 0,
+        averageBAUExecution: dashboardData?.average_bau_execution || 0,
         teamOKRs,
         teamBAUs,
       });
@@ -210,7 +220,7 @@ export const DepartmentDetailPage: React.FC = () => {
         </div>
 
         {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
@@ -248,6 +258,16 @@ export const DepartmentDetailPage: React.FC = () => {
                 <p className="text-3xl font-bold mt-2">{analytics.averageBAUHealth.toFixed(1)}%</p>
               </div>
               <Activity className="w-12 h-12 text-green-600 dark:text-green-400" />
+            </div>
+          </div>
+
+          <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-text-secondary">Avg BAU Execution (OCE)</p>
+                <p className="text-3xl font-bold mt-2">{(analytics.averageBAUExecution || 0).toFixed(1)}%</p>
+              </div>
+              <Activity className="w-12 h-12 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
         </div>

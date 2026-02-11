@@ -205,13 +205,15 @@ def get_department_dashboard_endpoint(
         total_members=dashboard_data["total_members"],
         average_okr_progress=dashboard_data["average_okr_progress"],
         average_bau_health=dashboard_data["average_bau_health"],
+        average_bau_execution=dashboard_data.get("average_bau_execution", 0.0),
         teams=[
             TeamDashboardSummaryResponse(
                 team_id=t["team_id"],
                 team_name=t["team_name"],
                 members_count=t["members_count"],
                 okr_progress=t["okr_progress"],
-                bau_health=t["bau_health"]
+                bau_health=t["bau_health"],
+                bau_execution=t.get("bau_execution", 0.0)
             ) for t in dashboard_data["teams"]
         ],
         updated_at=dashboard_data["updated_at"]
@@ -240,6 +242,7 @@ def get_organization_dashboard_endpoint(
         total_directors=dashboard_data["total_directors"],
         average_okr_progress=dashboard_data["average_okr_progress"],
         average_bau_health=dashboard_data["average_bau_health"],
+        average_bau_execution=dashboard_data.get("average_bau_execution", 0.0),
         departments=[
             DepartmentSummaryResponse(
                 department_id=d["department_id"],
@@ -248,7 +251,8 @@ def get_organization_dashboard_endpoint(
                 teams_count=d["teams_count"],
                 members_count=d["members_count"],
                 okr_progress=d["okr_progress"],
-                bau_health=d["bau_health"]
+                bau_health=d["bau_health"],
+                bau_execution=d.get("bau_execution", 0.0)
             ) for d in dashboard_data["departments"]
         ],
         updated_at=dashboard_data["updated_at"]

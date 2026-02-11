@@ -58,29 +58,47 @@ export const ExecutiveBAUListPage: React.FC = () => {
               const teamBAU = await api.getTeamBAUActivities(team.id);
 
               for (const activity of teamBAU) {
-                // Get activity health and execution
-                const bauHealth = await api.getBAUHealth(activity.id);
-                const bauExecution = await api.getBAUExecution(activity.id);
+                try {
+                  // Get activity health and execution
+                  let bauHealth = { health: 0, metrics: [] };
+                  let bauExecution = 0;
+                  
+                  try {
+                    bauHealth = await api.getBAUHealth(activity.id);
+                  } catch (healthErr: any) {
+                    console.warn(`Error fetching health for BAU ${activity.id}:`, healthErr);
+                  }
+                  
+                  try {
+                    bauExecution = await api.getBAUExecution(activity.id);
+                  } catch (execErr: any) {
+                    console.warn(`Error fetching execution for BAU ${activity.id}:`, execErr);
+                  }
 
-                allBAU.push({
-                  activity_id: activity.id,
-                  activity_name: activity.name,
-                  team_id: team.id,
-                  team_name: team.name,
-                  department_id: dept.id,
-                  department_name: dept.name,
-                  health: bauHealth.health || 0,
-                  execution: bauExecution || 0,
-                  metrics_count: bauHealth.metrics?.length || 0,
-                  is_active: activity.is_active,
-                });
+                  allBAU.push({
+                    activity_id: activity.id,
+                    activity_name: activity.name,
+                    team_id: team.id,
+                    team_name: team.name,
+                    department_id: dept.id,
+                    department_name: dept.name,
+                    health: bauHealth.health || 0,
+                    execution: bauExecution || 0,
+                    metrics_count: bauHealth.metrics?.length || 0,
+                    is_active: activity.is_active,
+                  });
+                } catch (activityErr) {
+                  console.error(`Error processing BAU activity ${activity.id}:`, activityErr);
+                }
               }
-            } catch (teamErr) {
+            } catch (teamErr: any) {
               console.error(`Error fetching BAU for team ${team.id}:`, teamErr);
+              // Continue to next team even if one fails
             }
           }
-        } catch (deptErr) {
+        } catch (deptErr: any) {
           console.error(`Error fetching teams for dept ${dept.id}:`, deptErr);
+          // Continue to next department even if one fails
         }
       }
 

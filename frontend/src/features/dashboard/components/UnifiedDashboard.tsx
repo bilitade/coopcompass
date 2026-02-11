@@ -44,6 +44,7 @@ interface TeamSummaryProps {
   members_count: number;
   okr_progress: number;
   bau_health: number;
+  bau_execution?: number;
 }
 
 interface DepartmentSummaryProps {
@@ -54,6 +55,7 @@ interface DepartmentSummaryProps {
   members_count: number;
   okr_progress: number;
   bau_health: number;
+  bau_execution?: number;
 }
 
 interface UnifiedDashboardProps {
@@ -279,7 +281,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
         </div>
 
         {/* Summary Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           <MetricsCard
             label="Total Teams"
             value={dashboardData.total_teams}
@@ -300,6 +302,12 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
             label="Avg BAU Health"
             value={dashboardData.average_bau_health}
             icon={<Activity className="w-12 h-12 text-green-600 dark:text-green-400" />}
+            isPercentage
+          />
+          <MetricsCard
+            label="Avg BAU Execution (OCE)"
+            value={dashboardData.average_bau_execution || 0}
+            icon={<Activity className="w-12 h-12 text-blue-600 dark:text-blue-400" />}
             isPercentage
           />
         </div>
@@ -354,6 +362,22 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
                         />
                       </div>
                     </div>
+                    {team.bau_execution !== undefined && (
+                      <div className="mt-3">
+                        <div className="flex justify-between mb-1">
+                          <span className="text-text-secondary">BAU Execution (OCE)</span>
+                          <span className="font-semibold">
+                            {team.bau_execution.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all"
+                            style={{ width: `${team.bau_execution}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -401,7 +425,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
         </div>
 
         {/* Overall Analytics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <MetricsCard
             label="Average OKR Progress"
             value={dashboardData.average_okr_progress}
@@ -412,6 +436,12 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
             label="Average BAU Health"
             value={dashboardData.average_bau_health}
             icon={<Activity className="w-12 h-12 text-green-600 dark:text-green-400" />}
+            isPercentage
+          />
+          <MetricsCard
+            label="Average BAU Execution (OCE)"
+            value={dashboardData.average_bau_execution || 0}
+            icon={<Activity className="w-12 h-12 text-blue-600 dark:text-blue-400" />}
             isPercentage
           />
         </div>
@@ -446,7 +476,7 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
                       <div className="flex justify-between mb-1 text-sm">
                         <span className="text-text-secondary">OKR Progress</span>
@@ -477,6 +507,20 @@ export const UnifiedDashboard: React.FC<UnifiedDashboardProps> = ({
                         />
                       </div>
                     </div>
+                    {dept.bau_execution !== undefined && (
+                      <div>
+                        <div className="flex justify-between mb-1 text-sm">
+                          <span className="text-text-secondary">BAU Execution (OCE)</span>
+                          <span className="font-semibold">{dept.bau_execution.toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all"
+                            style={{ width: `${dept.bau_execution}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

@@ -385,8 +385,24 @@ def get_bau_execution(
             detail="BAU activity not found"
         )
 
-    # Ensure user is in the same team
-    if activity.team_id != current_user.team_id:
+    # Authorization: Allow team members, executives, and directors
+    from app.models import Team, Department
+    
+    # Executives and admins can view all activities
+    if current_user.role in ['executive', 'admin']:
+        pass
+    # Directors can view activities from their department
+    elif current_user.role == 'director':
+        team = db.query(Team).filter(Team.id == activity.team_id).first()
+        if team:
+            department = db.query(Department).filter(Department.id == team.department_id).first()
+            if not department or department.director_id != current_user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Not authorized to view this BAU activity"
+                )
+    # Team members can only view activities from their team
+    elif activity.team_id != current_user.team_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view this BAU activity"

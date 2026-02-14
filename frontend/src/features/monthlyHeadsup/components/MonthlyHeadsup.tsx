@@ -26,7 +26,13 @@ export const MonthlyHeadsup: React.FC<MonthlyHeadsupProps> = ({ teamId, month, o
 
   // Work Item Form State
   const [isAddingWorkItem, setIsAddingWorkItem] = useState(false);
+  const [editingWorkItemId, setEditingWorkItemId] = useState<number | null>(null);
   const [newItem, setNewItem] = useState({
+    title: '',
+    source_type: 'OKR' as 'OKR' | 'BAU',
+    source_id: 0,
+  });
+  const [editItem, setEditItem] = useState({
     title: '',
     source_type: 'OKR' as 'OKR' | 'BAU',
     source_id: 0,
@@ -135,6 +141,42 @@ export const MonthlyHeadsup: React.FC<MonthlyHeadsupProps> = ({ teamId, month, o
       setSuccess('Work item removed');
     } catch (err: any) {
       setError('Failed to remove work item');
+    }
+  };
+
+  const handleStartEditWorkItem = (item: WorkItem) => {
+    setEditingWorkItemId(item.id);
+    setEditItem({
+      title: item.title,
+      source_type: item.source_type as 'OKR' | 'BAU',
+      source_id: item.source_id,
+    });
+  };
+
+  const handleCancelEditWorkItem = () => {
+    setEditingWorkItemId(null);
+    setEditItem({ title: '', source_type: 'OKR', source_id: 0 });
+  };
+
+  const handleUpdateWorkItem = async (id: number) => {
+    if (!editItem.title.trim() || editItem.source_id === 0) {
+      setError('Title and Source are required');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const updated = await api.updateWorkItem(id, {
+        title: editItem.title.trim(),
+      });
+      setWorkItems(workItems.map(wi => wi.id === id ? updated : wi));
+      setEditingWorkItemId(null);
+      setEditItem({ title: '', source_type: 'OKR', source_id: 0 });
+      setSuccess('Work item updated');
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to update work item');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -335,40 +377,116 @@ export const MonthlyHeadsup: React.FC<MonthlyHeadsupProps> = ({ teamId, month, o
                     ? okrs.flatMap(o => o.key_results).find(kr => kr.id === item.source_id)?.description || 'Source not found'
                     : bauActivities.find(a => a.id === item.source_id)?.name || 'Source not found';
                   
+                  const isEditing = editingWorkItemId === item.id;
+                  
                   return (
-                    <div key={item.id} className="flex items-start justify-between p-4 bg-surface border border-border rounded-lg hover:border-primary/30 hover:shadow-sm transition-all group">
-                      <div className="flex items-start space-x-4 flex-1 min-w-0">
-                        <div className={`w-1 h-full min-h-[60px] rounded-full flex-shrink-0 ${
-                          item.source_type === 'OKR' ? 'bg-primary' : 'bg-green-500'
-                        }`} />
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-text-primary mb-2">{item.title}</h4>
-                          <div className="flex items-center gap-3 flex-wrap">
-                            <span className={`text-xs uppercase font-bold px-2.5 py-1 rounded ${
-                              item.source_type === 'OKR' 
-                                ? 'bg-primary/10 text-primary dark:bg-primary/20' 
-                                : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            }`}>
-                              {item.source_type}
-                            </span>
-                            <div className="flex items-center text-xs text-text-secondary">
-                              <LinkIcon size={12} className="mr-1.5 flex-shrink-0" />
-                              <span className="truncate">{sourceName}</span>
+                    <div key={item.id} className="bg-surface border border-border rounded-lg hover:border-primary/30 hover:shadow-sm transition-all group">
+                      {isEditing ? (
+                        <div className="p-4 space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="md:col-span-2">
+                              <label className="label">Work Item Title</label>
+                              <input
+                                type="text"
+                                className="input w-full"
+                                placeholder="Enter specific deliverable title"
+                                value={editItem.title}
+                                onChange={(e) => setEditItem({ ...editItem, title: e.target.value })}
+                              />
+                            </div>
+                            <div>
+                              <label className="label">Source Type</label>
+                              <select
+                                className="input w-full"
+                                value={editItem.source_type}
+                                onChange={(e) => setEditItem({ ...editItem, source_type: e.target.value as 'OKR' | 'BAU', source_id: 0 })}
+                              >
+                                <option value="OKR">Strategic (OKR)</option>
+                                <option value="BAU">Operational (BAU)</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="label">Linking Source</label>
+                              <select
+                                className="input w-full"
+                                value={editItem.source_id}
+                                onChange={(e) => setEditItem({ ...editItem, source_id: parseInt(e.target.value) })}
+                              >
+                                <option value="0">Select a source...</option>
+                                {editItem.source_type === 'OKR' ? (
+                                  okrs.flatMap(okr => okr.key_results.map(kr => (
+                                    <option key={kr.id} value={kr.id}>{kr.description}</option>
+                                  )))
+                                ) : (
+                                  bauActivities.map(activity => (
+                                    <option key={activity.id} value={activity.id}>{activity.name}</option>
+                                  ))
+                                )}
+                              </select>
                             </div>
                           </div>
+                          <div className="flex justify-end space-x-2">
+                            <button 
+                              onClick={handleCancelEditWorkItem} 
+                              className="btn btn-secondary"
+                              disabled={saving}
+                            >
+                              Cancel
+                            </button>
+                            <button 
+                              onClick={() => handleUpdateWorkItem(item.id)} 
+                              disabled={saving} 
+                              className="btn btn-primary"
+                            >
+                              {saving ? 'Saving...' : 'Save Changes'}
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          if (confirm('Are you sure you want to remove this work item?')) {
-                            handleDeleteWorkItem(item.id);
-                          }
-                        }}
-                        className="p-2 text-text-secondary hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-all ml-4 flex-shrink-0"
-                        title="Remove work item"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      ) : (
+                        <div className="flex items-start justify-between p-4">
+                          <div className="flex items-start space-x-4 flex-1 min-w-0">
+                            <div className={`w-1 h-full min-h-[60px] rounded-full flex-shrink-0 ${
+                              item.source_type === 'OKR' ? 'bg-primary' : 'bg-green-500'
+                            }`} />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-text-primary mb-2">{item.title}</h4>
+                              <div className="flex items-center gap-3 flex-wrap">
+                                <span className={`text-xs uppercase font-bold px-2.5 py-1 rounded ${
+                                  item.source_type === 'OKR' 
+                                    ? 'bg-primary/10 text-primary dark:bg-primary/20' 
+                                    : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                }`}>
+                                  {item.source_type}
+                                </span>
+                                <div className="flex items-center text-xs text-text-secondary">
+                                  <LinkIcon size={12} className="mr-1.5 flex-shrink-0" />
+                                  <span className="truncate">{sourceName}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 ml-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all">
+                            <button
+                              onClick={() => handleStartEditWorkItem(item)}
+                              className="p-2 text-text-secondary hover:text-primary rounded-lg hover:bg-primary/10 transition-colors"
+                              title="Edit work item"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm('Are you sure you want to remove this work item?')) {
+                                  handleDeleteWorkItem(item.id);
+                                }
+                              }}
+                              className="p-2 text-text-secondary hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                              title="Remove work item"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

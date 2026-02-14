@@ -38,6 +38,8 @@ import { ExecutiveBAUListPage } from '../features/bau/pages/ExecutiveBAUListPage
 // Work Items pages
 import { WorkItemsPage } from '../features/workItems/pages/WorkItemsPage';
 import { TasksPage } from '../features/tasks/pages/TasksPage';
+import { TaskEditPage } from '../features/tasks/pages/TaskEditPage';
+import { TaskCreatePage } from '../features/tasks/pages/TaskCreatePage';
 
 // Priorities pages
 import { MonthlyHeadsupPage } from '../features/monthlyHeadsup/pages/MonthlyHeadsupPage';
@@ -270,6 +272,22 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <TasksPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tasks/new"
+        element={
+          <ProtectedRoute>
+            <TaskCreatePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tasks/:id/edit"
+        element={
+          <ProtectedRoute>
+            <TaskEditPage />
           </ProtectedRoute>
         }
       />

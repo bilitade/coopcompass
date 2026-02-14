@@ -9,6 +9,7 @@ from app.modules.users.schemas import UserResponse
 
 class TaskCreate(BaseModel):
     """Task creation schema."""
+    title: str = Field(..., min_length=1, max_length=255)
     description: str = Field(..., min_length=1)
     assignee_id: Optional[int] = None
     effort_hours: Optional[int] = Field(None, gt=0)
@@ -16,6 +17,7 @@ class TaskCreate(BaseModel):
 
 class TaskUpdate(BaseModel):
     """Task update schema."""
+    title: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
     assignee_id: Optional[int] = None
     status: Optional[str] = Field(None, pattern="^(Not Started|In Progress|Done|Blocked)$")
@@ -27,6 +29,7 @@ class TaskResponse(BaseModel):
     """Task response schema."""
     id: int
     work_item_id: int
+    title: str
     description: str
     assignee_id: Optional[int]
     status: str
@@ -59,6 +62,7 @@ class WorkItemSmallResponse(BaseModel):
 class TaskWithWorkItemResponse(TaskResponse):
     """Task response with embedded work item information."""
     work_item: Optional[WorkItemSmallResponse] = None
+    assignee: Optional[UserResponse] = None
 
     class Config:
         from_attributes = True

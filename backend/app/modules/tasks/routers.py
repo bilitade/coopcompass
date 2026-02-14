@@ -51,6 +51,7 @@ def create_task(
     
     new_task = Task(
         work_item_id=work_item_id,
+        title=task_data.title,
         description=task_data.description,
         assignee_id=task_data.assignee_id,
         effort_hours=task_data.effort_hours
@@ -132,6 +133,9 @@ def update_task(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Task not found"
         )
+    
+    if task_data.title is not None:
+        task.title = task_data.title
     
     if task_data.description is not None:
         task.description = task_data.description
@@ -217,7 +221,8 @@ def get_team_tasks(
         return []
         
     tasks = db.query(Task).filter(Task.work_item_id.in_(task_ids)).options(
-        joinedload(Task.work_item)
+        joinedload(Task.work_item),
+        joinedload(Task.assignee)
     ).all()
     
     return tasks

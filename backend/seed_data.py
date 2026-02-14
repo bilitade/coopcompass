@@ -653,7 +653,8 @@ def seed_demo_data():
         tasks_core = [
             Task(
                 work_item_id=work_items_core[0].id,
-                description="Setup AWS infrastructure",
+                title="Setup AWS Infrastructure",
+                description="Setup AWS infrastructure for authentication service migration",
                 assignee_id=oliver.id,
                 status="Done",
                 effort_hours=8,
@@ -661,21 +662,24 @@ def seed_demo_data():
             ),
             Task(
                 work_item_id=work_items_core[0].id,
-                description="Configure authentication service",
+                title="Configure Authentication Service",
+                description="Configure authentication service on cloud infrastructure",
                 assignee_id=emma.id,
                 status="In Progress",
                 effort_hours=12
             ),
             Task(
                 work_item_id=work_items_core[0].id,
-                description="Run integration tests",
+                title="Run Integration Tests",
+                description="Run integration tests for migrated authentication service",
                 assignee_id=sophia.id,
                 status="Not Started",
                 effort_hours=6
             ),
             Task(
                 work_item_id=work_items_core[1].id,
-                description="Design failover architecture",
+                title="Design Failover Architecture",
+                description="Design automatic failover architecture for critical services",
                 assignee_id=james.id,
                 status="Done",
                 effort_hours=10,
@@ -683,7 +687,8 @@ def seed_demo_data():
             ),
             Task(
                 work_item_id=work_items_core[1].id,
-                description="Implement failover logic",
+                title="Implement Failover Logic",
+                description="Implement failover logic and automatic switching mechanism",
                 assignee_id=emma.id,
                 status="In Progress",
                 effort_hours=16
@@ -693,7 +698,8 @@ def seed_demo_data():
         tasks_security = [
             Task(
                 work_item_id=work_items_security[0].id,
-                description="Audit current network architecture",
+                title="Audit Network Architecture",
+                description="Audit current network architecture for zero-trust implementation",
                 assignee_id=isabella.id,
                 status="Done",
                 effort_hours=12,
@@ -701,7 +707,8 @@ def seed_demo_data():
             ),
             Task(
                 work_item_id=work_items_security[0].id,
-                description="Implement network segmentation",
+                title="Implement Network Segmentation",
+                description="Implement network segmentation and access controls",
                 assignee_id=ethan.id,
                 status="In Progress",
                 effort_hours=20

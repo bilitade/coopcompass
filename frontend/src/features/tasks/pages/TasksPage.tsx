@@ -2,37 +2,29 @@ import React, { useEffect, useState } from 'react';
 import { Layout } from '../../../shared/components/Layout';
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner';
 import { Alert } from '../../../shared/components/Alert';
-import { Modal } from '../../../shared/components/Modal';
 import { useAuth } from '../../../app/context/AuthContext';
 import { tasksApi } from '../services/tasksApi';
 import type { Task, TaskWithWorkItem } from '../types';
-import type { WorkItem } from '../../../shared/types';
 import {
   Plus,
   CheckCircle,
   Clock,
   Filter,
   TrendingUp,
+  Edit,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const TasksPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState<TaskWithWorkItem[]>([]);
-  const [workItems, setWorkItems] = useState<WorkItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [showTaskModal, setShowTaskModal] = useState(false);
   
   const [filterStatus, setFilterStatus] = useState<'All' | Task['status']>('All');
   const [sortBy, setSortBy] = useState<'recent' | 'priority' | 'assignee'>('recent');
-
-  const [taskForm, setTaskForm] = useState({
-    description: '',
-    work_item_id: '',
-    assignee_id: '',
-    effort_hours: '',
-  });
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,12 +42,8 @@ export const TasksPage: React.FC = () => {
     }
 
     try {
-      const [tasksData, workItemsData] = await Promise.all([
-        tasksApi.getTeamTasks(user.team_id),
-        tasksApi.getPrioritizedWorkItems(user.team_id),
-      ]);
+      const tasksData = await tasksApi.getTeamTasks(user.team_id);
       setTasks(tasksData);
-      setWorkItems(workItemsData as any);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load tasks');
     } finally {
@@ -63,43 +51,6 @@ export const TasksPage: React.FC = () => {
     }
   };
 
-  const handleCreateTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!taskForm.work_item_id) {
-      setError('Please select a work item');
-      return;
-    }
-
-    try {
-      await tasksApi.createTask(parseInt(taskForm.work_item_id), {
-        description: taskForm.description,
-        assignee_id: taskForm.assignee_id ? parseInt(taskForm.assignee_id) : null,
-        effort_hours: taskForm.effort_hours ? parseInt(taskForm.effort_hours) : null,
-      });
-      setSuccess('Task created successfully');
-      setShowTaskModal(false);
-      setTaskForm({
-        description: '',
-        work_item_id: '',
-        assignee_id: '',
-        effort_hours: '',
-      });
-      loadData();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create task');
-    }
-  };
-
-  const handleUpdateTaskStatus = async (taskId: number, status: Task['status']) => {
-    try {
-      await tasksApi.updateTask(taskId, { status });
-      setSuccess('Task updated successfully');
-      loadData();
-    } catch (err: any) {
-      setError('Failed to update task');
-    }
-  };
 
   const filteredTasks = tasks.filter((task) => {
     if (filterStatus === 'All') return true;
@@ -145,24 +96,18 @@ export const TasksPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-3">
-        {/* Header - Compact */}
-        <div className="flex justify-between items-center gap-4">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-text-primary">Tasks</h1>
-            {/* Clear Stats Inline */}
-            <div className="flex items-center gap-4 text-sm text-text-secondary">
-              <span>Total: <span className="font-semibold text-text-primary">{taskStats.total}</span></span>
-              <span>Done: <span className="font-semibold text-green-600">{taskStats.done}</span></span>
-              <span>In Progress: <span className="font-semibold text-blue-600">{taskStats.inProgress}</span></span>
-              <span>Blocked: <span className="font-semibold text-red-600">{taskStats.blocked}</span></span>
-            </div>
+      <div className="max-w-7xl mx-auto space-y-5 pb-12">
+        {/* Header */}
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-text-primary tracking-tight">Tasks</h1>
+            <p className="text-sm text-text-secondary mt-0.5">Manage and track your team's tasks</p>
           </div>
           <button
-            onClick={() => setShowTaskModal(true)}
-            className="btn btn-primary flex items-center space-x-1 px-3 py-1.5 text-sm"
+            onClick={() => navigate('/tasks/new')}
+            className="btn btn-primary flex items-center gap-2"
           >
-            <Plus size={16} />
+            <Plus size={18} />
             <span>New Task</span>
           </button>
         </div>
@@ -170,58 +115,81 @@ export const TasksPage: React.FC = () => {
         {error && <Alert type="error" message={error} onClose={() => setError('')} />}
         {success && <Alert type="success" message={success} onClose={() => setSuccess('')} />}
 
-        {/* Compact Progress Bar */}
-        <div className="flex items-center gap-3">
-          <TrendingUp className="text-green-600" size={16} />
-          <span className="text-sm font-medium text-text-primary">Progress</span>
-          <div className="flex-1 bg-border rounded-full h-2">
-            <div
-              className="bg-green-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${donePercentage}%` }}
-            />
+        {/* Stats Row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-1">Total</p>
+            <p className="text-2xl font-bold text-text-primary">{taskStats.total}</p>
           </div>
-          <span className="text-sm font-bold text-text-primary min-w-[3rem]">{donePercentage.toFixed(0)}%</span>
-        </div>
-
-        {/* Compact Filters */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Filter size={14} className="text-text-secondary" />
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value as any)}
-              className="px-2 py-1 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="All">All Tasks</option>
-              <option value="Not Started">Not Started</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Done">Done</option>
-              <option value="Blocked">Blocked</option>
-            </select>
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-1">Done</p>
+            <p className="text-2xl font-bold text-emerald-500">{taskStats.done}</p>
           </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-text-secondary">Sort:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-2 py-1 border border-border rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="recent">Recent</option>
-              <option value="priority">Priority</option>
-            </select>
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-1">In Progress</p>
+            <p className="text-2xl font-bold text-blue-500">{taskStats.inProgress}</p>
+          </div>
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-1">Blocked</p>
+            <p className="text-2xl font-bold text-red-500">{taskStats.blocked}</p>
           </div>
         </div>
 
-        {/* Ultra-Compact Tasks Table */}
-        <div className="border border-border rounded-lg overflow-hidden">
+        {/* Progress Bar */}
+        <div className="bg-surface border border-border rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <TrendingUp className="text-primary" size={18} />
+            <span className="text-sm font-semibold text-text-primary">Overall Progress</span>
+            <div className="flex-1 bg-border/30 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="bg-primary h-2.5 rounded-full transition-all duration-500"
+                style={{ width: `${donePercentage}%` }}
+              />
+            </div>
+            <span className="text-sm font-bold text-primary min-w-[3.5rem]">{donePercentage.toFixed(0)}%</span>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-surface border border-border rounded-xl p-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Filter size={16} className="text-text-secondary" />
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as any)}
+                className="input text-sm h-9 w-40"
+              >
+                <option value="All">All Tasks</option>
+                <option value="Not Started">Not Started</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Done">Done</option>
+                <option value="Blocked">Blocked</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="input text-sm h-9 w-32"
+              >
+                <option value="recent">Recent</option>
+                <option value="priority">Priority</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Tasks Table */}
+        <div className="bg-surface border border-border rounded-xl overflow-hidden">
           {sortedTasks.length === 0 ? (
-            <div className="text-center py-8">
-              <CheckCircle className="mx-auto text-text-secondary" size={32} />
-              <h3 className="mt-2 text-sm font-medium text-text-primary">
+            <div className="text-center py-12">
+              <CheckCircle className="mx-auto text-text-secondary/40" size={48} />
+              <h3 className="mt-4 text-lg font-medium text-text-primary">
                 {filterStatus === 'All' ? 'No tasks yet' : `No ${filterStatus.toLowerCase()} tasks`}
               </h3>
-              <p className="mt-1 text-xs text-text-secondary">
+              <p className="mt-2 text-sm text-text-secondary max-w-md mx-auto">
                 {filterStatus === 'All'
                   ? 'Only prioritized work items (P1-P3) can have tasks. Mark items as priority in the Planning page.'
                   : 'Keep up the great work!'}
@@ -231,54 +199,46 @@ export const TasksPage: React.FC = () => {
             <>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-surface border-b border-border">
-                    <tr>
-                      <th className="px-2 py-1.5 text-left text-xs font-medium text-text-secondary uppercase tracking-wider w-24">
-                        Status
+                  <thead>
+                    <tr className="border-b border-border bg-surface-hover/30">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                        Title
                       </th>
-                      <th className="px-2 py-1.5 text-left text-xs font-medium text-text-secondary uppercase tracking-wider w-64">
-                        Description
-                      </th>
-                      <th className="px-2 py-1.5 text-left text-xs font-medium text-text-secondary uppercase tracking-wider w-40">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
                         Work Item
                       </th>
-                      <th className="px-2 py-1.5 text-left text-xs font-medium text-text-secondary uppercase tracking-wider w-16">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                        Assigned To
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
                         Effort
                       </th>
-                      <th className="px-2 py-1.5 text-left text-xs font-medium text-text-secondary uppercase tracking-wider w-20">
-                        Created
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                        Status
                       </th>
-                      <th className="px-2 py-1.5 text-left text-xs font-medium text-text-secondary uppercase tracking-wider w-28">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-border/50">
                     {paginatedTasks.map((task) => (
-                      <tr key={task.id} className="hover:bg-surface h-10">
-                        <td className="px-2 py-1.5 whitespace-nowrap">
-                          <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${
-                            task.status === 'Done' ? 'bg-green-500/10 text-green-600 dark:text-green-300' :
-                            task.status === 'In Progress' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-300' :
-                            task.status === 'Blocked' ? 'bg-red-500/10 text-red-600 dark:text-red-300' :
-                            'bg-surface-hover text-text-primary'
-                          }`}>
-                            {task.status === 'In Progress' ? 'In Progress' : task.status}
-                          </span>
-                        </td>
-                        <td className="px-2 py-1.5">
-                          <div className="text-sm text-text-primary max-w-64 truncate" title={task.description}>
-                            {task.description}
+                      <tr key={task.id} className="hover:bg-surface-hover/30 transition-colors duration-150">
+                        <td className="px-4 py-3">
+                          <div className="text-sm font-semibold text-text-primary max-w-md line-clamp-2" title={task.title}>
+                            {task.title}
                           </div>
                         </td>
-                        <td className="px-2 py-1.5">
+                        <td className="px-4 py-3">
                           {task.work_item ? (
-                            <div>
-                              <div className="text-sm text-text-primary font-medium truncate" title={task.work_item.title}>
+                            <div className="space-y-1">
+                              <div className="text-sm text-text-primary font-medium line-clamp-1" title={task.work_item.title}>
                                 {task.work_item.title}
                               </div>
-                              <span className={`inline-block mt-0.5 px-1 py-0.5 text-xs font-medium rounded ${
-                                task.work_item.source_type === 'OKR' ? 'bg-primary/10 text-primary' : 'bg-green-500/10 text-green-600 dark:text-green-300'
+                              <span className={`inline-block px-2 py-0.5 text-[10px] font-bold rounded border ${
+                                task.work_item.source_type === 'OKR' 
+                                  ? 'bg-primary/10 text-primary border-primary/20' 
+                                  : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
                               }`}>
                                 {task.work_item.source_type}
                               </span>
@@ -287,30 +247,48 @@ export const TasksPage: React.FC = () => {
                             <span className="text-sm text-text-secondary">-</span>
                           )}
                         </td>
-                        <td className="px-2 py-1.5 whitespace-nowrap">
-                          {task.effort_hours ? (
-                            <div className="flex items-center text-sm text-text-primary">
-                              <Clock size={10} className="mr-1" />
-                              {task.effort_hours}h
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {task.assignee ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                                <span className="text-xs font-bold text-primary">
+                                  {task.assignee.name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <span className="text-sm text-text-primary">{task.assignee.name}</span>
                             </div>
                           ) : (
-                            <span className="text-xs text-text-secondary">-</span>
+                            <span className="text-sm text-text-secondary">Unassigned</span>
                           )}
                         </td>
-                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-text-secondary">
-                          {new Date(task.created_at).toLocaleDateString()}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {task.effort_hours ? (
+                            <div className="flex items-center gap-1.5 text-sm text-text-primary">
+                              <Clock size={14} className="text-text-secondary" />
+                              <span className="font-medium">{task.effort_hours}h</span>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-text-secondary">-</span>
+                          )}
                         </td>
-                        <td className="px-2 py-1.5 whitespace-nowrap">
-                          <select
-                            value={task.status}
-                            onChange={(e) => handleUpdateTaskStatus(task.id, e.target.value as Task['status'])}
-                            className="px-1.5 py-0.5 border border-border rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className={`px-2.5 py-1 rounded-md text-xs font-bold border ${
+                            task.status === 'Done' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                            task.status === 'In Progress' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
+                            task.status === 'Blocked' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                            'bg-surface-hover text-text-secondary border-border/50'
+                          }`}>
+                            {task.status === 'In Progress' ? 'In Progress' : task.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <button
+                            onClick={() => navigate(`/tasks/${task.id}/edit`)}
+                            className="btn btn-ghost p-2 hover:bg-primary/10 text-primary"
+                            title="Edit Task"
                           >
-                            <option value="Not Started">Not Started</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Done">Done</option>
-                            <option value="Blocked">Blocked</option>
-                          </select>
+                            <Edit size={16} />
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -318,14 +296,14 @@ export const TasksPage: React.FC = () => {
                 </table>
               </div>
 
-              {/* Ultra-Compact Pagination */}
-              <div className="px-2 py-1.5 border-t border-border bg-surface">
+              {/* Pagination - KEPT EXACTLY AS IS */}
+              <div className="px-4 py-3 border-t border-border bg-surface-hover/30">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <select
                       value={pageSize}
                       onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                      className="px-1.5 py-0.5 border border-border rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                      className="input text-xs h-8 w-20"
                     >
                       <option value={5}>5</option>
                       <option value={10}>10</option>
@@ -342,7 +320,7 @@ export const TasksPage: React.FC = () => {
                       <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className="px-1.5 py-0.5 border border-border rounded text-xs text-text-secondary hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-1.5 py-0.5 border border-border rounded text-xs text-text-secondary hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         ‹
                       </button>
@@ -364,10 +342,10 @@ export const TasksPage: React.FC = () => {
                             <button
                               key={pageNum}
                               onClick={() => handlePageChange(pageNum)}
-                              className={`px-1.5 py-0.5 border rounded text-xs min-w-[22px] ${
+                              className={`px-1.5 py-0.5 border rounded text-xs min-w-[22px] transition-colors ${
                                 pageNum === currentPage
                                   ? 'bg-primary text-white border-primary'
-                                  : 'border-border text-text-primary hover:bg-surface'
+                                  : 'border-border text-text-primary hover:bg-surface-hover'
                               }`}
                             >
                               {pageNum}
@@ -379,7 +357,7 @@ export const TasksPage: React.FC = () => {
                             <span className="px-0.5 text-xs text-text-secondary">…</span>
                             <button
                               onClick={() => handlePageChange(totalPages)}
-                              className="px-1.5 py-0.5 border border-border rounded text-xs text-text-primary hover:bg-surface"
+                              className="px-1.5 py-0.5 border border-border rounded text-xs text-text-primary hover:bg-surface-hover transition-colors"
                             >
                               {totalPages}
                             </button>
@@ -390,7 +368,7 @@ export const TasksPage: React.FC = () => {
                       <button
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className="px-1.5 py-0.5 border border-border rounded text-xs text-text-secondary hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-1.5 py-0.5 border border-border rounded text-xs text-text-secondary hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         ›
                       </button>
@@ -401,69 +379,6 @@ export const TasksPage: React.FC = () => {
             </>
           )}
         </div>
-
-        {/* Create Task Modal */}
-        <Modal
-          isOpen={showTaskModal}
-          onClose={() => setShowTaskModal(false)}
-          title="Create New Task"
-        >
-          <form onSubmit={handleCreateTask} className="space-y-4">
-            <div>
-              <label className="label">Select Prioritized Work Item *</label>
-              <select
-                required
-                className="input"
-                value={taskForm.work_item_id}
-                onChange={(e) => setTaskForm({ ...taskForm, work_item_id: e.target.value })}
-              >
-                <option value="">Choose an active priority...</option>
-                {workItems.map((item: any) => (
-                  <option key={item.id} value={item.id}>
-                    P{item.priority}: {item.title} ({item.source_type})
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1 text-[10px] text-text-secondary italic">Only P1-P3 items for the current week are available.</p>
-            </div>
-
-            <div>
-              <label className="label">Task Description *</label>
-              <textarea
-                required
-                className="input"
-                rows={3}
-                value={taskForm.description}
-                onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
-                placeholder="What needs to be done?"
-              />
-            </div>
-
-            <div>
-              <label className="label">Effort (hours)</label>
-              <input
-                type="number"
-                className="input"
-                value={taskForm.effort_hours}
-                onChange={(e) => setTaskForm({ ...taskForm, effort_hours: e.target.value })}
-                placeholder="Estimated hours"
-              />
-            </div>
-
-            <div className="flex space-x-3">
-              <button
-                type="button"
-                onClick={() => setShowTaskModal(false)}
-                className="btn btn-secondary flex-1"
-              >
-                Cancel
-              </button>
-              <button type="submit" className="btn btn-primary flex-1">
-                Create Task
-              </button>
-            </div>
-          </form>
-        </Modal>
       </div>
     </Layout>
   );

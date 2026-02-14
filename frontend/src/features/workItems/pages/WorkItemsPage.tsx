@@ -112,10 +112,32 @@ export const WorkItemsPage: React.FC = () => {
     if (!user?.team_id) return;
 
     try {
+      // 1. Get or Create Monthly HeadsUp
+      let headsupId: number;
+      try {
+        const headsup = await api.getMonthlyHeadsUp(user.team_id, workItemForm.month);
+        headsupId = headsup.id;
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          const newHeadsup = await api.createMonthlyHeadsUp(user.team_id, {
+            month: workItemForm.month,
+            description: `Heads up for ${getMonthName(workItemForm.month)}`
+          });
+          headsupId = newHeadsup.id;
+        } else {
+          throw err;
+        }
+      }
+
+      // 2. Create Work Item
       await api.createWorkItem({
-        ...workItemForm,
+        title: workItemForm.title,
+        description: workItemForm.description,
+        source_type: workItemForm.source_type,
         source_id: parseInt(workItemForm.source_id),
+        monthly_headsup_id: headsupId,
       });
+
       setSuccess('Work item created successfully');
       setShowWorkItemModal(false);
       setWorkItemForm({

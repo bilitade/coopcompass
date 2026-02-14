@@ -17,6 +17,7 @@ class Task(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     work_item_id = Column(Integer, ForeignKey("work_items.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
     assignee_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     status = Column(

@@ -327,6 +327,39 @@ class ApiService {
     return response.data;
   }
 
+  async deleteWorkItem(workItemId: number): Promise<void> {
+    await this.client.delete(`/api/work-items/${workItemId}`);
+  }
+
+  // Task endpoints
+  async createTask(workItemId: number, data: { description: string; assignee_id?: number; effort_hours?: number }): Promise<any> {
+    const response = await this.client.post<any>(`/api/work-items/${workItemId}/tasks`, data);
+    return response.data;
+  }
+
+  async getTask(taskId: number): Promise<any> {
+    const response = await this.client.get<any>(`/api/tasks/${taskId}`);
+    return response.data;
+  }
+
+  async updateTask(taskId: number, data: { description?: string; assignee_id?: number; status?: string; effort_hours?: number; blocked_reason?: string }): Promise<any> {
+    const response = await this.client.put<any>(`/api/tasks/${taskId}`, data);
+    return response.data;
+  }
+
+  async deleteTask(taskId: number): Promise<void> {
+    await this.client.delete(`/api/tasks/${taskId}`);
+  }
+
+  async getTasksByWorkItem(workItemId: number): Promise<any[]> {
+    const response = await this.client.get<any[]>(`/api/work-items/${workItemId}/tasks`);
+    return response.data;
+  }
+
+  async getUserTasks(userId: number): Promise<any[]> {
+    const response = await this.client.get<any[]>(`/api/users/${userId}/tasks`);
+    return response.data;
+  }
 
   // Weekly Priority endpoints
   async setWeeklyPriority(data: WeeklyPriorityCreate): Promise<WeeklyPriority> {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, AlertCircle } from 'lucide-react';
-import type { OKRCreate, KeyResultCreate } from '../../../shared/types';
+import type { OKRCreate } from '../../../shared/types';
 
 interface OKRFormProps {
   onSubmit: (data: OKRCreate) => void;

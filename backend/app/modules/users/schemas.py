@@ -24,7 +24,7 @@ class UserUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1)
     email: Optional[EmailStr] = None
     position: Optional[str] = None
-    role: Optional[str] = Field(None, pattern="^(member|lead|director|executive)$")
+    role: Optional[str] = Field(None, pattern="^(member|lead|director|executive|admin)$")
     is_active: Optional[bool] = None
 
 

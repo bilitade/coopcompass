@@ -10,7 +10,7 @@ import { ArrowLeft, Save, TrendingUp } from 'lucide-react';
 
 export const OKRMeasurementPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  useAuth();
   const { id } = useParams<{ id: string }>();
 
   const [loading, setLoading] = useState(true);

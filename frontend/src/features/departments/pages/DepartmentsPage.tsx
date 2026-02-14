@@ -29,7 +29,6 @@ interface DepartmentStats {
   totalMembers: number;
   averageOKRProgress: number;
   averageBAUHealth: number;
-  averageBAUExecution?: number;
 }
 
 export const DepartmentsPage: React.FC = () => {
@@ -67,7 +66,6 @@ export const DepartmentsPage: React.FC = () => {
             totalMembers: deptDashboard.total_members || 0,
             averageOKRProgress: deptDashboard.average_okr_progress || 0,
             averageBAUHealth: deptDashboard.average_bau_health || 0,
-            averageBAUExecution: deptDashboard.average_bau_execution || 0,
           });
         } catch (deptErr) {
           console.error(`Error fetching dashboard for dept ${dept.id}:`, deptErr);
@@ -78,7 +76,6 @@ export const DepartmentsPage: React.FC = () => {
             totalMembers: 0,
             averageOKRProgress: 0,
             averageBAUHealth: 0,
-            averageBAUExecution: 0,
           });
         }
       }
@@ -259,16 +256,6 @@ export const DepartmentsPage: React.FC = () => {
                         </div>
                         <p className="text-2xl font-bold text-green-600">
                           {deptStats?.averageBAUHealth.toFixed(0) || '0'}%
-                        </p>
-                      </div>
-
-                      <div className="bg-surface border border-border rounded-lg p-3 col-span-2">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Activity size={14} className="text-blue-600" />
-                          <p className="text-xs font-medium text-text-secondary">BAU Execution (OCE)</p>
-                        </div>
-                        <p className="text-2xl font-bold text-blue-600">
-                          {(deptStats?.averageBAUExecution || 0).toFixed(0)}%
                         </p>
                       </div>
                     </div>

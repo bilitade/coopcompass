@@ -11,7 +11,7 @@ import { ArrowLeft } from 'lucide-react';
 
 export const AddEditOKRPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  useAuth();
   const { id } = useParams<{ id: string }>();
   const isEditing = !!id;
 

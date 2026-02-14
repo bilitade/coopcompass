@@ -199,4 +199,19 @@ def update_work_item(
     return work_item
 
 
-
+@router.delete("/work-items/{work_item_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_work_item(
+    work_item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_team_lead)
+):
+    """Delete a work item and its associated tasks and priorities."""
+    work_item = db.query(WorkItem).filter(WorkItem.id == work_item_id).first()
+    if not work_item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Work item not found"
+        )
+    
+    db.delete(work_item)
+    db.commit()

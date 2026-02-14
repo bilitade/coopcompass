@@ -345,7 +345,7 @@ def seed_demo_data():
                 current_value=Decimal("99.7"),
                 unit="%",
                 weight=Decimal("0.6"),
-                is_higher_better=True
+                metric_type="Higher is Better"
             ),
             BAUMetric(
                 bau_activity_id=bau_core[0].id,
@@ -354,7 +354,7 @@ def seed_demo_data():
                 current_value=Decimal("35"),
                 unit="minutes",
                 weight=Decimal("0.4"),
-                is_higher_better=False
+                metric_type="Lower is Better"
             ),
             BAUMetric(
                 bau_activity_id=bau_core[1].id,
@@ -363,7 +363,7 @@ def seed_demo_data():
                 current_value=Decimal("92"),
                 unit="%",
                 weight=Decimal("0.5"),
-                is_higher_better=True
+                metric_type="Higher is Better"
             ),
         ]
         db.add_all(metrics_core)
@@ -430,7 +430,7 @@ def seed_demo_data():
                 current_value=Decimal("93"),
                 unit="%",
                 weight=Decimal("0.7"),
-                is_higher_better=True
+                metric_type="Higher is Better"
             ),
         ]
         db.add_all(metrics_security)
@@ -497,7 +497,7 @@ def seed_demo_data():
                 current_value=Decimal("0.8"),
                 unit="%",
                 weight=Decimal("0.6"),
-                is_higher_better=False
+                metric_type="Lower is Better"
             ),
             BAUMetric(
                 bau_activity_id=bau_mobile[0].id,
@@ -506,7 +506,7 @@ def seed_demo_data():
                 current_value=Decimal("2.5"),
                 unit="seconds",
                 weight=Decimal("0.4"),
-                is_higher_better=False
+                metric_type="Lower is Better"
             ),
         ]
         db.add_all(metrics_mobile)
@@ -521,7 +521,7 @@ def seed_demo_data():
         work_items_core = [
             WorkItem(
                 team_id=team_core.id,
-                name="Migrate authentication service to cloud",
+                title="Migrate authentication service to cloud",
                 description="Move auth service to AWS infrastructure",
                 source_type="OKR",
                 source_id=key_results_core[0].id,
@@ -530,7 +530,7 @@ def seed_demo_data():
             ),
             WorkItem(
                 team_id=team_core.id,
-                name="Implement auto-failover system",
+                title="Implement auto-failover system",
                 description="Setup automatic failover for critical services",
                 source_type="OKR",
                 source_id=key_results_core[1].id,
@@ -539,7 +539,7 @@ def seed_demo_data():
             ),
             WorkItem(
                 team_id=team_core.id,
-                name="Monthly database optimization",
+                title="Monthly database optimization",
                 description="Optimize database queries and indexes",
                 source_type="BAU",
                 source_id=bau_core[1].id,
@@ -551,7 +551,7 @@ def seed_demo_data():
         work_items_security = [
             WorkItem(
                 team_id=team_security.id,
-                name="Deploy zero-trust network controls",
+                title="Deploy zero-trust network controls",
                 description="Implement network segmentation and access controls",
                 source_type="OKR",
                 source_id=key_results_security[0].id,
@@ -563,7 +563,7 @@ def seed_demo_data():
         work_items_mobile = [
             WorkItem(
                 team_id=team_mobile.id,
-                name="Optimize app performance",
+                title="Optimize app performance",
                 description="Reduce app load time and crash rate",
                 source_type="OKR",
                 source_id=key_results_mobile[0].id,

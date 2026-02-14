@@ -117,7 +117,7 @@ def calculate_bau_metric_achievement(
     if target == 0 or current == 0:
         return 0.0
     
-    if metric_type == "higher_better":
+    if metric_type == "Higher is Better":
         achievement = (current / target) * 100
     else:  # lower_better
         achievement = (target / current) * 100

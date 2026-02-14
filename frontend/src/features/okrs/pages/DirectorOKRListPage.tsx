@@ -67,7 +67,7 @@ export const DirectorOKRListPage: React.FC = () => {
             allOKRs.push({
               okr_id: okr.id,
               objective: okr.objective,
-              quarter: okr.quarter,
+              quarter: okr.quarter || 'Q1',
               team_id: team.id,
               team_name: team.name,
               department_id: directorDept.id,

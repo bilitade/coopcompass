@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from app.models import OKR, Team, Department, User, WeeklyPriority, WorkItem
 from app.modules.okrs.services import calculate_okr_progress, calculate_kr_progress
-from app.modules.bau.services import calculate_bau_health, calculate_bau_execution
+from app.modules.bau.services import calculate_bau_health
 from app.modules.work_items.services import calculate_work_item_progress
 from app.services.calculations import get_current_quarter, get_current_week
 
@@ -52,7 +52,6 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
     ).all()
     
     bau_healths = []
-    bau_healths = []
     for activity in bau_activities:
         health = calculate_bau_health(db, activity.id)
         metrics_data = [
@@ -64,7 +63,7 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
                 "current_value": float(m.current_value) if m.current_value else 0.0,
                 "unit": m.unit,
                 "weight": float(m.weight),
-                "is_higher_better": m.is_higher_better,
+                "metric_type": m.metric_type,
                 "created_at": m.created_at,
                 "updated_at": m.updated_at
             }
@@ -97,7 +96,7 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
         current_priorities.append({
             "priority_id": p.id,
             "work_item_id": p.work_item_id,
-            "work_item_name": p.work_item.name,
+            "work_item_name": p.work_item.title,
             "priority": p.priority,
             "progress": progress
         })
@@ -124,7 +123,6 @@ def get_department_dashboard(db: Session, department_id: int) -> dict:
     total_members = 0
     total_okr_progress = 0.0
     total_bau_health = 0.0
-    total_bau_execution = 0.0
     team_count_with_data = 0
     
     teams_data = []
@@ -183,7 +181,6 @@ def get_organization_dashboard(db: Session) -> dict:
     total_directors = 0
     total_okr_progress = 0.0
     total_bau_health = 0.0
-    total_bau_execution = 0.0
     dept_count_with_data = 0
     
     departments_data = []

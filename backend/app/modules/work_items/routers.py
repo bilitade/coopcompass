@@ -33,12 +33,13 @@ def create_work_item(
     
     new_work_item = WorkItem(
         team_id=work_item_data.team_id if hasattr(work_item_data, 'team_id') else current_user.team_id,
-        name=work_item_data.name,
+        title=work_item_data.title,
         description=work_item_data.description,
         source_type=work_item_data.source_type,
         source_id=work_item_data.source_id,
         owner_id=work_item_data.owner_id,
-        month=work_item_data.month
+        month=work_item_data.month,
+        status="Not Started"
     )
     
     db.add(new_work_item)
@@ -100,12 +101,13 @@ def list_work_items_with_source(
         wi_dict = {
             'id': wi.id,
             'team_id': wi.team_id,
-            'name': wi.name,
+            'title': wi.title,
             'description': wi.description,
             'source_type': wi.source_type,
             'source_id': wi.source_id,
             'owner_id': wi.owner_id,
             'month': wi.month,
+            'status': wi.status,
             'created_at': wi.created_at,
             'updated_at': wi.updated_at,
             'key_result': None,
@@ -120,9 +122,11 @@ def list_work_items_with_source(
                     'id': kr.id,
                     'okr_id': kr.okr_id,
                     'description': kr.description,
+                    'base_value': kr.base_value,
                     'target_value': kr.target_value,
                     'current_value': kr.current_value,
                     'unit': kr.unit,
+                    'weight': kr.weight,
                     'created_at': kr.created_at,
                     'updated_at': kr.updated_at,
                 }
@@ -178,14 +182,17 @@ def update_work_item(
             detail="Work item not found"
         )
     
-    if work_item_data.name is not None:
-        work_item.name = work_item_data.name
+    if work_item_data.title is not None:
+        work_item.title = work_item_data.title
     
     if work_item_data.description is not None:
         work_item.description = work_item_data.description
     
     if work_item_data.owner_id is not None:
         work_item.owner_id = work_item_data.owner_id
+    
+    if work_item_data.status is not None:
+        work_item.status = work_item_data.status
     
     db.commit()
     db.refresh(work_item)

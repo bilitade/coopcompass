@@ -2,11 +2,19 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from typing import List
+from decimal import Decimal
 from app.core.database import get_db
-from app.models import *
-from app.schemas import *
+from app.models import BAUActivity, BAUMetric, Team
+from app.modules.bau.schemas import *
+from app.modules.bau.services import (
+    get_bau_activity_with_scores,
+    get_team_bau_health,
+    validate_metric_weights,
+    update_metric_current_value
+)
 from app.api.v1.deps import get_current_user, get_current_team_lead
-from app.modules.bau.services import calculate_bau_health, calculate_bau_execution
+from app.modules.users.models import User
 
 
 router = APIRouter(prefix="/api", tags=["bau"])
@@ -41,7 +49,7 @@ def create_bau_activity(
     return new_bau
 
 
-@router.get("/teams/{team_id}/bau", response_model=list[BAUActivityResponse])
+@router.get("/teams/{team_id}/bau", response_model=List[BAUActivityResponse])
 def list_team_bau_activities(
     team_id: int,
     db: Session = Depends(get_db),
@@ -79,6 +87,24 @@ def get_bau_activity(
         )
     
     return activity
+
+
+@router.get("/bau/{bau_id}/with-scores", response_model=BAUActivityWithScore)
+def get_bau_activity_with_calculated_scores(
+    bau_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get BAU activity with calculated achievement and scores."""
+    activity_data = get_bau_activity_with_scores(db, bau_id)
+    
+    if not activity_data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="BAU activity not found"
+        )
+    
+    return activity_data
 
 
 @router.put("/bau/{bau_id}", response_model=BAUActivityResponse)
@@ -127,13 +153,6 @@ def delete_bau_activity(
             detail="BAU activity not found"
         )
 
-    # Check if user is from the same team
-    if activity.team_id != current_user.team_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to delete this BAU activity"
-        )
-
     db.delete(activity)
     db.commit()
 
@@ -145,7 +164,7 @@ def create_bau_metric(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_team_lead)
 ):
-    """Add a metric to a BAU activity."""
+    """Add a metric (KPI) to a BAU activity."""
     activity = db.query(BAUActivity).filter(BAUActivity.id == bau_id).first()
     
     if not activity:
@@ -154,13 +173,18 @@ def create_bau_metric(
             detail="BAU activity not found"
         )
     
+    # Note: Weight validation is relaxed to allow incremental additions
+    # Users can add/edit metrics and adjust weights as needed
+    # Weights should ideally sum to 1.0, but this is not strictly enforced during creation
+    
     new_metric = BAUMetric(
         bau_activity_id=bau_id,
         name=metric_data.name,
         target_value=metric_data.target_value,
+        current_value=metric_data.current_value,
         unit=metric_data.unit,
         weight=metric_data.weight,
-        is_higher_better=metric_data.is_higher_better
+        metric_type=metric_data.metric_type
     )
     
     db.add(new_metric)
@@ -170,7 +194,7 @@ def create_bau_metric(
     return new_metric
 
 
-@router.get("/bau/{bau_id}/metrics", response_model=list[BAUMetricResponse])
+@router.get("/bau/{bau_id}/metrics", response_model=List[BAUMetricResponse])
 def list_bau_metrics(
     bau_id: int,
     db: Session = Depends(get_db),
@@ -183,13 +207,6 @@ def list_bau_metrics(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="BAU activity not found"
-        )
-
-    # Check if user is from the same team
-    if activity.team_id != current_user.team_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to view this BAU activity"
         )
 
     metrics = db.query(BAUMetric).filter(
@@ -214,17 +231,6 @@ def get_bau_metric(
             detail="BAU metric not found"
         )
 
-    # Check if user is from the same team as the activity
-    activity = db.query(BAUActivity).filter(
-        BAUActivity.id == metric.bau_activity_id
-    ).first()
-
-    if activity.team_id != current_user.team_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to view this BAU metric"
-        )
-
     return metric
 
 
@@ -235,7 +241,7 @@ def update_bau_metric(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_team_lead)
 ):
-    """Update a BAU metric value and other properties."""
+    """Update a BAU metric properties."""
     metric = db.query(BAUMetric).filter(BAUMetric.id == metric_id).first()
     
     if not metric:
@@ -243,6 +249,9 @@ def update_bau_metric(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Metric not found"
         )
+    
+    # Note: Weight validation is relaxed to allow flexible adjustments
+    # Users can update weights incrementally without strict enforcement
     
     if metric_data.name is not None:
         metric.name = metric_data.name
@@ -256,23 +265,39 @@ def update_bau_metric(
     if metric_data.weight is not None:
         metric.weight = metric_data.weight
     
-    if metric_data.is_higher_better is not None:
-        metric.is_higher_better = metric_data.is_higher_better
+    if metric_data.metric_type is not None:
+        metric.metric_type = metric_data.metric_type
     
     if metric_data.current_value is not None:
         metric.current_value = metric_data.current_value
-        
-        # Record metric history
-        history_entry = MetricHistory(
-            bau_metric_id=metric_id,
-            value=metric_data.current_value
-        )
-        db.add(history_entry)
     
     db.commit()
     db.refresh(metric)
     
     return metric
+
+
+@router.patch("/bau-metrics/{metric_id}/current-value")
+def update_metric_current(
+    metric_id: int,
+    current_value: Decimal,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_team_lead)
+):
+    """Update only the current value of a BAU Metric (weekly update by Manager)."""
+    metric = update_metric_current_value(db, metric_id, current_value)
+    
+    if not metric:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Metric not found"
+        )
+    
+    return {
+        "id": metric.id,
+        "current_value": metric.current_value,
+        "message": "Current value updated successfully"
+    }
 
 
 @router.delete("/bau-metrics/{metric_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -290,123 +315,37 @@ def delete_bau_metric(
             detail="BAU metric not found"
         )
 
-    # Check if user is from the same team as the activity
-    activity = db.query(BAUActivity).filter(
-        BAUActivity.id == metric.bau_activity_id
-    ).first()
-
-    if activity.team_id != current_user.team_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to delete this BAU metric"
-        )
-
+    # Validate remaining weights will be valid
+    activity_id = metric.bau_activity_id
     db.delete(metric)
+    db.flush()  # Apply delete but don't commit yet
+    
+    is_valid, error_msg = validate_metric_weights(db, activity_id)
+    if not is_valid and error_msg:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot delete: {error_msg}"
+        )
+    
     db.commit()
 
 
-@router.get("/bau/{bau_id}/health", response_model=BAUHealthResponse)
-def get_bau_health(
-    bau_id: int,
+@router.get("/teams/{team_id}/bau/health", response_model=BAUOverallHealthResponse)
+def get_team_bau_overall_health(
+    team_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get BAU activity health score."""
-    activity = db.query(BAUActivity).filter(BAUActivity.id == bau_id).first()
-    
-    if not activity:
+    """Get overall BAU health for a team with all activities and scores."""
+    # Check team exists
+    team = db.query(Team).filter(Team.id == team_id).first()
+    if not team:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="BAU activity not found"
+            detail="Team not found"
         )
     
-    health = calculate_bau_health(db, bau_id)
+    health_data = get_team_bau_health(db, team_id)
     
-    metrics_data = [
-        {
-            "id": m.id,
-            "bau_activity_id": m.bau_activity_id,
-            "name": m.name,
-            "target_value": m.target_value,
-            "current_value": m.current_value,
-            "unit": m.unit,
-            "weight": m.weight,
-            "is_higher_better": m.is_higher_better,
-            "created_at": m.created_at,
-            "updated_at": m.updated_at
-        }
-        for m in activity.metrics
-    ]
-    
-    return {
-        "activity_id": activity.id,
-        "activity_name": activity.name,
-        "health": health,
-        "metrics": metrics_data
-    }
-
-
-@router.get("/bau-metrics/{metric_id}/history", response_model=list[MetricHistoryResponse])
-def get_metric_history(
-    metric_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Get metric history."""
-    metric = db.query(BAUMetric).filter(BAUMetric.id == metric_id).first()
-    
-    if not metric:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Metric not found"
-        )
-    
-    history = db.query(MetricHistory).filter(
-        MetricHistory.bau_metric_id == metric_id
-    ).order_by(MetricHistory.recorded_at.desc()).all()
-    
-    return history
-
-@router.get("/bau/{bau_id}/execution", response_model=float)
-def get_bau_execution(
-    bau_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Get BAU team effort (Operational Control Execution, OCE) for a BAU activity.
-    Returns a percentage (0-100).
-    """
-    activity = db.query(BAUActivity).filter(BAUActivity.id == bau_id).first()
-    
-    if not activity:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="BAU activity not found"
-        )
-
-    # Authorization: Allow team members, executives, and directors
-    from app.models import Team, Department
-    
-    # Executives and admins can view all activities
-    if current_user.role in ['executive', 'admin']:
-        pass
-    # Directors can view activities from their department
-    elif current_user.role == 'director':
-        team = db.query(Team).filter(Team.id == activity.team_id).first()
-        if team:
-            department = db.query(Department).filter(Department.id == team.department_id).first()
-            if not department or department.director_id != current_user.id:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Not authorized to view this BAU activity"
-                )
-    # Team members can only view activities from their team
-    elif activity.team_id != current_user.team_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to view this BAU activity"
-        )
-
-    execution = calculate_bau_execution(db, bau_id)
-    return execution
+    return health_data

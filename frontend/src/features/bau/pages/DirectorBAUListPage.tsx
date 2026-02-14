@@ -60,9 +60,16 @@ export const DirectorBAUListPage: React.FC = () => {
           const teamBAU = await api.getTeamBAUActivities(team.id);
 
           for (const activity of teamBAU) {
-            // Get activity health and execution
-            const bauHealth = await api.getBAUHealth(activity.id);
-            const bauExecution = await api.getBAUExecution(activity.id);
+            // Get activity detail with metrics
+            const activityDetail = await api.getBAUActivity(activity.id);
+            
+            // Calculate activity score from metrics
+            let activityScore = 0;
+            if (activityDetail.metrics && activityDetail.metrics.length > 0) {
+              activityScore = activityDetail.metrics.reduce((sum, metric) => {
+                return sum + (metric.achievement || 0) * parseFloat(metric.weight.toString());
+              }, 0);
+            }
 
             allBAU.push({
               activity_id: activity.id,
@@ -71,9 +78,9 @@ export const DirectorBAUListPage: React.FC = () => {
               team_name: team.name,
               department_id: directorDept.id,
               department_name: directorDept.name,
-              health: bauHealth.health || 0,
-              execution: bauExecution || 0,
-              metrics_count: bauHealth.metrics?.length || 0,
+              health: activityScore,
+              execution: activityScore,
+              metrics_count: activityDetail.metrics?.length || 0,
               is_active: activity.is_active,
             });
           }

@@ -17,12 +17,13 @@ class WorkItem(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     team_id = Column(Integer, ForeignKey("teams.id", ondelete="CASCADE"), nullable=False)
-    name = Column(Text, nullable=False)
+    title = Column(Text, nullable=False)
     description = Column(Text)
-    source_type = Column(String(10), nullable=False)
+    source_type = Column(String(10), nullable=False)  # "OKR" or "BAU"
     source_id = Column(Integer, nullable=False)  # References key_results.id or bau_activities.id
     owner_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     month = Column(String(7), nullable=False)  # e.g., "2026-01"
+    status = Column(String(20), default="Not Started", nullable=False)  # Not Started / In Progress / Completed
     created_at = Column(DateTime, default=get_utc_now)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
@@ -33,10 +34,12 @@ class WorkItem(Base):
     weekly_priorities = relationship("WeeklyPriority", back_populates="work_item", cascade="all, delete-orphan")
 
     __table_args__ = (
-        CheckConstraint("source_type IN ('OKR', 'BAU')"),
+        CheckConstraint("source_type IN ('OKR', 'BAU')", name="check_source_type"),
+        CheckConstraint("status IN ('Not Started', 'In Progress', 'Completed')", name="check_work_item_status"),
         Index("idx_work_items_source", "source_type", "source_id"),
         Index("idx_work_items_month", "month"),
         Index("idx_work_items_owner", "owner_id"),
+        Index("idx_work_items_team", "team_id"),
     )
 
 

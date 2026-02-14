@@ -56,11 +56,12 @@ export const WorkItemsPage: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonth());
 
   const [workItemForm, setWorkItemForm] = useState({
-    name: '',
+    title: '',
     description: '',
     source_type: 'OKR' as 'OKR' | 'BAU',
     source_id: '',
     month: '',
+    status: 'Not Started' as 'Not Started' | 'In Progress' | 'Completed',
   });
 
   useEffect(() => {
@@ -118,11 +119,12 @@ export const WorkItemsPage: React.FC = () => {
       setSuccess('Work item created successfully');
       setShowWorkItemModal(false);
       setWorkItemForm({
-        name: '',
+        title: '',
         description: '',
         source_type: 'OKR',
         source_id: '',
         month: getCurrentMonth(),
+        status: 'Not Started',
       });
       loadData();
     } catch (err: any) {
@@ -178,7 +180,14 @@ export const WorkItemsPage: React.FC = () => {
 
         {/* Work Items List */}
         <div className="space-y-2">
-          {workItems.map((item) => (
+          {workItems.map((item) => {
+            const statusColors = {
+              'Not Started': 'bg-gray-500/10 text-gray-700 dark:text-gray-300',
+              'In Progress': 'bg-blue-500/10 text-blue-700 dark:text-blue-300',
+              'Completed': 'bg-green-500/10 text-green-700 dark:text-green-300',
+            };
+            
+            return (
             <div
               key={item.id}
               className="flex items-center justify-between px-4 py-3 border border-border rounded-lg hover:bg-surface-highlight transition-colors"
@@ -191,9 +200,14 @@ export const WorkItemsPage: React.FC = () => {
                   {item.source_type}
                 </span>
                 
+                {/* Status Badge */}
+                <span className={`inline-block px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${statusColors[item.status || 'Not Started']}`}>
+                  {item.status || 'Not Started'}
+                </span>
+                
                 {/* Work Item Info */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-text-primary truncate">{item.name}</h3>
+                  <h3 className="font-medium text-text-primary truncate">{item.title}</h3>
                   <div className="flex items-center space-x-2 mt-1 text-xs text-text-secondary">
                     <span>{item.month}</span>
                     <span>•</span>
@@ -211,7 +225,7 @@ export const WorkItemsPage: React.FC = () => {
                 </div>
               </div>
             </div>
-          ))}
+          )})}
         </div>
 
         {workItems.length === 0 && (
@@ -230,14 +244,14 @@ export const WorkItemsPage: React.FC = () => {
         >
           <form onSubmit={handleCreateWorkItem} className="space-y-4">
             <div>
-              <label className="label">Name</label>
+              <label className="label">Title</label>
               <input
                 type="text"
                 required
                 className="input"
-                value={workItemForm.name}
-                onChange={(e) => setWorkItemForm({ ...workItemForm, name: e.target.value })}
-                placeholder="Work item name"
+                value={workItemForm.title}
+                onChange={(e) => setWorkItemForm({ ...workItemForm, title: e.target.value })}
+                placeholder="Work item title"
               />
             </div>
 
@@ -250,6 +264,19 @@ export const WorkItemsPage: React.FC = () => {
                 onChange={(e) => setWorkItemForm({ ...workItemForm, description: e.target.value })}
                 placeholder="Describe the work..."
               />
+            </div>
+
+            <div>
+              <label className="label">Status</label>
+              <select
+                className="input"
+                value={workItemForm.status}
+                onChange={(e) => setWorkItemForm({ ...workItemForm, status: e.target.value as any })}
+              >
+                <option value="Not Started">Not Started</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+              </select>
             </div>
 
             <div>

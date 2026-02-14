@@ -24,11 +24,14 @@ import { MyTeamPage } from '../features/teams/pages/MyTeamPage';
 
 // OKR pages
 import { OKRPage } from '../features/okrs/pages/OKRPage';
+import { AddEditOKRPage } from '../features/okrs/pages/AddEditOKRPage';
+import { OKRMeasurementPage } from '../features/okrs/pages/OKRMeasurementPage';
 import { DirectorOKRListPage } from '../features/okrs/pages/DirectorOKRListPage';
 import { ExecutiveOKRListPage } from '../features/okrs/pages/ExecutiveOKRListPage';
 
 // BAU pages
-import { BAUPage } from '../features/bau/pages/BAUPage';
+import { BAUActivitiesPage } from '../features/bau/pages/BAUActivitiesPage';
+import { ManageMetricsPage } from '../features/bau/pages/ManageMetricsPage';
 import { DirectorBAUListPage } from '../features/bau/pages/DirectorBAUListPage';
 import { ExecutiveBAUListPage } from '../features/bau/pages/ExecutiveBAUListPage';
 
@@ -178,10 +181,46 @@ export const AppRoutes = () => {
         }
       />
       <Route
-        path="/bau"
+        path="/okrs/new"
         element={
           <ProtectedRoute>
-            <BAUPage />
+            <AddEditOKRPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/okrs/:id/edit"
+        element={
+          <ProtectedRoute>
+            <AddEditOKRPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/okrs/:id/measure"
+        element={
+          <ProtectedRoute>
+            <OKRMeasurementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/bau"
+        element={<Navigate to="/bau-activities" replace />}
+      />
+      <Route
+        path="/bau-activities"
+        element={
+          <ProtectedRoute>
+            <BAUActivitiesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/bau-activities/:activityId/metrics"
+        element={
+          <ProtectedRoute>
+            <ManageMetricsPage />
           </ProtectedRoute>
         }
       />

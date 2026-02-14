@@ -48,7 +48,7 @@ class TaskDetailResponse(TaskResponse):
 class WorkItemSmallResponse(BaseModel):
     """Small work item response for embedding in tasks."""
     id: int
-    name: str
+    title: str
     source_type: str
     month: str
 
@@ -66,7 +66,7 @@ class TaskWithWorkItemResponse(TaskResponse):
 
 class WorkItemCreate(BaseModel):
     """Work item creation schema."""
-    name: str = Field(..., min_length=1)
+    title: str = Field(..., min_length=1, max_length=500)
     description: Optional[str] = None
     source_type: str = Field(..., pattern="^(OKR|BAU)$")
     source_id: int = Field(..., gt=0)
@@ -76,21 +76,23 @@ class WorkItemCreate(BaseModel):
 
 class WorkItemUpdate(BaseModel):
     """Work item update schema."""
-    name: Optional[str] = None
+    title: Optional[str] = Field(None, min_length=1, max_length=500)
     description: Optional[str] = None
     owner_id: Optional[int] = None
+    status: Optional[str] = Field(None, pattern="^(Not Started|In Progress|Completed)$")
 
 
 class WorkItemResponse(BaseModel):
     """Work item response schema."""
     id: int
     team_id: int
-    name: str
+    title: str
     description: Optional[str]
     source_type: str
     source_id: int
     owner_id: Optional[int]
     month: str
+    status: str
     created_at: datetime
     updated_at: datetime
 

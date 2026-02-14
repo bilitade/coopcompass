@@ -283,7 +283,7 @@ export const PriorityPage: React.FC = () => {
                 <option value="">Choose a work item...</option>
                 {getAvailableWorkItems().map((item) => (
                   <option key={item.id} value={item.id}>
-                    {item.name} ({item.month})
+                    {item.title} ({item.month})
                   </option>
                 ))}
               </select>
@@ -321,7 +321,7 @@ export const PriorityPage: React.FC = () => {
             setShowTaskModal(false);
             setSelectedWorkItemForTask(null);
           }}
-          title={selectedWorkItemForTask ? `Create Task for "${selectedWorkItemForTask.name}"` : 'Create Task'}
+          title={selectedWorkItemForTask ? `Create Task for "${selectedWorkItemForTask.title}"` : 'Create Task'}
         >
           <form onSubmit={handleCreateTask} className="space-y-4">
             <div>
@@ -426,7 +426,7 @@ const WorkItemCard: React.FC<WorkItemCardProps> = ({ item, priority, onRemove, t
     <div className={`border-l-4 ${getPriorityColor(priority)} bg-surface rounded-lg p-4`}>
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
-          <h3 className="font-medium text-text-primary">{item.name}</h3>
+          <h3 className="font-medium text-text-primary">{item.title}</h3>
           <div className="flex items-center space-x-4 mt-1 text-sm text-text-secondary">
             <span>{item.month}</span>
             <span className={`px-2 py-0.5 rounded text-xs font-medium ${

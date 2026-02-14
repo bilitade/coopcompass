@@ -59,20 +59,15 @@ export const ExecutiveBAUListPage: React.FC = () => {
 
               for (const activity of teamBAU) {
                 try {
-                  // Get activity health and execution
-                  let bauHealth = { health: 0, metrics: [] };
-                  let bauExecution = 0;
+                  // Get activity detail with metrics
+                  const activityDetail = await api.getBAUActivity(activity.id);
                   
-                  try {
-                    bauHealth = await api.getBAUHealth(activity.id);
-                  } catch (healthErr: any) {
-                    console.warn(`Error fetching health for BAU ${activity.id}:`, healthErr);
-                  }
-                  
-                  try {
-                    bauExecution = await api.getBAUExecution(activity.id);
-                  } catch (execErr: any) {
-                    console.warn(`Error fetching execution for BAU ${activity.id}:`, execErr);
+                  // Calculate activity score from metrics
+                  let activityScore = 0;
+                  if (activityDetail.metrics && activityDetail.metrics.length > 0) {
+                    activityScore = activityDetail.metrics.reduce((sum, metric) => {
+                      return sum + (metric.achievement || 0) * parseFloat(metric.weight.toString());
+                    }, 0);
                   }
 
                   allBAU.push({
@@ -82,9 +77,9 @@ export const ExecutiveBAUListPage: React.FC = () => {
                     team_name: team.name,
                     department_id: dept.id,
                     department_name: dept.name,
-                    health: bauHealth.health || 0,
-                    execution: bauExecution || 0,
-                    metrics_count: bauHealth.metrics?.length || 0,
+                    health: activityScore,
+                    execution: activityScore,
+                    metrics_count: activityDetail.metrics?.length || 0,
                     is_active: activity.is_active,
                   });
                 } catch (activityErr) {

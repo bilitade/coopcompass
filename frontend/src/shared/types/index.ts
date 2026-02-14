@@ -66,15 +66,20 @@ export interface TeamDetail extends Team {
   users: User[];
 }
 
-// OKR types
+// OKR types - Simplified and clean
 export interface OKR {
   id: number;
   team_id: number;
-  quarter: string;
+  year: number;
+  quarters: string; // Single quarter like "Q1"
+  okr_level: 'strategic' | 'operational' | 'tactical';
   objective: string;
+  description?: string | null;
+  status: 'draft' | 'active' | 'completed';
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  quarter?: string; // Legacy field
 }
 
 export interface OKRDetail extends OKR {
@@ -85,38 +90,41 @@ export interface KeyResult {
   id: number;
   okr_id: number;
   description: string;
+  base_value: string;
   target_value: string;
   current_value: string;
-  unit: string | null;
+  unit: string;
+  weight: string;
   created_at: string;
   updated_at: string;
 }
 
+export interface KeyResultWithScore extends KeyResult {
+  score: number; // 0.0 to 1.0
+}
+
 export interface OKRCreate {
-  quarter: string;
+  okr_level: 'strategic' | 'operational' | 'tactical';
+  year: number;
+  quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4';
   objective: string;
+  description?: string;
+  status?: 'draft' | 'active' | 'completed';
+  key_results?: KeyResultCreate[];
 }
 
 export interface KeyResultCreate {
   description: string;
+  base_value: number | string;
   target_value: number | string;
-  unit?: string | null;
+  unit: string;
+  weight: number | string;
 }
 
-export interface KRProgress {
-  kr_id: number;
-  description: string;
-  progress: number;
-  current_value: string;
-  target_value: string;
-}
-
-export interface OKRProgress {
-  okr_id: number;
-  objective: string;
-  quarter: string;
-  progress: number;
-  key_results: KRProgress[];
+export interface OKRWithScores extends OKR {
+  key_results: KeyResultWithScore[];
+  objective_score: number; // 0.0 to 1.0
+  status: 'Green' | 'Yellow' | 'Red';
 }
 
 // BAU types
@@ -131,7 +139,7 @@ export interface BAUActivity {
 }
 
 export interface BAUActivityDetail extends BAUActivity {
-  metrics: BAUMetric[];
+  metrics: BAUMetricWithAchievement[];
 }
 
 export interface BAUMetric {
@@ -140,11 +148,15 @@ export interface BAUMetric {
   name: string;
   target_value: string;
   current_value: string;
-  unit: string | null;
+  unit: string;
   weight: string;
-  is_higher_better: boolean;
+  metric_type: 'Higher is Better' | 'Lower is Better';
   created_at: string;
   updated_at: string;
+}
+
+export interface BAUMetricWithAchievement extends BAUMetric {
+  achievement: number; // 0 to 100
 }
 
 export interface BAUActivityCreate {
@@ -152,31 +164,44 @@ export interface BAUActivityCreate {
   description?: string | null;
 }
 
+export interface BAUActivityUpdate {
+  name?: string;
+  description?: string | null;
+  is_active?: boolean;
+}
+
 export interface BAUMetricCreate {
   name: string;
   target_value: number | string;
-  unit?: string | null;
-  weight?: number | string;
-  is_higher_better?: boolean;
+  current_value?: number | string;
+  unit: string;
+  weight: number | string;
+  metric_type?: 'Higher is Better' | 'Lower is Better';
 }
 
-export interface BAUHealth {
-  activity_id: number;
-  activity_name: string;
-  health: number;
-  metrics: BAUMetric[];
+export interface BAUActivityWithScore extends BAUActivity {
+  metrics: BAUMetricWithAchievement[];
+  activity_score: number; // 0 to 100
+}
+
+export interface BAUOverallHealth {
+  team_id: number;
+  activities: BAUActivityWithScore[];
+  overall_health: number; // 0 to 100
+  status: 'Excellent' | 'Good' | 'Acceptable' | 'Warning' | 'Poor';
 }
 
 // Work Item types
 export interface WorkItem {
   id: number;
   team_id: number;
-  name: string;
+  title: string;
   description: string | null;
   source_type: 'OKR' | 'BAU';
   source_id: number;
   owner_id: number | null;
   month: string;
+  status: 'Not Started' | 'In Progress' | 'Completed';
   created_at: string;
   updated_at: string;
 }
@@ -187,7 +212,7 @@ export interface WorkItemDetail extends WorkItem {
 }
 
 export interface WorkItemCreate {
-  name: string;
+  title: string;
   description?: string | null;
   source_type: 'OKR' | 'BAU';
   source_id: number;
@@ -235,8 +260,8 @@ export interface Dashboard {
   team_id: number;
   okr_progress: number;
   bau_health: number;
-  okrs: OKRProgress[];
-  bau_activities: BAUHealth[];
+  okrs: OKRWithScores[];
+  bau_activities: BAUActivityWithScore[];
   current_week_priorities: WeeklyPriorityWithProgress[];
   updated_at: string;
 }

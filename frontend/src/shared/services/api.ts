@@ -2,8 +2,9 @@ import axios, { type AxiosInstance, type AxiosError } from 'axios';
 import type {
   User, UserCreate, UserLogin, TokenResponse,
   Department, DepartmentDetail, Team, TeamDetail,
-  OKR, OKRDetail, OKRCreate, KeyResultCreate, KeyResult, OKRProgress, KRProgress,
-  BAUActivity, BAUActivityDetail, BAUActivityCreate, BAUMetric, BAUMetricCreate, BAUHealth,
+  OKR, OKRDetail, OKRCreate, KeyResultCreate, KeyResult, OKRWithScores,
+  BAUActivity, BAUActivityDetail, BAUActivityCreate, BAUActivityUpdate, BAUMetric, BAUMetricCreate, 
+  BAUActivityWithScore, BAUOverallHealth,
   WorkItem, WorkItemDetail, WorkItemCreate,
   Task, TaskDetail, TaskCreate, TaskUpdate,
   WeeklyPriority, WeeklyPriorityCreate,
@@ -166,6 +167,11 @@ class ApiService {
   }
 
   // OKR endpoints
+  async addOKR(data: OKRCreate): Promise<OKR> {
+    const response = await this.client.post<OKR>('/api/okrs/add', data);
+    return response.data;
+  }
+
   async createOKR(teamId: number, data: OKRCreate): Promise<OKR> {
     const response = await this.client.post<OKR>(`/api/okrs/teams/${teamId}/okrs`, data);
     return response.data;
@@ -183,7 +189,15 @@ class ApiService {
     return response.data;
   }
 
-  async updateOKR(okrId: number, data: { quarter?: string; objective?: string; is_active?: boolean }): Promise<OKR> {
+  async updateOKR(okrId: number, data: { 
+    okr_level?: 'strategic' | 'operational' | 'tactical';
+    year?: number; 
+    quarter?: 'Q1' | 'Q2' | 'Q3' | 'Q4'; 
+    objective?: string; 
+    description?: string;
+    status?: 'draft' | 'active' | 'completed';
+    is_active?: boolean 
+  }): Promise<OKR> {
     const response = await this.client.put<OKR>(`/api/okrs/${okrId}`, data);
     return response.data;
   }
@@ -201,18 +215,22 @@ class ApiService {
     return response.data;
   }
 
-  async updateKeyResult(krId: number, data: Partial<KeyResultCreate>): Promise<KeyResult> {
+  async updateKeyResult(krId: number, data: Partial<KeyResultCreate & { current_value?: number | string }>): Promise<KeyResult> {
     const response = await this.client.put<KeyResult>(`/api/okrs/key-results/${krId}`, data);
     return response.data;
   }
 
-  async getKRProgress(krId: number): Promise<KRProgress> {
-    const response = await this.client.get<KRProgress>(`/api/okrs/${krId}/progress`);
+  async updateKRCurrentValue(krId: number, currentValue: number | string): Promise<{ id: number; current_value: string; message: string }> {
+    const response = await this.client.patch<{ id: number; current_value: string; message: string }>(
+      `/api/okrs/key-results/${krId}/current-value`,
+      null,
+      { params: { current_value: currentValue } }
+    );
     return response.data;
   }
 
-  async getOKRProgress(okrId: number): Promise<OKRProgress> {
-    const response = await this.client.get<OKRProgress>(`/api/okrs/${okrId}/progress`);
+  async getOKRWithScores(okrId: number): Promise<OKRWithScores> {
+    const response = await this.client.get<OKRWithScores>(`/api/okrs/${okrId}/with-scores`);
     return response.data;
   }
 
@@ -232,7 +250,7 @@ class ApiService {
     return response.data;
   }
 
-  async updateBAUActivity(bauId: number, data: Partial<BAUActivityCreate>): Promise<BAUActivity> {
+  async updateBAUActivity(bauId: number, data: BAUActivityUpdate): Promise<BAUActivity> {
     const response = await this.client.put<BAUActivity>(`/api/bau/${bauId}`, data);
     return response.data;
   }
@@ -247,13 +265,22 @@ class ApiService {
     return response.data;
   }
 
-  async getBAUHealth(bauId: number): Promise<BAUHealth> {
-    const response = await this.client.get<BAUHealth>(`/api/bau/${bauId}/health`);
+  async updateMetricCurrentValue(metricId: number, currentValue: number | string): Promise<{ id: number; current_value: string; message: string }> {
+    const response = await this.client.patch<{ id: number; current_value: string; message: string }>(
+      `/api/bau-metrics/${metricId}/current-value`,
+      null,
+      { params: { current_value: currentValue } }
+    );
     return response.data;
   }
 
-  async getBAUExecution(bauId: number): Promise<number> {
-    const response = await this.client.get<number>(`/api/bau/${bauId}/execution`);
+  async getBAUActivityWithScores(bauId: number): Promise<BAUActivityWithScore> {
+    const response = await this.client.get<BAUActivityWithScore>(`/api/bau/${bauId}/with-scores`);
+    return response.data;
+  }
+
+  async getTeamBAUHealth(teamId: number): Promise<BAUOverallHealth> {
+    const response = await this.client.get<BAUOverallHealth>(`/api/teams/${teamId}/bau/health`);
     return response.data;
   }
 
@@ -296,7 +323,7 @@ class ApiService {
     return response.data;
   }
 
-  async updateWorkItem(workItemId: number, data: { name?: string; description?: string; owner_id?: number }): Promise<WorkItem> {
+  async updateWorkItem(workItemId: number, data: { title?: string; description?: string; owner_id?: number; status?: string }): Promise<WorkItem> {
     const response = await this.client.put<WorkItem>(`/api/work-items/${workItemId}`, data);
     return response.data;
   }

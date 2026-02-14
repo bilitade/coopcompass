@@ -277,8 +277,8 @@ export const TasksPage: React.FC = () => {
                         <td className="px-2 py-1.5">
                           {task.work_item ? (
                             <div>
-                              <div className="text-sm text-text-primary font-medium truncate" title={task.work_item.name}>
-                                {task.work_item.name}
+                              <div className="text-sm text-text-primary font-medium truncate" title={task.work_item.title}>
+                                {task.work_item.title}
                               </div>
                               <span className={`inline-block mt-0.5 px-1 py-0.5 text-xs font-medium rounded ${
                                 task.work_item.source_type === 'OKR' ? 'bg-primary/10 text-primary' : 'bg-green-500/10 text-green-600 dark:text-green-300'
@@ -423,7 +423,7 @@ export const TasksPage: React.FC = () => {
                 <option value="">Choose a work item...</option>
                 {workItems.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {item.name} ({item.source_type})
+                    {item.title} ({item.source_type})
                   </option>
                 ))}
               </select>

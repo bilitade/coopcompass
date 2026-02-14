@@ -15,7 +15,6 @@ interface BAUWithContext {
   department_id: number;
   department_name: string;
   health: number;
-  execution: number;
   metrics_count: number;
   is_active: boolean;
 }
@@ -55,36 +54,20 @@ export const ExecutiveBAUListPage: React.FC = () => {
 
           for (const team of teams) {
             try {
-              const teamBAU = await api.getTeamBAUActivities(team.id);
+              const teamHealth = await api.getTeamBAUHealth(team.id);
 
-              for (const activity of teamBAU) {
-                try {
-                  // Get activity detail with metrics
-                  const activityDetail = await api.getBAUActivity(activity.id);
-                  
-                  // Calculate activity score from metrics
-                  let activityScore = 0;
-                  if (activityDetail.metrics && activityDetail.metrics.length > 0) {
-                    activityScore = activityDetail.metrics.reduce((sum, metric) => {
-                      return sum + (metric.achievement || 0) * parseFloat(metric.weight.toString());
-                    }, 0);
-                  }
-
-                  allBAU.push({
-                    activity_id: activity.id,
-                    activity_name: activity.name,
-                    team_id: team.id,
-                    team_name: team.name,
-                    department_id: dept.id,
-                    department_name: dept.name,
-                    health: activityScore,
-                    execution: activityScore,
-                    metrics_count: activityDetail.metrics?.length || 0,
-                    is_active: activity.is_active,
-                  });
-                } catch (activityErr) {
-                  console.error(`Error processing BAU activity ${activity.id}:`, activityErr);
-                }
+              for (const activity of teamHealth.activities) {
+                allBAU.push({
+                  activity_id: activity.id,
+                  activity_name: activity.name,
+                  team_id: team.id,
+                  team_name: team.name,
+                  department_id: dept.id,
+                  department_name: dept.name,
+                  health: activity.activity_score,
+                  metrics_count: activity.metrics?.length || 0,
+                  is_active: activity.is_active,
+                });
               }
             } catch (teamErr: any) {
               console.error(`Error fetching BAU for team ${team.id}:`, teamErr);
@@ -213,12 +196,6 @@ export const ExecutiveBAUListPage: React.FC = () => {
                         Health
                       </div>
                     </th>
-                    <th className="text-center py-4 px-4 font-semibold text-text-primary">
-                      <div className="flex items-center justify-center gap-2">
-                        <Activity size={18} />
-                        Execution
-                      </div>
-                    </th>
                     <th className="text-center py-4 px-4 font-semibold text-text-primary">Status</th>
                   </tr>
                 </thead>
@@ -256,19 +233,6 @@ export const ExecutiveBAUListPage: React.FC = () => {
                           </div>
                           <span className={`font-bold text-sm w-12 text-right ${getHealthColor(activity.health)}`}>
                             {activity.health.toFixed(0)}%
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                            <div
-                              className={`h-2.5 rounded-full transition-all ${getHealthBgColor(activity.execution)}`}
-                              style={{ width: `${activity.execution}%` }}
-                            />
-                          </div>
-                          <span className={`font-bold text-sm w-12 text-right ${getHealthColor(activity.execution)}`}>
-                            {activity.execution.toFixed(0)}%
                           </span>
                         </div>
                       </td>

@@ -14,11 +14,6 @@ const MetricsCard: React.FC<{ label: string; value: number | string; icon: React
       <div className="p-2 bg-primary/10 rounded-lg text-primary">
         {icon}
       </div>
-      {isPercentage && (
-        <span className={`text-xs font-bold px-2 py-1 rounded-full ${Number(value) >= 80 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-          Overall Health
-        </span>
-      )}
     </div>
     <div>
       <p className="text-sm font-medium text-text-secondary">{label}</p>

@@ -94,6 +94,14 @@ export const AppRoutes = () => {
         }
       />
       <Route
+        path="/dashboard/department/:departmentId/teams/:teamId"
+        element={
+          <ProtectedRoute>
+            <TeamDetailViewPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/my-team"
         element={
           <ProtectedRoute>

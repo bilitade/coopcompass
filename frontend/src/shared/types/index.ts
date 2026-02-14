@@ -134,8 +134,8 @@ export interface KeyResultCreate {
 
 export interface OKRWithScores extends OKR {
   key_results: KeyResultWithScore[];
-  objective_score: number; // 0.0 to 1.0
-  health_status: 'Green' | 'Yellow' | 'Red';
+  objective_score?: number; // 0.0 to 1.0 (Optional to match safe access)
+  health_status?: 'Green' | 'Yellow' | 'Red';
 }
 
 // BAU types

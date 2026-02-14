@@ -65,7 +65,7 @@ export const DepartmentDetailViewPage: React.FC = () => {
   }
 
   const handleTeamClick = (teamId: number) => {
-    navigate(`/dashboard/team/${teamId}`);
+    navigate(`/dashboard/department/${departmentId}/teams/${teamId}`);
   };
 
   return (

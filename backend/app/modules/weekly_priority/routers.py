@@ -170,6 +170,14 @@ def get_dashboard(
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
     
+    # Authorization: Directors can only see dashboards for teams in their department
+    if current_user.role == "director":
+        if not team.department_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
     return services.get_team_dashboard(db, team_id)
 
 
@@ -187,6 +195,14 @@ def get_performance_trend(
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
     
+    # Authorization: Directors can only see performance for teams in their department
+    if current_user.role == "director":
+        if not team.department_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
     dashboard_data = services.get_team_dashboard(db, team_id)
     
     return [
@@ -209,6 +225,10 @@ def get_department_dashboard_endpoint(
     if not department:
         raise HTTPException(status_code=404, detail="Department not found")
     
+    # Authorization: Directors can only see their own department dashboard
+    if current_user.role == "director" and department.director_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied: You are not the director of this department")
+
     return services.get_department_dashboard(db, department_id)
 
 

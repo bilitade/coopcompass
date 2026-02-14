@@ -118,7 +118,9 @@ export const DepartmentsPage: React.FC = () => {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Organization Overview</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            {user.role === 'director' ? 'Department Overview' : 'Organization Overview'}
+          </h1>
         </div>
 
         {/* Summary Cards */}
@@ -126,7 +128,9 @@ export const DepartmentsPage: React.FC = () => {
           <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-text-secondary">Total Departments</p>
+                <p className="text-sm text-text-secondary">
+                  {user.role === 'director' ? 'My Department' : 'Total Departments'}
+                </p>
                 <p className="text-3xl font-bold mt-2">{departments.length}</p>
               </div>
               <Building2 className="w-12 h-12 text-primary" />
@@ -160,9 +164,11 @@ export const DepartmentsPage: React.FC = () => {
           <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-text-secondary">Directors</p>
+                <p className="text-sm text-text-secondary">
+                  {user.role === 'director' ? 'Director Status' : 'Directors'}
+                </p>
                 <p className="text-3xl font-bold mt-2">
-                  {departments.filter(d => d.director_id).length}
+                  {user.role === 'director' ? 'Assigned' : departments.filter(d => d.director_id).length}
                 </p>
               </div>
               <TrendingUp className="w-12 h-12 text-primary" />
@@ -173,7 +179,9 @@ export const DepartmentsPage: React.FC = () => {
         {/* Departments Grid */}
         <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">All Departments</h2>
+            <h2 className="text-2xl font-bold">
+              {user.role === 'director' ? 'My Department' : 'All Departments'}
+            </h2>
           </div>
 
           {departments.length === 0 ? (

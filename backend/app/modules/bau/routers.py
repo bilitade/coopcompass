@@ -64,6 +64,20 @@ def list_team_bau_activities(
             detail="Team not found"
         )
     
+    # Authorization: Directors can only see BAU for teams in their department
+    if current_user.role == "director":
+        if not team.department_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: This team does not belong to your department"
+            )
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: This team does not belong to your department"
+            )
+
     activities = db.query(BAUActivity).filter(
         BAUActivity.team_id == team_id
     ).all()
@@ -86,6 +100,15 @@ def get_bau_activity(
             detail="BAU activity not found"
         )
     
+    # Authorization: Directors can only see BAU for teams in their department
+    if current_user.role == "director":
+        team = db.query(Team).filter(Team.id == activity.team_id).first()
+        if not team or not team.department_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+    
     return activity
 
 
@@ -96,6 +119,18 @@ def get_bau_activity_with_calculated_scores(
     current_user: User = Depends(get_current_user)
 ):
     """Get BAU activity with calculated achievement and scores."""
+    # Authorization: Directors can only see BAU for teams in their department
+    if current_user.role == "director":
+        activity = db.query(BAUActivity).filter(BAUActivity.id == bau_id).first()
+        if not activity:
+            raise HTTPException(status_code=404, detail="BAU activity not found")
+        team = db.query(Team).filter(Team.id == activity.team_id).first()
+        if not team or not team.department_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
     activity_data = get_bau_activity_with_scores(db, bau_id)
     
     if not activity_data:
@@ -346,6 +381,14 @@ def get_team_bau_overall_health(
             detail="Team not found"
         )
     
+    # Authorization: Directors can only see BAU for teams in their department
+    if current_user.role == "director":
+        if not team.department_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+            
     health_data = get_team_bau_health(db, team_id)
     
     return health_data

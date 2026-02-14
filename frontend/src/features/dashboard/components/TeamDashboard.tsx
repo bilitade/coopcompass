@@ -296,18 +296,18 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ data }) => {
             <div key={activity.id} className="bg-surface-hover/30 border border-border/50 rounded-2xl p-6 hover:bg-surface-hover hover:-translate-y-1 transition-all duration-300">
               <div className="flex justify-between items-start mb-4">
                 <h3 className="font-black text-sm line-clamp-1">{activity.name}</h3>
-                <span className={`text-lg font-black ${activity.activity_score >= 90 ? 'text-emerald-500' : activity.activity_score >= 70 ? 'text-amber-500' : 'text-red-500'}`}>
-                  {activity.activity_score.toFixed(0)}%
+                <span className={`text-lg font-black ${(activity.activity_score || 0) >= 90 ? 'text-emerald-500' : (activity.activity_score || 0) >= 70 ? 'text-amber-500' : 'text-red-500'}`}>
+                  {(activity.activity_score || 0).toFixed(0)}%
                 </span>
               </div>
               <div className="w-full bg-border/40 rounded-full h-1.5 mb-6">
                 <div 
-                  className={`h-1.5 rounded-full transition-all duration-1000 ${activity.activity_score >= 90 ? 'bg-emerald-500' : activity.activity_score >= 70 ? 'bg-amber-500' : 'bg-red-500'}`} 
-                  style={{ width: `${activity.activity_score}%` }} 
+                  className={`h-1.5 rounded-full transition-all duration-1000 ${(activity.activity_score || 0) >= 90 ? 'bg-emerald-500' : (activity.activity_score || 0) >= 70 ? 'bg-amber-500' : 'bg-red-500'}`} 
+                  style={{ width: `${activity.activity_score || 0}%` }} 
                 />
               </div>
               <div className="space-y-2">
-                 {activity.metrics?.slice(0, 2).map((m: any) => (
+                 {(activity.metrics || []).slice(0, 2).map((m: any) => (
                    <div key={m.id} className="flex justify-between items-center text-[10px]">
                       <span className="text-text-secondary font-medium line-clamp-1">{m.name}</span>
                       <span className="font-bold">{m.current_value} / {m.target_value}</span>

@@ -55,7 +55,12 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
     for activity in bau_activities:
         activity_data = get_bau_activity_with_scores(db, activity.id)
         if activity_data:
-            bau_healths.append(activity_data)
+            bau_healths.append({
+                "id": activity_data["id"],
+                "name": activity_data["name"],
+                "activity_score": activity_data["activity_score"],
+                "metrics": activity_data["metrics"]
+            })
     
     avg_bau_health = (
         sum(b["activity_score"] for b in bau_healths) / len(bau_healths)
@@ -149,7 +154,8 @@ def get_department_dashboard(db: Session, department_id: int) -> dict:
     total_members = 0
     total_okr_progress = 0.0
     total_bau_health = 0.0
-    team_count_with_data = 0
+    teams_with_okrs = 0
+    teams_with_bau = 0
     
     teams_data = []
     
@@ -163,9 +169,14 @@ def get_department_dashboard(db: Session, department_id: int) -> dict:
         # Get team dashboard metrics
         team_dashboard = get_team_dashboard(db, team.id)
         
-        if team_dashboard["okr_progress"] > 0 or team_dashboard["bau_health"] > 0:
-            team_count_with_data += 1
+        # Count OKR progress if it exists (non-zero) or if the team has OKRs
+        if team_dashboard["okrs"] or team_dashboard["okr_progress"] > 0:
+            teams_with_okrs += 1
             total_okr_progress += team_dashboard["okr_progress"]
+            
+        # Count BAU health if it exists (non-zero) or if the team has BAU activities
+        if team_dashboard["bau_activities"] or team_dashboard["bau_health"] > 0:
+            teams_with_bau += 1
             total_bau_health += team_dashboard["bau_health"]
         
         teams_data.append({
@@ -177,12 +188,12 @@ def get_department_dashboard(db: Session, department_id: int) -> dict:
         })
     
     avg_okr_progress = (
-        total_okr_progress / team_count_with_data
-        if team_count_with_data > 0 else 0.0
+        total_okr_progress / teams_with_okrs
+        if teams_with_okrs > 0 else 0.0
     )
     avg_bau_health = (
-        total_bau_health / team_count_with_data
-        if team_count_with_data > 0 else 0.0
+        total_bau_health / teams_with_bau
+        if teams_with_bau > 0 else 0.0
     )
     
     return {
@@ -207,7 +218,8 @@ def get_organization_dashboard(db: Session) -> dict:
     total_directors = 0
     total_okr_progress = 0.0
     total_bau_health = 0.0
-    dept_count_with_data = 0
+    depts_with_okrs = 0
+    depts_with_bau = 0
     
     departments_data = []
     
@@ -222,9 +234,12 @@ def get_organization_dashboard(db: Session) -> dict:
         total_teams += dept_dashboard["total_teams"]
         total_members += dept_dashboard["total_members"]
         
-        if dept_dashboard["average_okr_progress"] > 0 or dept_dashboard["average_bau_health"] > 0:
-            dept_count_with_data += 1
+        if dept_dashboard["average_okr_progress"] > 0:
+            depts_with_okrs += 1
             total_okr_progress += dept_dashboard["average_okr_progress"]
+            
+        if dept_dashboard["average_bau_health"] > 0:
+            depts_with_bau += 1
             total_bau_health += dept_dashboard["average_bau_health"]
         
         # Get director name if director_id exists
@@ -245,12 +260,12 @@ def get_organization_dashboard(db: Session) -> dict:
         })
     
     avg_okr_progress = (
-        total_okr_progress / dept_count_with_data
-        if dept_count_with_data > 0 else 0.0
+        total_okr_progress / depts_with_okrs
+        if depts_with_okrs > 0 else 0.0
     )
     avg_bau_health = (
-        total_bau_health / dept_count_with_data
-        if dept_count_with_data > 0 else 0.0
+        total_bau_health / depts_with_bau
+        if depts_with_bau > 0 else 0.0
     )
     
     return {

@@ -15,12 +15,19 @@ def list_teams(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """List all teams with department and member information."""
-    teams = db.query(Team).options(
+    """List teams based on role visibility."""
+    query = db.query(Team).options(
         joinedload(Team.department),
         joinedload(Team.users)
-    ).all()
-    return teams
+    )
+
+    if current_user.role == "director":
+        # Find department(s) led by this director
+        dept_ids = [d.id for d in db.query(Department).filter(Department.director_id == current_user.id).all()]
+        query = query.filter(Team.department_id.in_(dept_ids))
+    
+    # Executives and Admins see all
+    return query.all()
 
 
 @router.post("", response_model=TeamResponse, status_code=status.HTTP_201_CREATED)
@@ -58,6 +65,14 @@ def get_team(
             detail="Team not found"
         )
     
+    # Authorization: Directors can only see teams in their own department
+    if current_user.role == "director":
+        if not team.department or team.department.director_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: This team does not belong to your department"
+            )
+    
     return team
 
 
@@ -75,6 +90,20 @@ def list_team_users(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Team not found"
         )
+    
+    # Authorization: Directors can only see teams in their own department
+    if current_user.role == "director":
+        if not team.department_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: This team does not belong to your department"
+            )
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: This team does not belong to your department"
+            )
     
     users = db.query(User).filter(User.team_id == team_id).all()
     return users

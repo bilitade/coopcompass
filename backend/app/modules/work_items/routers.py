@@ -65,10 +65,25 @@ def list_work_items(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """List work items with optional filters."""
+    """List work items with optional filters and role-based restriction."""
     query = db.query(WorkItem)
     
-    if team_id:
+    # Role-based restriction for directors
+    if current_user.role == "director":
+        from app.models import Department, Team
+        dept = db.query(Department).filter(Department.director_id == current_user.id).first()
+        if dept:
+            team_ids = [t.id for t in db.query(Team).filter(Team.department_id == dept.id).all()]
+            if team_id:
+                if team_id not in team_ids:
+                    return [] # Or raise 403, but returning empty list is safer for generic listing
+                query = query.filter(WorkItem.team_id == team_id)
+            else:
+                query = query.filter(WorkItem.team_id.in_(team_ids))
+        else:
+            return [] # Director not assigned to any department
+            
+    elif team_id:
         query = query.filter(WorkItem.team_id == team_id)
     
     if month:
@@ -173,6 +188,16 @@ def get_work_item(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Work item not found"
         )
+        
+    # Authorization: Directors can only see work items for teams in their department
+    if current_user.role == "director":
+        from app.models import Team, Department
+        team = db.query(Team).filter(Team.id == work_item.team_id).first()
+        if not team or not team.department_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
     
     return work_item
 

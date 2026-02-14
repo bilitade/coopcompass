@@ -70,8 +70,16 @@ def get_prioritized_work_items(
     current_user: User = Depends(get_current_user)
 ):
     """Get only the work items that are prioritized for the current week."""
-    # Verify user belongs to the team
-    if current_user.team_id != team_id:
+    # Authorization: Verify user belongs to the team OR is the director of the department
+    is_team_member = current_user.team_id == team_id
+    is_director = False
+    
+    if current_user.role == "director":
+        team = db.query(Team).filter(Team.id == team_id).first()
+        if team and team.department:
+            is_director = team.department.director_id == current_user.id
+
+    if not is_team_member and not is_director and current_user.role not in ["executive", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have access to this team's data"
@@ -185,8 +193,16 @@ def get_team_tasks(
     current_user: User = Depends(get_current_user)
 ):
     """Get all tasks for a team (grouped by work items)."""
-    # Verify user belongs to the team
-    if current_user.team_id != team_id:
+    # Authorization: Verify user belongs to the team OR is the director of the department
+    is_team_member = current_user.team_id == team_id
+    is_director = False
+    
+    if current_user.role == "director":
+        team = db.query(Team).filter(Team.id == team_id).first()
+        if team and team.department:
+            is_director = team.department.director_id == current_user.id
+
+    if not is_team_member and not is_director and current_user.role not in ["executive", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You don't have access to this team's tasks"

@@ -58,8 +58,12 @@ def get_okr_with_scores(db: Session, okr_id: int) -> Dict:
     return {
         'id': okr.id,
         'team_id': okr.team_id,
+        'year': okr.year,
+        'quarters': okr.quarters,
         'quarter': okr.quarter,
+        'okr_level': okr.okr_level,
         'objective': okr.objective,
+        'description': okr.description,
         'is_active': okr.is_active,
         'created_at': okr.created_at,
         'updated_at': okr.updated_at,

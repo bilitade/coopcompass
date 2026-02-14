@@ -181,7 +181,7 @@ export const TeamDetailViewPage: React.FC = () => {
                         </div>
                       </div>
                       <span className="font-semibold whitespace-nowrap">
-                        {okr.progress.toFixed(1)}%
+                        {(okr.progress || 0).toFixed(1)}%
                       </span>
                     </div>
                   </div>
@@ -195,12 +195,12 @@ export const TeamDetailViewPage: React.FC = () => {
                           <span>
                             {kr.current_value} / {kr.target_value}
                           </span>
-                          <span className="font-semibold">{kr.progress.toFixed(1)}%</span>
+                          <span className="font-semibold">{(kr.progress || 0).toFixed(1)}%</span>
                         </div>
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                           <div
                             className="bg-primary h-1.5 rounded-full transition-all"
-                            style={{ width: `${kr.progress}%` }}
+                            style={{ width: `${kr.progress || 0}%` }}
                           />
                         </div>
                       </div>
@@ -225,25 +225,25 @@ export const TeamDetailViewPage: React.FC = () => {
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-lg font-semibold">{activity.activity_name}</h3>
                     <span className={`font-semibold ${
-                      activity.health >= 90
+                      (activity.health || 0) >= 90
                         ? 'text-green-600'
-                        : activity.health >= 70
+                        : (activity.health || 0) >= 70
                         ? 'text-yellow-600'
                         : 'text-red-600'
                     }`}>
-                      {activity.health.toFixed(1)}%
+                      {(activity.health || 0).toFixed(1)}%
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-4">
                     <div
                       className={`h-2 rounded-full transition-all ${
-                        activity.health >= 90
+                        (activity.health || 0) >= 90
                           ? 'bg-green-600'
-                          : activity.health >= 70
+                          : (activity.health || 0) >= 70
                           ? 'bg-yellow-600'
                           : 'bg-red-600'
                       }`}
-                      style={{ width: `${activity.health}%` }}
+                      style={{ width: `${activity.health || 0}%` }}
                     />
                   </div>
 
@@ -300,7 +300,7 @@ export const TeamDetailViewPage: React.FC = () => {
                         />
                       </div>
                       <span className="text-sm font-bold text-primary whitespace-nowrap w-12 text-right">
-                        {priority.progress.toFixed(0)}%
+                        {(priority.progress || 0).toFixed(0)}%
                       </span>
                     </div>
                   </div>

@@ -177,8 +177,8 @@ class ApiService {
     return response.data;
   }
 
-  async getTeamOKRs(teamId: number, quarter?: string): Promise<OKRDetail[]> {
-    const response = await this.client.get<OKRDetail[]>(`/api/okrs/teams/${teamId}/okrs`, {
+  async getTeamOKRs(teamId: number, quarter?: string): Promise<OKRWithScores[]> {
+    const response = await this.client.get<OKRWithScores[]>(`/api/okrs/teams/${teamId}/okrs`, {
       params: quarter ? { quarter } : undefined,
     });
     return response.data;

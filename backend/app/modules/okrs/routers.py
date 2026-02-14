@@ -168,14 +168,14 @@ def create_okr(
     return new_okr
 
 
-@router.get("/teams/{team_id}/okrs", response_model=List[OKRDetailResponse])
+@router.get("/teams/{team_id}/okrs", response_model=List[OKRWithScoreResponse])
 def list_team_okrs(
     team_id: int,
     quarter: str = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """List team OKRs with key results and optional quarter filter."""
+    """List team OKRs with scores, key results and optional quarter filter."""
     # Check team exists
     team = db.query(Team).filter(Team.id == team_id).first()
     if not team:
@@ -184,17 +184,35 @@ def list_team_okrs(
             detail="Team not found"
         )
 
-    query = db.query(OKR).options(joinedload(OKR.key_results)).filter(OKR.team_id == team_id)
+    # Authorization: Directors can only see OKRs for teams in their department
+    if current_user.role == "director":
+        if not team.department_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: This team does not belong to your department"
+            )
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: This team does not belong to your department"
+            )
+
+    query = db.query(OKR).filter(OKR.team_id == team_id)
 
     if quarter:
         query = query.filter(OKR.quarter == quarter)
 
     okrs = query.all()
     
-    # Normalize OKRs to ensure backward compatibility
-    normalized_okrs = [normalize_okr(okr) for okr in okrs]
+    # Return OKRs with scores
+    result = []
+    for okr in okrs:
+        okr_data = get_okr_with_scores(db, okr.id)
+        if okr_data:
+            result.append(okr_data)
     
-    return normalized_okrs
+    return result
 
 
 @router.get("/{okr_id}", response_model=OKRDetailResponse)
@@ -212,6 +230,21 @@ def get_okr(
             detail="OKR not found"
         )
     
+    # Authorization: Directors can only see OKRs for teams in their department
+    if current_user.role == "director":
+        team = db.query(Team).filter(Team.id == okr.team_id).first()
+        if not team or not team.department_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied"
+            )
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied"
+            )
+    
     # Normalize for backward compatibility
     okr = normalize_okr(okr)
     
@@ -225,6 +258,18 @@ def get_okr_with_calculated_scores(
     current_user: User = Depends(get_current_user)
 ):
     """Get OKR with calculated scores for all key results and objective."""
+    # Authorization: Directors can only see OKRs for teams in their department
+    if current_user.role == "director":
+        okr = db.query(OKR).filter(OKR.id == okr_id).first()
+        if not okr:
+            raise HTTPException(status_code=404, detail="OKR not found")
+        team = db.query(Team).filter(Team.id == okr.team_id).first()
+        if not team or not team.department_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
     okr_data = get_okr_with_scores(db, okr_id)
     
     if not okr_data:

@@ -19,6 +19,16 @@ def read_headsup_by_month(
     current_user: User = Depends(deps.get_current_user)
 ):
     """Get a monthly headsup for a team and month."""
+    # Authorization: Directors can only see planning for teams in their department
+    if current_user.role == "director":
+        from app.models import Team, Department
+        team = db.query(Team).filter(Team.id == team_id).first()
+        if not team or not team.department_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
     db_obj = services.get_monthly_headsup_by_month(db, team_id=team_id, month=month)
     if not db_obj:
         raise HTTPException(status_code=404, detail="Monthly Heads-Up not found")
@@ -32,6 +42,16 @@ def read_headsups(
     current_user: User = Depends(deps.get_current_user)
 ):
     """Get all monthly headsups for a team."""
+    # Authorization: Directors can only see planning for teams in their department
+    if current_user.role == "director":
+        from app.models import Team, Department
+        team = db.query(Team).filter(Team.id == team_id).first()
+        if not team or not team.department_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
     return services.get_monthly_headsups(db, team_id=team_id)
 
 

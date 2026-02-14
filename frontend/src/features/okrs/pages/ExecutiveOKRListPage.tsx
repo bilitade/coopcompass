@@ -59,9 +59,6 @@ export const ExecutiveOKRListPage: React.FC = () => {
               const teamOKRs = await api.getTeamOKRs(team.id);
 
               for (const okr of teamOKRs) {
-                // Get OKR with scores
-                const okrWithScores = await api.getOKRWithScores(okr.id);
-
                 allOKRs.push({
                   okr_id: okr.id,
                   objective: okr.objective,
@@ -70,7 +67,7 @@ export const ExecutiveOKRListPage: React.FC = () => {
                   team_name: team.name,
                   department_id: dept.id,
                   department_name: dept.name,
-                  progress: okrWithScores.objective_score * 100 || 0,
+                  progress: (okr.objective_score || 0) * 100,
                   key_results_count: okr.key_results?.length || 0,
                   is_active: okr.is_active,
                 });

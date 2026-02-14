@@ -106,24 +106,23 @@ export const AddEditOKRPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-5xl mx-auto space-y-4">
         {/* Header */}
-        <div className="mb-6">
-          <button
-            onClick={handleCancel}
-            className="flex items-center gap-2 text-text-secondary hover:text-text-primary mb-4 transition-colors"
-          >
-            <ArrowLeft size={20} />
-            <span>Back to OKRs</span>
-          </button>
-          <h1 className="text-3xl font-bold text-text-primary">
-            {isEditing ? 'Edit OKR' : 'Create New OKR'}
-          </h1>
-          <p className="text-text-secondary mt-2">
-            {isEditing 
-              ? 'Update your objective and key results'
-              : 'Define your objective and measurable key results'}
-          </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleCancel}
+              className="p-2 text-text-secondary hover:text-text-primary hover:bg-surface-hover rounded-lg transition-colors"
+              title="Back to OKRs"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-text-primary">
+                {isEditing ? 'Edit OKR' : 'Create New OKR'}
+              </h1>
+            </div>
+          </div>
         </div>
 
         {/* Error Alert */}
@@ -136,7 +135,7 @@ export const AddEditOKRPage: React.FC = () => {
         )}
 
         {/* Form Card */}
-        <div className="bg-surface border border-border rounded-lg shadow-sm p-6">
+        <div className="bg-surface border border-border rounded-lg p-5">
           <OKRForm
             onSubmit={handleSubmit}
             onCancel={handleCancel}

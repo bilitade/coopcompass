@@ -5,7 +5,7 @@ import { Layout } from '../../../shared/components/Layout';
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner';
 import { Alert } from '../../../shared/components/Alert';
 import { Breadcrumb } from '../../../shared/components/Breadcrumb';
-import { Target, TrendingUp, Calendar, Users, Building2 } from 'lucide-react';
+import { Target, Users, Building2 } from 'lucide-react';
 
 interface OKRWithContext {
   okr_id: number;
@@ -173,99 +173,75 @@ export const ExecutiveOKRListPage: React.FC = () => {
         </div>
 
         {/* OKR List */}
-        <div className="bg-surface border border-border rounded-lg shadow-sm overflow-hidden">
+        <div className="card p-0 overflow-hidden">
           {filteredOKRs.length === 0 ? (
             <div className="text-center py-12">
-              <Target className="w-16 h-16 text-text-secondary mx-auto mb-4" />
-              <p className="text-text-secondary text-lg">No OKRs found</p>
+              <Target className="w-12 h-12 text-text-secondary/50 mx-auto mb-3" />
+              <p className="text-text-secondary font-medium">No OKRs found for this period</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-surface-hover border-b-2 border-border">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-surface-hover/50 text-xs uppercase text-text-secondary font-semibold tracking-wider">
                   <tr>
-                    <th className="text-left py-4 px-6 font-semibold text-text-primary">
-                      <div className="flex items-center gap-2">
-                        <Target size={18} />
-                        Objective
-                      </div>
-                    </th>
-                    <th className="text-left py-4 px-4 font-semibold text-text-primary">
-                      <div className="flex items-center gap-2">
-                        <Calendar size={18} />
-                        Quarter
-                      </div>
-                    </th>
-                    <th className="text-left py-4 px-4 font-semibold text-text-primary">
-                      <div className="flex items-center gap-2">
-                        <Building2 size={18} />
-                        Department
-                      </div>
-                    </th>
-                    <th className="text-left py-4 px-4 font-semibold text-text-primary">
-                      <div className="flex items-center gap-2">
-                        <Users size={18} />
-                        Team
-                      </div>
-                    </th>
-                    <th className="text-center py-4 px-4 font-semibold text-text-primary">KRs</th>
-                    <th className="text-center py-4 px-4 font-semibold text-text-primary">
-                      <div className="flex items-center justify-center gap-2">
-                        <TrendingUp size={18} />
-                        Progress
-                      </div>
-                    </th>
-                    <th className="text-center py-4 px-4 font-semibold text-text-primary">Status</th>
+                    <th className="py-3 px-4 first:pl-6">Objective</th>
+                    <th className="py-3 px-4">Quarter</th>
+                    <th className="py-3 px-4">Department</th>
+                    <th className="py-3 px-4">Team</th>
+                    <th className="py-3 px-4 text-center">KRs</th>
+                    <th className="py-3 px-4 w-48">Progress</th>
+                    <th className="py-3 px-4 text-center last:pr-6">Status</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-border/50">
                   {filteredOKRs.map((okr) => (
                     <tr
                       key={okr.okr_id}
-                      className="border-b border-border hover:bg-surface-hover transition-colors"
+                      className="hover:bg-surface-hover/50 transition-colors group"
                     >
-                      <td className="py-4 px-6">
-                        <p className="font-semibold text-text-primary">{okr.objective}</p>
+                      <td className="py-3 px-4 first:pl-6">
+                        <p className="font-medium text-text-primary group-hover:text-primary transition-colors line-clamp-2" title={okr.objective}>
+                          {okr.objective}
+                        </p>
                       </td>
-                      <td className="py-4 px-4">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
-                          <Calendar size={14} />
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface border border-border text-text-secondary">
                           {okr.quarter}
                         </span>
                       </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-2">
-                          <Building2 size={16} className="text-text-secondary" />
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 text-sm text-text-secondary">
+                          <Building2 size={14} />
                           <span className="font-medium text-text-primary">{okr.department_name}</span>
                         </div>
                       </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-2">
-                          <Users size={16} className="text-text-secondary" />
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 text-sm text-text-secondary">
+                          <Users size={14} />
                           <span className="text-text-primary">{okr.team_name}</span>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-center">
-                        <span className="text-text-secondary">{okr.key_results_count}</span>
+                      <td className="py-3 px-4 text-center">
+                        <span className="text-sm font-medium text-text-secondary bg-surface-hover px-2 py-0.5 rounded-full">{okr.key_results_count}</span>
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                          <div className="flex-1 bg-border/50 rounded-full h-1.5 overflow-hidden">
                             <div
-                              className="bg-blue-600 h-2.5 rounded-full transition-all"
+                              className="bg-primary h-full rounded-full transition-all duration-500"
                               style={{ width: `${okr.progress}%` }}
                             />
                           </div>
-                          <span className="font-bold text-blue-600 text-sm w-12 text-right">
+                          <span className="text-xs font-bold text-text-primary w-8 text-right">
                             {okr.progress.toFixed(0)}%
                           </span>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-center">
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                      <td className="py-3 px-4 text-center last:pr-6 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
                           okr.is_active
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/50'
+                            : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
                         }`}>
                           {okr.is_active ? 'Active' : 'Inactive'}
                         </span>
@@ -280,31 +256,31 @@ export const ExecutiveOKRListPage: React.FC = () => {
 
         {/* Summary Stats */}
         {filteredOKRs.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            <div className="bg-surface border border-border rounded-lg p-4">
-              <p className="text-sm text-text-secondary mb-1">Total OKRs</p>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="card p-4 flex flex-col justify-center">
+              <p className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1">Total OKRs</p>
               <p className="text-2xl font-bold text-text-primary">{filteredOKRs.length}</p>
             </div>
-            <div className="bg-surface border border-border rounded-lg p-4">
-              <p className="text-sm text-text-secondary mb-1">Departments</p>
+            <div className="card p-4 flex flex-col justify-center">
+              <p className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1">Departments</p>
               <p className="text-2xl font-bold text-primary">
                 {new Set(filteredOKRs.map(o => o.department_name)).size}
               </p>
             </div>
-            <div className="bg-surface border border-border rounded-lg p-4">
-              <p className="text-sm text-text-secondary mb-1">Active OKRs</p>
-              <p className="text-2xl font-bold text-green-600">
+            <div className="card p-4 flex flex-col justify-center">
+              <p className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1">Active OKRs</p>
+              <p className="text-2xl font-bold text-emerald-600">
                 {filteredOKRs.filter(o => o.is_active).length}
               </p>
             </div>
-            <div className="bg-surface border border-border rounded-lg p-4">
-              <p className="text-sm text-text-secondary mb-1">Avg Progress</p>
-              <p className="text-2xl font-bold text-blue-600">
+            <div className="card p-4 flex flex-col justify-center">
+              <p className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1">Avg Progress</p>
+              <p className="text-2xl font-bold text-primary">
                 {(filteredOKRs.reduce((sum, o) => sum + o.progress, 0) / filteredOKRs.length).toFixed(0)}%
               </p>
             </div>
-            <div className="bg-surface border border-border rounded-lg p-4">
-              <p className="text-sm text-text-secondary mb-1">Total KRs</p>
+            <div className="card p-4 flex flex-col justify-center">
+              <p className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-1">Total KRs</p>
               <p className="text-2xl font-bold text-text-primary">
                 {filteredOKRs.reduce((sum, o) => sum + o.key_results_count, 0)}
               </p>

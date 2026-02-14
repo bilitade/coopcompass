@@ -132,12 +132,12 @@ export const OKRForm: React.FC<OKRFormProps> = ({
   const totalWeight = calculateTotalWeight();
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-5">
       {/* Errors */}
       {errors.length > 0 && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
           <div className="flex items-center gap-2 mb-2">
-            <AlertCircle size={20} className="text-red-600" />
+            <AlertCircle size={18} className="text-red-600" />
             <h4 className="text-sm font-semibold text-red-800 dark:text-red-200">Please fix these errors:</h4>
           </div>
           <ul className="list-disc list-inside space-y-1">
@@ -148,35 +148,34 @@ export const OKRForm: React.FC<OKRFormProps> = ({
         </div>
       )}
 
-      {/* OKR Level */}
-      <div>
-        <label className="label">OKR Level *</label>
-        <div className="grid grid-cols-3 gap-3">
-          {(['strategic', 'operational', 'tactical'] as const).map((level) => (
-            <button
-              key={level}
-              type="button"
-              onClick={() => setFormData({ ...formData, okr_level: level })}
-              className={`p-4 rounded-lg border-2 transition-all font-medium capitalize ${
-                formData.okr_level === level
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border hover:border-primary/50 text-text-secondary'
-              }`}
-            >
-              {level}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Year and Quarter */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* OKR Level, Year and Quarter */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="label">Year *</label>
+          <label className="label text-sm mb-2">OKR Level *</label>
+          <div className="grid grid-cols-3 gap-2">
+            {(['strategic', 'operational', 'tactical'] as const).map((level) => (
+              <button
+                key={level}
+                type="button"
+                onClick={() => setFormData({ ...formData, okr_level: level })}
+                className={`p-2.5 rounded-md border-2 transition-all text-sm font-medium capitalize ${
+                  formData.okr_level === level
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border hover:border-primary/50 text-text-secondary'
+                }`}
+              >
+                {level}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="label text-sm mb-2">Year *</label>
           <select
             value={formData.year}
             onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
-            className="input w-full"
+            className="input w-full h-9"
             required
           >
             {Array.from({ length: 10 }, (_, i) => currentYear + i).map((year) => (
@@ -186,14 +185,14 @@ export const OKRForm: React.FC<OKRFormProps> = ({
         </div>
 
         <div>
-          <label className="label">Quarter *</label>
+          <label className="label text-sm mb-2">Quarter *</label>
           <div className="grid grid-cols-4 gap-2">
             {(['Q1', 'Q2', 'Q3', 'Q4'] as const).map((q) => (
               <button
                 key={q}
                 type="button"
                 onClick={() => setFormData({ ...formData, quarter: q })}
-                className={`p-3 rounded-lg border-2 transition-all font-medium ${
+                className={`p-2.5 rounded-md border-2 transition-all text-sm font-medium ${
                   formData.quarter === q
                     ? 'border-primary bg-primary/10 text-primary'
                     : 'border-border hover:border-primary/50 text-text-secondary'
@@ -206,24 +205,39 @@ export const OKRForm: React.FC<OKRFormProps> = ({
         </div>
       </div>
 
-      {/* Objective */}
-      <div>
-        <label className="label">Objective *</label>
-        <textarea
-          value={formData.objective}
-          onChange={(e) => setFormData({ ...formData, objective: e.target.value })}
-          className="input w-full"
-          rows={3}
-          placeholder="What do you want to achieve?"
-          required
-          maxLength={1000}
-        />
-        <p className="text-xs text-text-secondary mt-1">{formData.objective.length}/1000</p>
+      {/* Objective and Status */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="md:col-span-2">
+          <label className="label text-sm mb-2">Objective *</label>
+          <textarea
+            value={formData.objective}
+            onChange={(e) => setFormData({ ...formData, objective: e.target.value })}
+            className="input w-full"
+            rows={2}
+            placeholder="What do you want to achieve?"
+            required
+            maxLength={1000}
+          />
+          <p className="text-xs text-text-secondary mt-1">{formData.objective.length}/1000</p>
+        </div>
+
+        <div>
+          <label className="label text-sm mb-2">Status *</label>
+          <select
+            value={formData.status}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+            className="input w-full h-9"
+          >
+            <option value="draft">Draft</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
       </div>
 
       {/* Description */}
       <div>
-        <label className="label">Description (Optional)</label>
+        <label className="label text-sm mb-2">Description (Optional)</label>
         <textarea
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -234,40 +248,26 @@ export const OKRForm: React.FC<OKRFormProps> = ({
         />
       </div>
 
-      {/* Status */}
-      <div>
-        <label className="label">Status *</label>
-        <select
-          value={formData.status}
-          onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-          className="input w-full"
-        >
-          <option value="draft">Draft</option>
-          <option value="active">Active</option>
-          <option value="completed">Completed</option>
-        </select>
-      </div>
-
       {/* Key Results */}
-      <div className="border-t border-border pt-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="border-t border-border pt-4">
+        <div className="flex items-center justify-between mb-3">
           <div>
-            <h3 className="text-lg font-semibold text-text-primary">Key Results</h3>
-            <p className="text-sm text-text-secondary">Define measurable outcomes (weights must sum to 1.0)</p>
+            <h3 className="text-base font-semibold text-text-primary">Key Results</h3>
+            <p className="text-xs text-text-secondary mt-0.5">Define measurable outcomes (weights must sum to 1.0)</p>
           </div>
           <button
             type="button"
             onClick={addKeyResult}
-            className="btn btn-secondary flex items-center gap-2"
+            className="btn btn-secondary flex items-center gap-1.5 px-3 py-1.5 text-sm"
           >
-            <Plus size={18} />
-            Add Key Result
+            <Plus size={16} />
+            Add KR
           </button>
         </div>
 
         {keyResults.length > 0 && (
-          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
+          <div className="mb-3 p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+            <p className="text-xs text-blue-800 dark:text-blue-200">
               <strong>Total Weight:</strong>{' '}
               <span className={`font-bold ${Math.abs(totalWeight - 1.0) <= 0.01 ? 'text-green-600' : 'text-red-600'}`}>
                 {totalWeight.toFixed(2)} / 1.00
@@ -278,62 +278,70 @@ export const OKRForm: React.FC<OKRFormProps> = ({
         )}
 
         {keyResults.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full border border-border rounded-lg">
-              <thead className="bg-surface-highlight">
-                <tr>
-                  <th className="p-3 text-left text-sm font-semibold">#</th>
-                  <th className="p-3 text-left text-sm font-semibold">Description</th>
-                  <th className="p-3 text-left text-sm font-semibold">Base</th>
-                  <th className="p-3 text-left text-sm font-semibold">Target</th>
-                  <th className="p-3 text-left text-sm font-semibold">Unit</th>
-                  <th className="p-3 text-left text-sm font-semibold">Weight</th>
-                  <th className="p-3 text-left text-sm font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {keyResults.map((kr, idx) => (
-                  <tr key={kr.tempId} className="border-t border-border">
-                    <td className="p-3 text-sm">{idx + 1}</td>
-                    <td className="p-3">
-                      <input
-                        type="text"
-                        value={kr.description}
-                        onChange={(e) => updateKeyResult(kr.tempId, 'description', e.target.value)}
-                        className="input w-full text-sm"
-                        placeholder="Description"
-                      />
-                    </td>
-                    <td className="p-3">
+          <div className="space-y-3">
+            {keyResults.map((kr, idx) => (
+              <div key={kr.tempId} className="border border-border rounded-lg p-4 bg-surface-hover/30">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-semibold text-text-primary">Key Result #{idx + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeKeyResult(kr.tempId)}
+                    className="text-red-500 hover:text-red-700 p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    title="Remove"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+                
+                <div className="space-y-3">
+                  {/* Description */}
+                  <div>
+                    <label className="text-xs font-medium text-text-secondary mb-1.5 block">Description *</label>
+                    <input
+                      type="text"
+                      value={kr.description}
+                      onChange={(e) => updateKeyResult(kr.tempId, 'description', e.target.value)}
+                      className="input w-full text-sm h-9"
+                      placeholder="Enter key result description"
+                    />
+                  </div>
+
+                  {/* Base, Target, Unit, Weight in grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-text-secondary mb-1.5 block">Base Value *</label>
                       <input
                         type="number"
                         step="0.01"
                         value={kr.base_value}
                         onChange={(e) => updateKeyResult(kr.tempId, 'base_value', e.target.value)}
-                        className="input w-24 text-sm"
+                        className="input w-full text-sm h-9"
                         placeholder="0"
                       />
-                    </td>
-                    <td className="p-3">
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-text-secondary mb-1.5 block">Target Value *</label>
                       <input
                         type="number"
                         step="0.01"
                         value={kr.target_value}
                         onChange={(e) => updateKeyResult(kr.tempId, 'target_value', e.target.value)}
-                        className="input w-24 text-sm"
+                        className="input w-full text-sm h-9"
                         placeholder="100"
                       />
-                    </td>
-                    <td className="p-3">
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-text-secondary mb-1.5 block">Unit *</label>
                       <input
                         type="text"
                         value={kr.unit}
                         onChange={(e) => updateKeyResult(kr.tempId, 'unit', e.target.value)}
-                        className="input w-20 text-sm"
+                        className="input w-full text-sm h-9"
                         placeholder="%"
                       />
-                    </td>
-                    <td className="p-3">
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-text-secondary mb-1.5 block">Weight *</label>
                       <input
                         type="number"
                         step="0.01"
@@ -341,29 +349,19 @@ export const OKRForm: React.FC<OKRFormProps> = ({
                         max="1"
                         value={kr.weight}
                         onChange={(e) => updateKeyResult(kr.tempId, 'weight', e.target.value)}
-                        className="input w-20 text-sm"
+                        className="input w-full text-sm h-9"
                         placeholder="0.25"
                       />
-                    </td>
-                    <td className="p-3">
-                      <button
-                        type="button"
-                        onClick={() => removeKeyResult(kr.tempId)}
-                        className="text-red-500 hover:text-red-700 p-2"
-                        title="Remove"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
-          <div className="text-center py-8 border-2 border-dashed border-border rounded-lg">
-            <p className="text-text-secondary">No key results yet</p>
-            <p className="text-sm text-text-secondary mt-1">Click "Add Key Result" to start</p>
+          <div className="text-center py-6 border-2 border-dashed border-border rounded-lg bg-surface/30">
+            <p className="text-sm text-text-secondary">No key results yet</p>
+            <p className="text-xs text-text-secondary mt-1">Click "Add KR" to start</p>
           </div>
         )}
       </div>

@@ -106,6 +106,110 @@ export const OKRPage: React.FC = () => {
   });
 
   const years = Array.from(new Set(okrs.map(o => o.year))).sort((a, b) => b - a);
+  
+  // Update year filter if current selection has no OKRs
+  useEffect(() => {
+    if (okrs.length > 0 && years.length > 0 && !years.includes(yearFilter)) {
+      setYearFilter(years[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [okrs.length]);
+
+  const renderOKRCard = (okr: OKRDetail) => {
+    const score = calculateOKRScore(okr);
+    
+    return (
+      <div key={okr.id} className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            {/* Badges */}
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(okr.okr_level)}`}>
+                {okr.okr_level}
+              </span>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(okr.status)}`}>
+                {okr.status}
+              </span>
+              <span className="text-sm text-text-secondary">
+                {okr.quarters} {okr.year}
+              </span>
+            </div>
+
+            {/* Objective */}
+            <h3 className="text-xl font-semibold text-text-primary mb-1">{okr.objective}</h3>
+            {okr.description && (
+              <p className="text-sm text-text-secondary mb-4">{okr.description}</p>
+            )}
+
+            {/* Key Results */}
+            {okr.key_results && okr.key_results.length > 0 && (
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-text-primary">Key Results</span>
+                  <span className="text-sm font-semibold text-text-primary">{(score * 100).toFixed(1)}%</span>
+                </div>
+                <div className="space-y-2.5">
+                  {okr.key_results.map((kr) => {
+                    const base = parseFloat(kr.base_value);
+                    const target = parseFloat(kr.target_value);
+                    const current = parseFloat(kr.current_value);
+                    const krScore = target === base ? 0 : Math.max(0, Math.min(1, (current - base) / (target - base)));
+                    const krPercentage = (krScore * 100).toFixed(1);
+                    
+                    return (
+                      <div key={kr.id} className="bg-surface-hover/50 border border-border rounded-lg p-3">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <p className="text-sm text-text-primary flex-1">{kr.description}</p>
+                          <span className="text-xs font-semibold text-text-secondary whitespace-nowrap">
+                            {krPercentage}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-border rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all ${getScoreColor(krScore)}`}
+                            style={{ width: `${Math.min(krScore * 100, 100)}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between mt-1.5 text-xs text-text-secondary">
+                          <span>{kr.current_value} / {kr.target_value}</span>
+                          <span className="text-[10px]">Weight: {parseFloat(kr.weight).toFixed(1)}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => navigate(`/okrs/${okr.id}/measure`)}
+              className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+              title="Measure"
+            >
+              <TrendingUp size={18} />
+            </button>
+            <button
+              onClick={() => navigate(`/okrs/${okr.id}/edit`)}
+              className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+              title="Edit"
+            >
+              <Edit size={18} />
+            </button>
+            <button
+              onClick={() => handleDelete(okr.id)}
+              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   if (loading) return <Layout><LoadingSpinner /></Layout>;
 
@@ -131,68 +235,50 @@ export const OKRPage: React.FC = () => {
         {success && <Alert type="success" message={success} onClose={() => setSuccess('')} />}
 
         {/* Filters */}
-        <div className="bg-surface border border-border rounded-lg p-4 space-y-4">
-          {/* Status Tabs */}
-          <div className="flex gap-2 flex-wrap">
-            {(['all', 'draft', 'active', 'completed'] as StatusFilter[]).map((status) => (
-              <button
-                key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors ${
-                  statusFilter === status
-                    ? 'bg-primary text-white'
-                    : 'bg-surface-highlight text-text-secondary hover:bg-primary/10'
-                }`}
-              >
-                {status}
-              </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+            className="input text-sm h-9 w-32"
+          >
+            <option value="all">All Status</option>
+            <option value="draft">Draft</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+          </select>
+
+          <select
+            value={yearFilter}
+            onChange={(e) => setYearFilter(parseInt(e.target.value))}
+            className="input text-sm h-9 w-24"
+          >
+            {years.map((year) => (
+              <option key={year} value={year}>{year}</option>
             ))}
-          </div>
+          </select>
 
-          {/* Other Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="text-sm text-text-secondary mb-1 block">Year</label>
-              <select
-                value={yearFilter}
-                onChange={(e) => setYearFilter(parseInt(e.target.value))}
-                className="input w-full"
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
+          <select
+            value={quarterFilter}
+            onChange={(e) => setQuarterFilter(e.target.value as any)}
+            className="input text-sm h-9 w-32"
+          >
+            <option value="all">All Quarters</option>
+            <option value="Q1">Q1</option>
+            <option value="Q2">Q2</option>
+            <option value="Q3">Q3</option>
+            <option value="Q4">Q4</option>
+          </select>
 
-            <div>
-              <label className="text-sm text-text-secondary mb-1 block">Quarter</label>
-              <select
-                value={quarterFilter}
-                onChange={(e) => setQuarterFilter(e.target.value as any)}
-                className="input w-full"
-              >
-                <option value="all">All Quarters</option>
-                <option value="Q1">Q1</option>
-                <option value="Q2">Q2</option>
-                <option value="Q3">Q3</option>
-                <option value="Q4">Q4</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-sm text-text-secondary mb-1 block">Level</label>
-              <select
-                value={levelFilter}
-                onChange={(e) => setLevelFilter(e.target.value as any)}
-                className="input w-full"
-              >
-                <option value="all">All Levels</option>
-                <option value="strategic">Strategic</option>
-                <option value="operational">Operational</option>
-                <option value="tactical">Tactical</option>
-              </select>
-            </div>
-          </div>
+          <select
+            value={levelFilter}
+            onChange={(e) => setLevelFilter(e.target.value as any)}
+            className="input text-sm h-9 w-36"
+          >
+            <option value="all">All Levels</option>
+            <option value="strategic">Strategic</option>
+            <option value="operational">Operational</option>
+            <option value="tactical">Tactical</option>
+          </select>
         </div>
 
         {/* OKR List */}
@@ -204,77 +290,7 @@ export const OKRPage: React.FC = () => {
               <p className="mt-2 text-text-secondary">Create your first OKR to get started</p>
             </div>
           ) : (
-            filteredOKRs.map((okr) => {
-              const score = calculateOKRScore(okr);
-              
-              return (
-                <div key={okr.id} className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      {/* Badges */}
-                      <div className="flex items-center gap-2 mb-3 flex-wrap">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(okr.okr_level)}`}>
-                          {okr.okr_level}
-                        </span>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(okr.status)}`}>
-                          {okr.status}
-                        </span>
-                        <span className="text-sm text-text-secondary">
-                          {okr.quarters} {okr.year}
-                        </span>
-                      </div>
-
-                      {/* Objective */}
-                      <h3 className="text-xl font-semibold text-text-primary mb-2">{okr.objective}</h3>
-                      {okr.description && (
-                        <p className="text-sm text-text-secondary mb-3">{okr.description}</p>
-                      )}
-
-                      {/* Progress Bar */}
-                      {okr.key_results && okr.key_results.length > 0 && (
-                        <div className="mt-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-text-secondary">{okr.key_results.length} Key Results</span>
-                            <span className="text-sm font-semibold">{(score * 100).toFixed(1)}%</span>
-                          </div>
-                          <div className="w-full bg-border rounded-full h-3">
-                            <div
-                              className={`h-3 rounded-full transition-all ${getScoreColor(score)}`}
-                              style={{ width: `${Math.min(score * 100, 100)}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-col gap-2">
-                      <button
-                        onClick={() => navigate(`/okrs/${okr.id}/measure`)}
-                        className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                        title="Measure"
-                      >
-                        <TrendingUp size={18} />
-                      </button>
-                      <button
-                        onClick={() => navigate(`/okrs/${okr.id}/edit`)}
-                        className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(okr.id)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
+            filteredOKRs.map(okr => renderOKRCard(okr))
           )}
         </div>
       </div>

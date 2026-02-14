@@ -41,21 +41,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 h-16 transition-all duration-300 glass">
-      <div className="w-full lg:w-[90%] mx-auto px-4 sm:px-6 lg:px-8 h-full">
+    <nav className="fixed top-0 left-0 right-0 z-50 h-16 transition-all duration-300 glass border-b border-border/50">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="flex justify-between items-center h-full">
           
           <div className="flex items-center gap-4">
             <button
               onClick={onMenuClick}
-              className="p-2 -ml-2 rounded-lg text-text-secondary hover:bg-surface-hover md:hidden transition-colors"
+              className="p-2 -ml-2 rounded-lg text-text-secondary hover:bg-surface-hover transition-colors"
               aria-label="Toggle Menu"
             >
               <Menu size={24} />
             </button>
             
-            <Link to="/" className="flex items-center space-x-3 group">
-               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-primary/25 group-hover:scale-105 transition-all duration-200">
+            <Link to="/" className="flex items-center space-x-2.5 group">
+               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white shadow-sm shadow-primary/25 group-hover:scale-105 transition-all duration-200">
                 <Compass size={18} />
               </div>
               <span className="font-bold text-lg text-text-primary tracking-tight">Compass</span>

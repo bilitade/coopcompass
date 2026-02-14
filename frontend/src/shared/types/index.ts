@@ -5,7 +5,7 @@ import type {
   WeeklyPriorityWithProgress,
   WeeklyPriorityPlan,
   WeeklyPriorityPlanCreate,
-} from '../../features/priorities/types';
+} from '../../features/weeklyPriority/types';
 
 import type {
   Task,

@@ -30,14 +30,22 @@ def create_work_item(
             detail=f"{work_item_data.source_type} source not found"
         )
     
+    # Verify monthly heads-up exists
+    headsup = db.query(MonthlyHeadsUp).filter(MonthlyHeadsUp.id == work_item_data.monthly_headsup_id).first()
+    if not headsup:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Monthly Heads-Up not found"
+        )
+
     new_work_item = WorkItem(
-        team_id=work_item_data.team_id if hasattr(work_item_data, 'team_id') else current_user.team_id,
+        team_id=headsup.team_id,
+        monthly_headsup_id=work_item_data.monthly_headsup_id,
         title=work_item_data.title,
         description=work_item_data.description,
         source_type=work_item_data.source_type,
         source_id=work_item_data.source_id,
-        owner_id=work_item_data.owner_id,
-        month=work_item_data.month,
+        owner_id=work_item_data.owner_id or current_user.id,
         status="Not Started"
     )
     
@@ -52,6 +60,7 @@ def create_work_item(
 def list_work_items(
     team_id: int = Query(None),
     month: str = Query(None),
+    monthly_headsup_id: int = Query(None),
     source_type: str = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -64,6 +73,9 @@ def list_work_items(
     
     if month:
         query = query.filter(WorkItem.month == month)
+
+    if monthly_headsup_id:
+        query = query.filter(WorkItem.monthly_headsup_id == monthly_headsup_id)
     
     if source_type:
         query = query.filter(WorkItem.source_type == source_type)

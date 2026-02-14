@@ -243,3 +243,94 @@ def get_organization_dashboard(db: Session) -> dict:
         "updated_at": datetime.utcnow()
     }
 
+
+def get_weekly_priority_plan(db: Session, plan_id: int):
+    """Get a weekly priority plan by ID."""
+    return db.query(WeeklyPriorityPlan).filter(WeeklyPriorityPlan.id == plan_id).first()
+
+
+def get_weekly_priority_plan_by_week(db: Session, headsup_id: int, week: str):
+    """Get a weekly priority plan by headsup ID and week."""
+    return db.query(WeeklyPriorityPlan).filter(
+        WeeklyPriorityPlan.monthly_headsup_id == headsup_id,
+        WeeklyPriorityPlan.week == week
+    ).first()
+
+
+def create_weekly_priority_plan(db: Session, obj_in):
+    """Create a new weekly priority plan."""
+    db_obj = WeeklyPriorityPlan(
+        monthly_headsup_id=obj_in.monthly_headsup_id,
+        week=obj_in.week,
+        week_focus=obj_in.week_focus
+    )
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+
+def update_weekly_priority_plan(db: Session, db_obj: WeeklyPriorityPlan, obj_in):
+    """Update a weekly priority plan."""
+    if hasattr(obj_in, 'week_focus'):
+        db_obj.week_focus = obj_in.week_focus
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+
+def create_weekly_priority(db: Session, obj_in):
+    """Create a new weekly priority."""
+    # Validate P1 count
+    if obj_in.priority == 1:
+        p1_count = db.query(WeeklyPriority).filter(
+            WeeklyPriority.plan_id == obj_in.plan_id,
+            WeeklyPriority.priority == 1
+        ).count()
+        if p1_count >= 3:
+            raise ValueError("Maximum 3 P1 priorities allowed per week")
+            
+    db_obj = WeeklyPriority(
+        plan_id=obj_in.plan_id,
+        work_item_id=obj_in.work_item_id,
+        priority=obj_in.priority
+    )
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+
+def get_weekly_priorities(db: Session, plan_id: int):
+    """Get all priorities for a plan."""
+    return db.query(WeeklyPriority).filter(WeeklyPriority.plan_id == plan_id).all()
+
+
+def update_weekly_priority(db: Session, priority_id: int, new_priority: int):
+    """Update a priority level."""
+    db_obj = db.query(WeeklyPriority).filter(WeeklyPriority.id == priority_id).first()
+    if not db_obj:
+        return None
+        
+    if new_priority == 1 and db_obj.priority != 1:
+        p1_count = db.query(WeeklyPriority).filter(
+            WeeklyPriority.plan_id == db_obj.plan_id,
+            WeeklyPriority.priority == 1
+        ).count()
+        if p1_count >= 3:
+            raise ValueError("Maximum 3 P1 priorities allowed per week")
+            
+    db_obj.priority = new_priority
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+
+def delete_weekly_priority(db: Session, priority_id: int):
+    """Delete a weekly priority."""
+    db_obj = db.query(WeeklyPriority).filter(WeeklyPriority.id == priority_id).first()
+    if not db_obj:
+        return False
+    db.delete(db_obj)
+    db.commit()
+    return True

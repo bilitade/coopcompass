@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   Target,
   Activity,
-  ClipboardList,
   Calendar,
   CheckSquare,
   ChevronLeft,
@@ -39,8 +38,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isCollapsed
         { label: 'My Team', path: '/my-team', icon: <Users size={20} /> },
         { label: 'OKRs', path: '/okrs', icon: <Target size={20} /> },
         { label: 'BAU Activities', path: '/bau-activities', icon: <Activity size={20} /> },
-        { label: 'Work Items', path: '/work-items', icon: <ClipboardList size={20} /> },
-        { label: 'Weekly Priorities', path: '/weekly-priority', icon: <Calendar size={20} /> },
+        { label: 'Monthly Heads-Up', path: '/monthly-headsup', icon: <Calendar size={20} /> },
+        { label: 'Weekly Priority', path: '/weekly-priority', icon: <Target size={20} /> },
         { label: 'Tasks', path: '/tasks', icon: <CheckSquare size={20} /> },
       ];
     }

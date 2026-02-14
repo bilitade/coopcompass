@@ -40,7 +40,8 @@ import { WorkItemsPage } from '../features/workItems/pages/WorkItemsPage';
 import { TasksPage } from '../features/tasks/pages/TasksPage';
 
 // Priorities pages
-import { PriorityPage } from '../features/priorities/pages/PriorityPage';
+import { MonthlyHeadsupPage } from '../features/monthlyHeadsup/pages/MonthlyHeadsupPage';
+import { WeeklyPriorityPage } from '../features/weeklyPriority/pages/WeeklyPriorityPage';
 
 // User pages
 import { UserPage } from '../features/users/pages/UserPage';
@@ -265,10 +266,18 @@ export const AppRoutes = () => {
         }
       />
       <Route
+        path="/monthly-headsup"
+        element={
+          <ProtectedRoute>
+            <MonthlyHeadsupPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/weekly-priority"
         element={
           <ProtectedRoute>
-            <PriorityPage />
+            <WeeklyPriorityPage />
           </ProtectedRoute>
         }
       />

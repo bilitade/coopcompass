@@ -6,7 +6,8 @@ import type {
   BAUActivity, BAUActivityDetail, BAUActivityCreate, BAUActivityUpdate, BAUMetric, BAUMetricCreate,
   BAUActivityWithScore, BAUOverallHealth,
   WorkItem, WorkItemDetail, WorkItemCreate,
-  WeeklyPriority, WeeklyPriorityCreate,
+  WeeklyPriority, WeeklyPriorityCreate, WeeklyPriorityPlan, WeeklyPriorityPlanCreate,
+  MonthlyHeadsUp, MonthlyHeadsUpCreate,
   Dashboard, PerformanceTrend
 } from '../../shared/types';
 
@@ -301,6 +302,22 @@ class ApiService {
     return response.data;
   }
 
+  // Monthly Heads-Up endpoints
+  async createMonthlyHeadsUp(teamId: number, data: MonthlyHeadsUpCreate): Promise<MonthlyHeadsUp> {
+    const response = await this.client.post<MonthlyHeadsUp>(`/api/monthly-headsup/teams/${teamId}`, data);
+    return response.data;
+  }
+
+  async getMonthlyHeadsUp(teamId: number, month: string): Promise<MonthlyHeadsUp> {
+    const response = await this.client.get<MonthlyHeadsUp>(`/api/monthly-headsup/teams/${teamId}/${month}`);
+    return response.data;
+  }
+
+  async updateMonthlyHeadsUp(headsupId: number, data: { description: string }): Promise<MonthlyHeadsUp> {
+    const response = await this.client.put<MonthlyHeadsUp>(`/api/monthly-headsup/${headsupId}`, data);
+    return response.data;
+  }
+
   // Work Item endpoints
   async createWorkItem(data: WorkItemCreate): Promise<WorkItem> {
     const response = await this.client.post<WorkItem>('/api/work-items', data);
@@ -361,24 +378,40 @@ class ApiService {
     return response.data;
   }
 
-  // Weekly Priority endpoints
-  async setWeeklyPriority(data: WeeklyPriorityCreate): Promise<WeeklyPriority> {
-    const response = await this.client.post<WeeklyPriority>('/api/weekly-priorities', data);
+  // Weekly Priority Plan endpoints
+  async createWeeklyPriorityPlan(data: WeeklyPriorityPlanCreate): Promise<WeeklyPriorityPlan> {
+    const response = await this.client.post<WeeklyPriorityPlan>('/api/weekly-priority/plans', data);
     return response.data;
   }
 
-  async getWeeklyPriorities(filters?: { week?: string; team_id?: number }): Promise<WeeklyPriority[]> {
-    const response = await this.client.get<WeeklyPriority[]>('/api/weekly-priorities', { params: filters });
+  async getWeeklyPriorityPlan(headsupId: number, week: string): Promise<WeeklyPriorityPlan> {
+    const response = await this.client.get<WeeklyPriorityPlan>(`/api/weekly-priority/headsup/${headsupId}/plans/${week}`);
+    return response.data;
+  }
+
+  async updateWeeklyPriorityPlan(planId: number, data: { week_focus: string }): Promise<WeeklyPriorityPlan> {
+    const response = await this.client.put<WeeklyPriorityPlan>(`/api/weekly-priority/plans/${planId}`, data);
+    return response.data;
+  }
+
+  // Weekly Priority endpoints
+  async setWeeklyPriority(data: WeeklyPriorityCreate): Promise<WeeklyPriority> {
+    const response = await this.client.post<WeeklyPriority>('/api/weekly-priority/priorities', data);
+    return response.data;
+  }
+
+  async getWeeklyPriorities(planId: number): Promise<WeeklyPriority[]> {
+    const response = await this.client.get<WeeklyPriority[]>(`/api/weekly-priority/plans/${planId}/priorities`);
     return response.data;
   }
 
   async updateWeeklyPriority(priorityId: number, priority: 1 | 2 | 3): Promise<WeeklyPriority> {
-    const response = await this.client.put<WeeklyPriority>(`/api/weekly-priorities/${priorityId}`, { priority });
+    const response = await this.client.put<WeeklyPriority>(`/api/weekly-priority/priorities/${priorityId}`, { priority });
     return response.data;
   }
 
   async deleteWeeklyPriority(priorityId: number): Promise<void> {
-    await this.client.delete(`/api/weekly-priorities/${priorityId}`);
+    await this.client.delete(`/api/weekly-priority/priorities/${priorityId}`);
   }
 
   // Dashboard endpoints

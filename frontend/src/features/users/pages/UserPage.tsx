@@ -28,7 +28,7 @@ export const UserPage: React.FC = () => {
   const [userForm, setUserForm] = useState({
     name: '',
     email: '',
-    role: 'member' as 'member' | 'lead' | 'executive',
+    role: 'member' as 'member' | 'lead' | 'director' | 'executive' | 'admin',
     password: '',
   });
 
@@ -54,7 +54,7 @@ export const UserPage: React.FC = () => {
       setUserForm({
         name: user.name,
         email: user.email,
-        role: user.role as 'member' | 'lead' | 'executive',
+        role: user.role as 'member' | 'lead' | 'director' | 'executive' | 'admin',
         password: '',
       });
     } else {
@@ -317,7 +317,7 @@ export const UserPage: React.FC = () => {
           setUserForm({
             name: '',
             email: '',
-            role: 'member',
+            role: 'member' as 'member' | 'lead' | 'director' | 'executive' | 'admin',
             password: '',
           });
         }}
@@ -356,12 +356,14 @@ export const UserPage: React.FC = () => {
             </label>
             <select
               value={userForm.role}
-              onChange={(e) => setUserForm({ ...userForm, role: e.target.value as 'member' | 'lead' | 'executive' })}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+              onChange={(e) => setUserForm({ ...userForm, role: e.target.value as any })}
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-surface text-text-primary"
             >
               <option value="member">Member</option>
               <option value="lead">Team Lead</option>
+              <option value="director">Director</option>
               <option value="executive">Executive</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
 
@@ -389,7 +391,7 @@ export const UserPage: React.FC = () => {
                 setUserForm({
                   name: '',
                   email: '',
-                  role: 'member',
+                  role: 'member' as 'member' | 'lead' | 'director' | 'executive' | 'admin',
                   password: '',
                 });
               }}

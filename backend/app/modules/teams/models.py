@@ -27,4 +27,5 @@ class Team(Base):
     okrs = relationship("OKR", back_populates="team", cascade="all, delete-orphan")
     bau_activities = relationship("BAUActivity", back_populates="team", cascade="all, delete-orphan")
     work_items = relationship("WorkItem", back_populates="team", cascade="all, delete-orphan")
+    monthly_headsups = relationship("MonthlyHeadsUp", back_populates="team", cascade="all, delete-orphan")
 

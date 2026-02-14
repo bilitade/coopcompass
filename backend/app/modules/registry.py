@@ -14,6 +14,7 @@ ENABLED_MODULES = [
     "bau",
     "work_items",
     "tasks",
+    "monthly_headsup",
     "weekly_priority",
 ]
 

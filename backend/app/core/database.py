@@ -9,7 +9,7 @@ from app.core.config import DATABASE_URL, DEBUG
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,  # Verify connections before using
-    echo=DEBUG
+    
 )
 
 # Create session factory

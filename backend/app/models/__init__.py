@@ -6,7 +6,9 @@ from app.modules.teams.models import Team
 from app.modules.departments.models import Department
 from app.modules.okrs.models import OKR, KeyResult
 from app.modules.bau.models import BAUActivity, BAUMetric
-from app.modules.work_items.models import WorkItem, WeeklyPriority
+from app.modules.monthly_headsup.models import MonthlyHeadsUp
+from app.modules.weekly_priority.models import WeeklyPriority, WeeklyPriorityPlan
+from app.modules.work_items.models import WorkItem
 from app.modules.tasks.models import Task
 from app.modules.snapshots.models import WeeklySnapshot
 
@@ -23,9 +25,11 @@ __all__ = [
     "KeyResult",
     "BAUActivity",
     "BAUMetric",
+    "MonthlyHeadsUp",
+    "WeeklyPriorityPlan",
+    "WeeklyPriority",
     "WorkItem",
     "Task",
-    "WeeklyPriority",
     "WeeklySnapshot",
 ]
 

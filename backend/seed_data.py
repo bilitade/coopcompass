@@ -3,10 +3,10 @@
 import os
 from decimal import Decimal
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
-from app.models import Base, Team, User, OKR, KeyResult, BAUActivity, BAUMetric, WorkItem, Task, WeeklyPriority, Department
+from app.models import Base, Team, User, OKR, KeyResult, BAUActivity, BAUMetric, WorkItem, Task, WeeklyPriority, WeeklyPriorityPlan, MonthlyHeadsUp, Department
 from app.core.security import hash_password
 
 # Load environment variables
@@ -27,6 +27,12 @@ DATABASE_URL = database_url
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# Drop and recreate schema to ensure fresh schema (PostgreSQL specific)
+with engine.connect() as conn:
+    conn.execute(text("DROP SCHEMA public CASCADE"))
+    conn.execute(text("CREATE SCHEMA public"))
+    conn.commit()
+
 # Create tables
 Base.metadata.create_all(bind=engine)
 
@@ -39,7 +45,9 @@ def seed_demo_data():
         # Clear existing data
         db.query(Task).delete()
         db.query(WeeklyPriority).delete()
+        db.query(WeeklyPriorityPlan).delete()
         db.query(WorkItem).delete()
+        db.query(MonthlyHeadsUp).delete()
         db.query(KeyResult).delete()
         db.query(OKR).delete()
         db.query(BAUMetric).delete()
@@ -290,23 +298,29 @@ def seed_demo_data():
             KeyResult(
                 okr_id=okr_core.id,
                 description="Migrate 5 critical services to cloud",
+                base_value=Decimal("0"),
                 target_value=Decimal("5"),
                 current_value=Decimal("2"),
-                unit="services"
+                unit="services",
+                weight=Decimal("0.40")
             ),
             KeyResult(
                 okr_id=okr_core.id,
                 description="Reduce system downtime by 50%",
+                base_value=Decimal("4"),
                 target_value=Decimal("2"),
                 current_value=Decimal("0.8"),
-                unit="hours/month"
+                unit="hours/month",
+                weight=Decimal("0.30")
             ),
             KeyResult(
                 okr_id=okr_core.id,
                 description="Deploy new API gateway",
+                base_value=Decimal("0"),
                 target_value=Decimal("100"),
                 current_value=Decimal("65"),
-                unit="%"
+                unit="%",
+                weight=Decimal("0.30")
             ),
         ]
         db.add_all(key_results_core)
@@ -388,16 +402,20 @@ def seed_demo_data():
             KeyResult(
                 okr_id=okr_security.id,
                 description="Implement zero-trust architecture",
+                base_value=Decimal("0"),
                 target_value=Decimal("100"),
                 current_value=Decimal("45"),
-                unit="%"
+                unit="%",
+                weight=Decimal("0.60")
             ),
             KeyResult(
                 okr_id=okr_security.id,
                 description="Reduce security incidents by 40%",
+                base_value=Decimal("20"),
                 target_value=Decimal("10"),
                 current_value=Decimal("12"),
-                unit="incidents/month"
+                unit="incidents/month",
+                weight=Decimal("0.40")
             ),
         ]
         db.add_all(key_results_security)
@@ -455,16 +473,20 @@ def seed_demo_data():
             KeyResult(
                 okr_id=okr_mobile.id,
                 description="Achieve 4.5+ star app rating",
+                base_value=Decimal("4.0"),
                 target_value=Decimal("4.5"),
                 current_value=Decimal("4.2"),
-                unit="stars"
+                unit="stars",
+                weight=Decimal("0.50")
             ),
             KeyResult(
                 okr_id=okr_mobile.id,
                 description="Reach 50K active monthly users",
+                base_value=Decimal("25000"),
                 target_value=Decimal("50000"),
                 current_value=Decimal("35000"),
-                unit="users"
+                unit="users",
+                weight=Decimal("0.50")
             ),
         ]
         db.add_all(key_results_mobile)
@@ -513,62 +535,75 @@ def seed_demo_data():
         db.commit()
         print(f"✓ Created {len(metrics_mobile)} BAU metrics")
         
+        # === MONTHLY HEADS-UP ===
+        print("\n--- Creating Monthly Heads-Up ---")
+        
+        current_month = datetime.now(timezone.utc).strftime("%Y-%m")
+        
+        headsups = [
+            MonthlyHeadsUp(team_id=team_core.id, month=current_month, description="Focus on cloud migration and stability"),
+            MonthlyHeadsUp(team_id=team_security.id, month=current_month, description="Enhance zero-trust infrastructure"),
+            MonthlyHeadsUp(team_id=team_mobile.id, month=current_month, description="Improve UX and performance"),
+        ]
+        db.add_all(headsups)
+        db.commit()
+        for h in headsups:
+            db.refresh(h)
+        
         # === WORK ITEMS ===
         print("\n--- Creating Work Items ---")
-        
-        current_week = datetime.now(timezone.utc).strftime("%Y-W%U")
         
         work_items_core = [
             WorkItem(
                 team_id=team_core.id,
+                monthly_headsup_id=headsups[0].id,
                 title="Migrate authentication service to cloud",
                 description="Move auth service to AWS infrastructure",
                 source_type="OKR",
                 source_id=key_results_core[0].id,
-                owner_id=james.id,
-                month="2026-01"
+                owner_id=james.id
             ),
             WorkItem(
                 team_id=team_core.id,
+                monthly_headsup_id=headsups[0].id,
                 title="Implement auto-failover system",
                 description="Setup automatic failover for critical services",
                 source_type="OKR",
                 source_id=key_results_core[1].id,
-                owner_id=emma.id,
-                month="2026-01"
+                owner_id=emma.id
             ),
             WorkItem(
                 team_id=team_core.id,
+                monthly_headsup_id=headsups[0].id,
                 title="Monthly database optimization",
                 description="Optimize database queries and indexes",
                 source_type="BAU",
                 source_id=bau_core[1].id,
-                owner_id=sophia.id,
-                month="2026-01"
+                owner_id=sophia.id
             ),
         ]
         
         work_items_security = [
             WorkItem(
                 team_id=team_security.id,
+                monthly_headsup_id=headsups[1].id,
                 title="Deploy zero-trust network controls",
                 description="Implement network segmentation and access controls",
                 source_type="OKR",
                 source_id=key_results_security[0].id,
-                owner_id=alexander.id,
-                month="2026-01"
+                owner_id=alexander.id
             ),
         ]
         
         work_items_mobile = [
             WorkItem(
                 team_id=team_mobile.id,
+                monthly_headsup_id=headsups[2].id,
                 title="Optimize app performance",
                 description="Reduce app load time and crash rate",
                 source_type="OKR",
                 source_id=key_results_mobile[0].id,
-                owner_id=benjamin.id,
-                month="2026-01"
+                owner_id=benjamin.id
             ),
         ]
         
@@ -580,16 +615,31 @@ def seed_demo_data():
         for wi in all_work_items:
             db.refresh(wi)
         
+        # === WEEKLY PRIORITY PLANS ===
+        print("\n--- Creating Weekly Priority Plans ---")
+        
+        current_week = datetime.now(timezone.utc).strftime("%Y-W%U")
+        
+        plans = [
+             WeeklyPriorityPlan(monthly_headsup_id=headsups[0].id, week=current_week, week_focus="Authentication system migration"),
+             WeeklyPriorityPlan(monthly_headsup_id=headsups[1].id, week=current_week, week_focus="Security infra deployment"),
+             WeeklyPriorityPlan(monthly_headsup_id=headsups[2].id, week=current_week, week_focus="App performance improvements"),
+        ]
+        db.add_all(plans)
+        db.commit()
+        for p in plans:
+            db.refresh(p)
+            
         # === WEEKLY PRIORITIES ===
         priorities = [
             WeeklyPriority(
+                plan_id=plans[0].id,
                 work_item_id=work_items_core[0].id,
-                week=current_week,
                 priority=1
             ),
             WeeklyPriority(
+                plan_id=plans[1].id,
                 work_item_id=work_items_security[0].id,
-                week=current_week,
                 priority=1
             ),
         ]

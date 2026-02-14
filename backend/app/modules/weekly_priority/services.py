@@ -2,11 +2,11 @@
 
 from sqlalchemy.orm import Session
 from datetime import datetime
-from app.models import OKR, Team, Department, User, WeeklyPriority, WorkItem
+from app.models import OKR, Team, Department, User, WeeklyPriority, WeeklyPriorityPlan, WorkItem
+from app.services.calculations import get_current_quarter, get_current_week
 from app.modules.okrs.services import calculate_okr_progress, calculate_kr_progress
 from app.modules.bau.services import calculate_bau_health
 from app.modules.work_items.services import calculate_work_item_progress
-from app.services.calculations import get_current_quarter, get_current_week
 
 
 def get_team_dashboard(db: Session, team_id: int) -> dict:
@@ -84,22 +84,23 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
     # Get current week priorities
     current_week = get_current_week()
     
-    priorities = db.query(WeeklyPriority).filter(
-        WeeklyPriority.week == current_week
-    ).join(WorkItem).filter(
-        WorkItem.team_id == team_id
-    ).all()
+    # Find the plan for this week
+    plan = db.query(WeeklyPriorityPlan).join(WeeklyPriorityPlan.monthly_headsup).filter(
+        WeeklyPriorityPlan.week == current_week,
+        WeeklyPriorityPlan.monthly_headsup.has(team_id=team_id)
+    ).first()
     
     current_priorities = []
-    for p in priorities:
-        progress = calculate_work_item_progress(db, p.work_item_id)
-        current_priorities.append({
-            "priority_id": p.id,
-            "work_item_id": p.work_item_id,
-            "work_item_name": p.work_item.title,
-            "priority": p.priority,
-            "progress": progress
-        })
+    if plan:
+        for p in plan.priorities:
+            progress = calculate_work_item_progress(db, p.work_item_id)
+            current_priorities.append({
+                "priority_id": p.id,
+                "work_item_id": p.work_item_id,
+                "work_item_name": p.work_item.title,
+                "priority": p.priority,
+                "progress": progress
+            })
     
     return {
         "team_id": team_id,
@@ -108,6 +109,10 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
         "okrs": okrs_data,
         "bau_activities": bau_healths,
         "current_week_priorities": current_priorities,
+        "weekly_plan": {
+            "id": plan.id,
+            "week_focus": plan.week_focus
+        } if plan else None,
         "updated_at": datetime.utcnow()
     }
 

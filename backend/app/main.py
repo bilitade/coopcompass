@@ -73,6 +73,7 @@ def register_modules():
         "bau": ("app.modules.bau.routers", "router"),
         "work_items": ("app.modules.work_items.routers", "router"),
         "tasks": ("app.modules.tasks.routers", "router"),
+        "monthly_headsup": ("app.modules.monthly_headsup.routers", "router"),
         "weekly_priority": ("app.modules.weekly_priority.routers", "router"),
     }
     

@@ -3,6 +3,8 @@ import type {
   WeeklyPriority,
   WeeklyPriorityCreate,
   WeeklyPriorityWithProgress,
+  WeeklyPriorityPlan,
+  WeeklyPriorityPlanCreate,
 } from '../../features/priorities/types';
 
 import type {
@@ -204,12 +206,13 @@ export interface BAUOverallHealth {
 export interface WorkItem {
   id: number;
   team_id: number;
+  monthly_headsup_id: number;
   title: string;
   description: string | null;
   source_type: 'OKR' | 'BAU';
   source_id: number;
   owner_id: number | null;
-  month: string;
+  month?: string; // Derived / legacy
   status: 'Not Started' | 'In Progress' | 'Completed';
   created_at: string;
   updated_at: string;
@@ -222,16 +225,32 @@ export interface WorkItemDetail extends WorkItem {
 
 export interface WorkItemCreate {
   title: string;
+  monthly_headsup_id: number;
   description?: string | null;
   source_type: 'OKR' | 'BAU';
   source_id: number;
   owner_id?: number | null;
-  month: string;
 }
 
+// Monthly Heads-Up types
+export interface MonthlyHeadsUp {
+  id: number;
+  team_id: number;
+  month: string; // "YYYY-MM"
+  description: string;
+  created_at: string;
+  updated_at: string;
+  work_items?: WorkItem[];
+  weekly_priority_plans?: WeeklyPriorityPlan[];
+}
+
+export interface MonthlyHeadsUpCreate {
+  month: string;
+  description: string;
+}
 
 // Weekly Priority types - re-exported from priorities feature module
-export type { WeeklyPriority, WeeklyPriorityCreate, WeeklyPriorityWithProgress };
+export type { WeeklyPriority, WeeklyPriorityCreate, WeeklyPriorityWithProgress, WeeklyPriorityPlan, WeeklyPriorityPlanCreate };
 
 // Dashboard types
 export interface Dashboard {
@@ -241,7 +260,10 @@ export interface Dashboard {
   okrs: OKRWithScores[];
   bau_activities: BAUActivityWithScore[];
   current_week_priorities: WeeklyPriorityWithProgress[];
+  weekly_plan?: WeeklyPriorityPlan | null;
+  performance_trend?: PerformanceTrend[];
   updated_at: string;
+  viewType?: 'team' | 'department' | 'executive';
 }
 
 export interface PerformanceTrend {

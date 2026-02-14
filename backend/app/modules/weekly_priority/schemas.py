@@ -59,6 +59,8 @@ class DashboardResponse(BaseModel):
     okr_progress: float
     bau_health: float
     okrs: List[Any]
+    all_okrs: Optional[List[Any]] = None
+    monthly_headsup: Optional[Any] = None
     bau_activities: List[Any]
     current_week_priorities: List[WeeklyPriorityWithProgressResponse]
     weekly_plan: Optional[Any] = None

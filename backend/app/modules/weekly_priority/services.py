@@ -5,7 +5,7 @@ from datetime import datetime
 from app.models import OKR, Team, Department, User, WeeklyPriority, WeeklyPriorityPlan, WorkItem
 from app.services.calculations import get_current_quarter, get_current_week
 from app.modules.okrs.services import calculate_okr_progress, calculate_kr_progress
-from app.modules.bau.services import calculate_bau_health
+from app.modules.bau.services import calculate_bau_health, get_bau_activity_with_scores
 from app.modules.work_items.services import calculate_work_item_progress
 
 
@@ -53,31 +53,12 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
     
     bau_healths = []
     for activity in bau_activities:
-        health = calculate_bau_health(db, activity.id)
-        metrics_data = [
-            {
-                "id": m.id,
-                "bau_activity_id": m.bau_activity_id,
-                "name": m.name,
-                "target_value": float(m.target_value),
-                "current_value": float(m.current_value) if m.current_value else 0.0,
-                "unit": m.unit,
-                "weight": float(m.weight),
-                "metric_type": m.metric_type,
-                "created_at": m.created_at,
-                "updated_at": m.updated_at
-            }
-            for m in activity.metrics
-        ]
-        bau_healths.append({
-            "activity_id": activity.id,
-            "activity_name": activity.name,
-            "health": health,
-            "metrics": metrics_data
-        })
+        activity_data = get_bau_activity_with_scores(db, activity.id)
+        if activity_data:
+            bau_healths.append(activity_data)
     
     avg_bau_health = (
-        sum(b["health"] for b in bau_healths) / len(bau_healths)
+        sum(b["activity_score"] for b in bau_healths) / len(bau_healths)
         if bau_healths else 0.0
     )
     
@@ -102,11 +83,51 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
                 "progress": progress
             })
     
+    # Get all active OKRs for the year (to support timeline)
+    all_okrs = db.query(OKR).filter(
+        OKR.team_id == team_id,
+        OKR.is_active == True
+    ).order_by(OKR.quarter).all()
+    
+    all_okrs_data = []
+    for o in all_okrs:
+        all_okrs_data.append({
+            "id": o.id,
+            "objective": o.objective,
+            "quarter": o.quarter,
+            "status": o.status,
+            "okr_level": o.okr_level,
+            "progress": calculate_okr_progress(db, o.id)
+        })
+
+    # Get Monthly Heads-Up for current month
+    from app.modules.monthly_headsup.models import MonthlyHeadsUp
+    current_month = datetime.now().strftime("%Y-%m")
+    headsup = db.query(MonthlyHeadsUp).filter(
+        MonthlyHeadsUp.team_id == team_id,
+        MonthlyHeadsUp.month == current_month
+    ).first()
+
     return {
         "team_id": team_id,
         "okr_progress": okr_progress,
         "bau_health": round(avg_bau_health, 2),
         "okrs": okrs_data,
+        "all_okrs": all_okrs_data,
+        "monthly_headsup": {
+            "id": headsup.id,
+            "description": headsup.description,
+            "month": headsup.month,
+            "work_items": [
+                {
+                    "id": wi.id,
+                    "title": wi.title,
+                    "status": wi.status,
+                    "progress": calculate_work_item_progress(db, wi.id)
+                }
+                for wi in headsup.work_items[:5]
+            ]
+        } if headsup else None,
         "bau_activities": bau_healths,
         "current_week_priorities": current_priorities,
         "weekly_plan": {
@@ -334,3 +355,24 @@ def delete_weekly_priority(db: Session, priority_id: int):
     db.delete(db_obj)
     db.commit()
     return True
+
+
+def get_current_priorities(db: Session, team_id: int):
+    """Retrieve all work items with their priority level (P1, P2, P3) for a team in the current ISO week."""
+    from app.services.calculations import get_current_week
+    from app.modules.monthly_headsup.models import MonthlyHeadsUp
+    
+    current_week = get_current_week()
+    
+    # Find active plan for this week
+    plan = db.query(WeeklyPriorityPlan).join(
+        MonthlyHeadsUp, WeeklyPriorityPlan.monthly_headsup_id == MonthlyHeadsUp.id
+    ).filter(
+        MonthlyHeadsUp.team_id == team_id,
+        WeeklyPriorityPlan.week == current_week
+    ).first()
+    
+    if not plan:
+        return []
+        
+    return db.query(WeeklyPriority).filter(WeeklyPriority.plan_id == plan.id).all()

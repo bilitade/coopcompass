@@ -258,6 +258,13 @@ export interface Dashboard {
   okr_progress: number;
   bau_health: number;
   okrs: OKRWithScores[];
+  all_okrs?: any[];
+  monthly_headsup?: {
+    id: number;
+    description: string;
+    month: string;
+    work_items?: any[];
+  } | null;
   bau_activities: BAUActivityWithScore[];
   current_week_priorities: WeeklyPriorityWithProgress[];
   weekly_plan?: WeeklyPriorityPlan | null;

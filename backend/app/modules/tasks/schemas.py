@@ -62,3 +62,14 @@ class TaskWithWorkItemResponse(TaskResponse):
 
     class Config:
         from_attributes = True
+
+
+class PrioritizedWorkItemResponse(BaseModel):
+    """Simplified work item response for priority selection."""
+    id: int
+    title: str
+    priority: int
+    source_type: str
+
+    class Config:
+        from_attributes = True

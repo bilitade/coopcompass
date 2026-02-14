@@ -4,7 +4,6 @@ import { LoadingSpinner } from '../../../shared/components/LoadingSpinner';
 import { Alert } from '../../../shared/components/Alert';
 import { Modal } from '../../../shared/components/Modal';
 import { useAuth } from '../../../app/context/AuthContext';
-import { api } from '../../../shared/services/api';
 import { tasksApi } from '../services/tasksApi';
 import type { Task, TaskWithWorkItem } from '../types';
 import type { WorkItem } from '../../../shared/types';
@@ -53,10 +52,10 @@ export const TasksPage: React.FC = () => {
     try {
       const [tasksData, workItemsData] = await Promise.all([
         tasksApi.getTeamTasks(user.team_id),
-        api.getWorkItems({ team_id: user.team_id }),
+        tasksApi.getPrioritizedWorkItems(user.team_id),
       ]);
       setTasks(tasksData);
-      setWorkItems(workItemsData);
+      setWorkItems(workItemsData as any);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load tasks');
     } finally {
@@ -224,7 +223,7 @@ export const TasksPage: React.FC = () => {
               </h3>
               <p className="mt-1 text-xs text-text-secondary">
                 {filterStatus === 'All'
-                  ? 'Create tasks from work items to get started'
+                  ? 'Only prioritized work items (P1-P3) can have tasks. Mark items as priority in the Planning page.'
                   : 'Keep up the great work!'}
               </p>
             </div>
@@ -411,20 +410,21 @@ export const TasksPage: React.FC = () => {
         >
           <form onSubmit={handleCreateTask} className="space-y-4">
             <div>
-              <label className="label">Select Work Item *</label>
+              <label className="label">Select Prioritized Work Item *</label>
               <select
                 required
                 className="input"
                 value={taskForm.work_item_id}
                 onChange={(e) => setTaskForm({ ...taskForm, work_item_id: e.target.value })}
               >
-                <option value="">Choose a work item...</option>
-                {workItems.map((item) => (
+                <option value="">Choose an active priority...</option>
+                {workItems.map((item: any) => (
                   <option key={item.id} value={item.id}>
-                    {item.title} ({item.source_type})
+                    P{item.priority}: {item.title} ({item.source_type})
                   </option>
                 ))}
               </select>
+              <p className="mt-1 text-[10px] text-text-secondary italic">Only P1-P3 items for the current week are available.</p>
             </div>
 
             <div>

@@ -49,6 +49,11 @@ class TasksApiService {
         const response = await this.client.get<TaskWithWorkItem[]>(`/api/teams/${teamId}/tasks`);
         return response.data;
     }
+
+    async getPrioritizedWorkItems(teamId: number): Promise<any[]> {
+        const response = await this.client.get<any[]>(`/api/teams/${teamId}/prioritized-work-items`);
+        return response.data;
+    }
 }
 
 export const tasksApi = new TasksApiService();

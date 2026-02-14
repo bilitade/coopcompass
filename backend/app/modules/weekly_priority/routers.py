@@ -9,12 +9,12 @@ from . import services, schemas
 from app.modules.users.models import User
 from app.models import WeeklyPriority, WeeklyPriorityPlan, WorkItem, Team, Department
 
-router = APIRouter(prefix="/api/weekly-priority", tags=["weekly-priority", "dashboard"])
+router = APIRouter(prefix="/api", tags=["weekly-priority", "dashboard"])
 
 
 # Weekly Priority Plan Endpoints
 
-@router.get("/headsup/{headsup_id}/plans", response_model=List[schemas.WeeklyPriorityPlanResponse])
+@router.get("/weekly-priority/headsup/{headsup_id}/plans", response_model=List[schemas.WeeklyPriorityPlanResponse])
 def read_plans(
     headsup_id: int,
     db: Session = Depends(get_db),
@@ -24,7 +24,7 @@ def read_plans(
     return db.query(WeeklyPriorityPlan).filter(WeeklyPriorityPlan.monthly_headsup_id == headsup_id).all()
 
 
-@router.get("/headsup/{headsup_id}/plans/{week}", response_model=schemas.WeeklyPriorityPlanResponse)
+@router.get("/weekly-priority/headsup/{headsup_id}/plans/{week}", response_model=schemas.WeeklyPriorityPlanResponse)
 def read_plan_by_week(
     headsup_id: int,
     week: str,
@@ -38,7 +38,7 @@ def read_plan_by_week(
     return db_obj
 
 
-@router.post("/plans", response_model=schemas.WeeklyPriorityPlanResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/weekly-priority/plans", response_model=schemas.WeeklyPriorityPlanResponse, status_code=status.HTTP_201_CREATED)
 def create_plan(
     obj_in: schemas.WeeklyPriorityPlanCreate,
     db: Session = Depends(get_db),
@@ -51,7 +51,7 @@ def create_plan(
     return services.create_weekly_priority_plan(db, obj_in=obj_in)
 
 
-@router.get("/plans/{id}", response_model=schemas.WeeklyPriorityPlanResponse)
+@router.get("/weekly-priority/plans/{id}", response_model=schemas.WeeklyPriorityPlanResponse)
 def read_plan(
     id: int,
     db: Session = Depends(get_db),
@@ -64,7 +64,7 @@ def read_plan(
     return db_obj
 
 
-@router.put("/plans/{id}", response_model=schemas.WeeklyPriorityPlanResponse)
+@router.put("/weekly-priority/plans/{id}", response_model=schemas.WeeklyPriorityPlanResponse)
 def update_plan(
     id: int,
     obj_in: schemas.WeeklyPriorityPlanUpdate,
@@ -80,7 +80,7 @@ def update_plan(
 
 # Weekly Priority Endpoints
 
-@router.post("/priorities", response_model=schemas.WeeklyPriorityResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/weekly-priority/priorities", response_model=schemas.WeeklyPriorityResponse, status_code=status.HTTP_201_CREATED)
 def set_weekly_priority(
     obj_in: schemas.WeeklyPriorityCreate,
     db: Session = Depends(get_db),
@@ -107,7 +107,7 @@ def set_weekly_priority(
             raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/plans/{plan_id}/priorities", response_model=List[schemas.WeeklyPriorityResponse])
+@router.get("/weekly-priority/plans/{plan_id}/priorities", response_model=List[schemas.WeeklyPriorityResponse])
 def list_weekly_priorities(
     plan_id: int,
     db: Session = Depends(get_db),
@@ -117,7 +117,7 @@ def list_weekly_priorities(
     return services.get_weekly_priorities(db, plan_id=plan_id)
 
 
-@router.get("/priorities", response_model=List[schemas.WeeklyPriorityResponse])
+@router.get("/weekly-priority/priorities", response_model=List[schemas.WeeklyPriorityResponse])
 def list_weekly_priorities_alt(
     plan_id: int,
     db: Session = Depends(get_db),
@@ -127,7 +127,7 @@ def list_weekly_priorities_alt(
     return services.get_weekly_priorities(db, plan_id=plan_id)
 
 
-@router.put("/priorities/{priority_id}", response_model=schemas.WeeklyPriorityResponse)
+@router.put("/weekly-priority/priorities/{priority_id}", response_model=schemas.WeeklyPriorityResponse)
 def update_weekly_priority(
     priority_id: int,
     priority: int = Query(..., ge=1, le=3),
@@ -144,7 +144,7 @@ def update_weekly_priority(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.delete("/priorities/{priority_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/weekly-priority/priorities/{priority_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_weekly_priority(
     priority_id: int,
     db: Session = Depends(get_db),

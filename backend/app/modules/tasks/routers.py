@@ -13,7 +13,8 @@ from app.modules.tasks.schemas import (
     TaskUpdate,
     TaskResponse,
     TaskDetailResponse,
-    TaskWithWorkItemResponse
+    TaskWithWorkItemResponse,
+    PrioritizedWorkItemResponse
 )
 # We need WorkItem model to check existence
 from app.modules.work_items.models import WorkItem
@@ -37,6 +38,17 @@ def create_task(
             detail="Work item not found"
         )
     
+    # Validation: Task must be for a prioritized work item (P1, P2, P3) for the current week
+    from app.modules.weekly_priority.services import get_current_priorities
+    prioritized_items = get_current_priorities(db, team_id=current_user.team_id)
+    prioritized_ids = [p.work_item_id for p in prioritized_items]
+    
+    if work_item_id not in prioritized_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tasks can only be created for prioritized work items (P1, P2, or P3) of the current week."
+        )
+    
     new_task = Task(
         work_item_id=work_item_id,
         description=task_data.description,
@@ -49,6 +61,34 @@ def create_task(
     db.refresh(new_task)
     
     return new_task
+
+
+@router.get("/teams/{team_id}/prioritized-work-items", response_model=list[PrioritizedWorkItemResponse])
+def get_prioritized_work_items(
+    team_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get only the work items that are prioritized for the current week."""
+    # Verify user belongs to the team
+    if current_user.team_id != team_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to this team's data"
+        )
+        
+    from app.modules.weekly_priority.services import get_current_priorities
+    priorities = get_current_priorities(db, team_id=team_id)
+    
+    result = []
+    for p in priorities:
+        result.append({
+            "id": p.work_item.id,
+            "title": p.work_item.title,
+            "priority": p.priority,
+            "source_type": p.work_item.source_type
+        })
+    return result
 
 
 @router.get("/tasks/{task_id}", response_model=TaskDetailResponse)

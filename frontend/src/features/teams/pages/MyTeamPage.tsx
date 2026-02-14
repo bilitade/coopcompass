@@ -5,7 +5,7 @@ import { Alert } from '../../../shared/components/Alert';
 import { useAuth } from '../../../app/context/AuthContext';
 import { api } from '../../../shared/services/api';
 import type { TeamDetail, User } from '../../../shared/types';
-import { Building2, Users, Mail, Shield, Crown, UserCircle } from 'lucide-react';
+import { Building2, Users, Mail, Shield, Crown, UserCircle, Briefcase } from 'lucide-react';
 
 export const MyTeamPage: React.FC = () => {
   const { user } = useAuth();
@@ -72,15 +72,20 @@ export const MyTeamPage: React.FC = () => {
           <div className="space-y-5">
             {/* Team Name Card */}
             <div className="bg-surface border border-border rounded-xl p-5">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Building2 className="text-primary" size={24} />
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <h2 className="text-2xl font-bold text-text-primary">{teamData.name}</h2>
                   <p className="text-xs text-text-secondary mt-0.5">
                     {teamData.users?.length || 0} {teamData.users?.length === 1 ? 'member' : 'members'}
                   </p>
+                  {teamData.description && (
+                    <p className="text-sm text-text-secondary mt-3 leading-relaxed">
+                      {teamData.description}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -115,6 +120,12 @@ export const MyTeamPage: React.FC = () => {
                           )}
                         </div>
                         <div className="flex items-center gap-3 text-xs text-text-secondary">
+                          {lead.position && (
+                            <div className="flex items-center gap-1">
+                              <Briefcase size={12} />
+                              <span className="font-semibold">{lead.position}</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-1">
                             <Shield size={12} />
                             <span className="font-semibold capitalize">{getRoleDisplay(lead.role)}</span>
@@ -169,9 +180,15 @@ export const MyTeamPage: React.FC = () => {
                           )}
                         </div>
                         <div className="flex items-center gap-3 text-xs text-text-secondary">
+                          {member.position && (
+                            <div className="flex items-center gap-1">
+                              <Briefcase size={12} />
+                              <span className="font-semibold">{member.position}</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-1">
                             <UserCircle size={12} />
-                            <span className="font-semibold">{getRoleDisplay(member.role)}</span>
+                            <span className="font-semibold capitalize">{getRoleDisplay(member.role)}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Mail size={12} />

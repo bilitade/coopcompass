@@ -24,6 +24,8 @@ export interface User {
   role: 'member' | 'lead' | 'director' | 'executive' | 'admin';
   team_id: number | null;
   team_name?: string;
+  department_name?: string;
+  position?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -33,6 +35,7 @@ export interface UserCreate {
   name: string;
   email: string;
   role: 'member' | 'lead' | 'director' | 'executive' | 'admin';
+  position?: string;
   password: string;
 }
 
@@ -66,6 +69,7 @@ export interface DepartmentDetail extends Department {
 export interface Team {
   id: number;
   name: string;
+  description?: string | null;
   department_id?: number | null;
   department?: Department | null;
   users?: User[];

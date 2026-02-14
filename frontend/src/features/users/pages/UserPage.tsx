@@ -6,7 +6,7 @@ import { Modal } from '../../../shared/components/Modal';
 import { useAuth } from '../../../app/context/AuthContext';
 import { api } from '../../../shared/services/api';
 import type { User } from '../../../shared/types';
-import { Plus, Edit2, Trash2, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Edit2, Trash2, Users, ChevronLeft, ChevronRight, Search, X, Power } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -17,6 +17,13 @@ export const UserPage: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // Search and filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterRole, setFilterRole] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterTeam, setFilterTeam] = useState<string>('all');
+  const [filterDepartment, setFilterDepartment] = useState<string>('all');
 
   // Modal states
   const [showUserModal, setShowUserModal] = useState(false);
@@ -29,7 +36,10 @@ export const UserPage: React.FC = () => {
     name: '',
     email: '',
     role: 'member' as 'member' | 'lead' | 'director' | 'executive' | 'admin',
+    position: '',
     password: '',
+    is_active: true,
+    changePassword: false,
   });
 
   useEffect(() => {
@@ -55,7 +65,10 @@ export const UserPage: React.FC = () => {
         name: user.name,
         email: user.email,
         role: user.role as 'member' | 'lead' | 'director' | 'executive' | 'admin',
+        position: user.position || '',
         password: '',
+        is_active: user.is_active,
+        changePassword: false,
       });
     } else {
       setEditingUser(null);
@@ -63,7 +76,10 @@ export const UserPage: React.FC = () => {
         name: '',
         email: '',
         role: 'member',
+        position: '',
         password: '',
+        is_active: true,
+        changePassword: false,
       });
     }
     setShowUserModal(true);
@@ -82,14 +98,33 @@ export const UserPage: React.FC = () => {
       return;
     }
 
+    if (editingUser && userForm.changePassword && !userForm.password.trim()) {
+      setError('Please enter a new password');
+      return;
+    }
+
+    if (editingUser && userForm.changePassword && userForm.password.trim().length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+
     try {
       if (editingUser) {
         // Update user
-        await api.updateUser(editingUser.id, {
+        const updateData: any = {
           name: userForm.name,
           email: userForm.email,
           role: userForm.role,
-        });
+          position: userForm.position || undefined,
+          is_active: userForm.is_active,
+        };
+        
+        // Only include password if user wants to change it
+        if (userForm.changePassword && userForm.password.trim()) {
+          updateData.password = userForm.password;
+        }
+        
+        await api.updateUser(editingUser.id, updateData);
         setSuccess('User updated successfully');
       } else {
         // Create user
@@ -97,6 +132,7 @@ export const UserPage: React.FC = () => {
           name: userForm.name,
           email: userForm.email,
           role: userForm.role,
+          position: userForm.position || undefined,
           password: userForm.password,
         });
         setSuccess('User created successfully');
@@ -106,7 +142,10 @@ export const UserPage: React.FC = () => {
         name: '',
         email: '',
         role: 'member',
+        position: '',
         password: '',
+        is_active: true,
+        changePassword: false,
       });
       setEditingUser(null);
       await loadUsers();
@@ -135,6 +174,18 @@ export const UserPage: React.FC = () => {
     }
   };
 
+  const handleToggleActive = async (user: User) => {
+    try {
+      await api.updateUser(user.id, {
+        is_active: !user.is_active,
+      });
+      setSuccess(`User ${!user.is_active ? 'activated' : 'deactivated'} successfully`);
+      await loadUsers();
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to update user status');
+    }
+  };
+
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'executive':
@@ -152,11 +203,68 @@ export const UserPage: React.FC = () => {
     }
   };
 
+  // Get unique teams and departments for filter dropdowns
+  const uniqueTeams = Array.from(new Set(users.map(u => u.team_name).filter(Boolean))).sort();
+  const uniqueDepartments = Array.from(new Set(users.map(u => u.department_name).filter(Boolean))).sort();
+
+  // Filter users based on search and filters
+  const filteredUsers = users.filter((user) => {
+    // Search filter (name, email, position)
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = 
+        user.name.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query) ||
+        (user.position && user.position.toLowerCase().includes(query));
+      if (!matchesSearch) return false;
+    }
+
+    // Role filter
+    if (filterRole !== 'all' && user.role !== filterRole) return false;
+
+    // Status filter
+    if (filterStatus !== 'all') {
+      if (filterStatus === 'active' && !user.is_active) return false;
+      if (filterStatus === 'inactive' && user.is_active) return false;
+    }
+
+    // Team filter
+    if (filterTeam !== 'all') {
+      if (filterTeam === 'none' && user.team_name) return false;
+      if (filterTeam !== 'none' && user.team_name !== filterTeam) return false;
+    }
+
+    // Department filter
+    if (filterDepartment !== 'all') {
+      if (filterDepartment === 'none' && user.department_name) return false;
+      if (filterDepartment !== 'none' && user.department_name !== filterDepartment) return false;
+    }
+
+    return true;
+  });
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterRole, filterStatus, filterTeam, filterDepartment]);
+
   // Pagination calculations
-  const totalPages = Math.ceil(users.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedUsers = users.slice(startIndex, endIndex);
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Check if any filters are active
+  const hasActiveFilters = searchQuery || filterRole !== 'all' || filterStatus !== 'all' || filterTeam !== 'all' || filterDepartment !== 'all';
+
+  // Reset all filters
+  const resetFilters = () => {
+    setSearchQuery('');
+    setFilterRole('all');
+    setFilterStatus('all');
+    setFilterTeam('all');
+    setFilterDepartment('all');
+  };
 
   if (loading) {
     return (
@@ -188,18 +296,145 @@ export const UserPage: React.FC = () => {
         {error && <Alert type="error" message={error} onClose={() => setError('')} />}
         {success && <Alert type="success" message={success} onClose={() => setSuccess('')} />}
 
+        {/* Search and Filters */}
+        <div className="bg-surface border border-border rounded-lg p-4 space-y-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary" size={18} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name, email, or position..."
+              className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-surface text-text-primary"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-secondary hover:text-text-primary"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+
+          {/* Filter Row */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            {/* Role Filter */}
+            <div>
+              <label className="block text-xs font-medium text-text-primary mb-1.5">
+                Role
+              </label>
+              <select
+                value={filterRole}
+                onChange={(e) => setFilterRole(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-surface text-text-primary"
+              >
+                <option value="all">All Roles</option>
+                <option value="member">Member</option>
+                <option value="lead">Team Lead</option>
+                <option value="director">Director</option>
+                <option value="executive">Executive</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            {/* Status Filter */}
+            <div>
+              <label className="block text-xs font-medium text-text-primary mb-1.5">
+                Status
+              </label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-surface text-text-primary"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+
+            {/* Team Filter */}
+            <div>
+              <label className="block text-xs font-medium text-text-primary mb-1.5">
+                Team
+              </label>
+              <select
+                value={filterTeam}
+                onChange={(e) => setFilterTeam(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-surface text-text-primary"
+              >
+                <option value="all">All Teams</option>
+                <option value="none">No Team</option>
+                {uniqueTeams.map((team) => (
+                  <option key={team} value={team}>{team}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Department Filter */}
+            <div>
+              <label className="block text-xs font-medium text-text-primary mb-1.5">
+                Department
+              </label>
+              <select
+                value={filterDepartment}
+                onChange={(e) => setFilterDepartment(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-surface text-text-primary"
+              >
+                <option value="all">All Departments</option>
+                <option value="none">No Department</option>
+                {uniqueDepartments.map((dept) => (
+                  <option key={dept} value={dept}>{dept}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Filter Actions */}
+          {hasActiveFilters && (
+            <div className="flex items-center justify-between pt-2 border-t border-border">
+              <div className="text-xs text-text-secondary">
+                Showing {filteredUsers.length} of {users.length} users
+              </div>
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-surface-hover rounded transition-colors"
+              >
+                <X size={14} />
+                Clear Filters
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Users Table */}
-        {users.length === 0 ? (
+        {filteredUsers.length === 0 ? (
           <div className="text-center py-8 border border-border rounded-lg bg-surface">
             <Users size={40} className="mx-auto text-text-secondary/50 mb-3" />
-            <p className="text-text-secondary mb-3">No users yet. Create your first user to get started.</p>
-            <button
-              onClick={() => handleOpenUserModal()}
-              className="inline-flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
-            >
-              <Plus size={18} />
-              Create User
-            </button>
+            {hasActiveFilters ? (
+              <>
+                <p className="text-text-secondary mb-3">No users match your filters.</p>
+                <button
+                  onClick={resetFilters}
+                  className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-lg hover:bg-surface-hover transition-colors font-medium text-sm"
+                >
+                  Clear Filters
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-text-secondary mb-3">No users yet. Create your first user to get started.</p>
+                <button
+                  onClick={() => handleOpenUserModal()}
+                  className="inline-flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm"
+                >
+                  <Plus size={18} />
+                  Create User
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <div className="border border-border rounded-lg overflow-hidden">
@@ -209,9 +444,11 @@ export const UserPage: React.FC = () => {
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-text-primary">Name</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-text-primary">Email</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-text-primary">Position</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-text-primary">Role</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-text-primary">Status</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-text-primary">Team</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-text-primary">Department</th>
                     <th className="px-4 py-3 text-center text-xs font-semibold text-text-primary">Actions</th>
                   </tr>
                 </thead>
@@ -220,6 +457,9 @@ export const UserPage: React.FC = () => {
                     <tr key={user.id} className="hover:bg-surface-hover transition-colors">
                       <td className="px-4 py-3 text-xs font-medium text-text-primary">{user.name}</td>
                       <td className="px-4 py-3 text-xs text-text-secondary">{user.email}</td>
+                      <td className="px-4 py-3 text-xs text-text-secondary">
+                        {user.position || '-'}
+                      </td>
                       <td className="px-4 py-3 text-xs">
                         <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${getRoleColor(user.role)}`}>
                           {user.role}
@@ -239,6 +479,9 @@ export const UserPage: React.FC = () => {
                       <td className="px-4 py-3 text-xs text-text-secondary">
                         {user.team_name || '-'}
                       </td>
+                      <td className="px-4 py-3 text-xs text-text-secondary">
+                        {user.department_name || '-'}
+                      </td>
                       <td className="px-4 py-3 text-xs">
                         <div className="flex items-center justify-center gap-1">
                           <button
@@ -247,6 +490,17 @@ export const UserPage: React.FC = () => {
                             title="Edit user"
                           >
                             <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleToggleActive(user)}
+                            className={`p-1.5 rounded transition-colors ${
+                              user.is_active
+                                ? 'text-text-secondary hover:text-amber-500 hover:bg-surface-hover'
+                                : 'text-text-secondary hover:text-emerald-500 hover:bg-surface-hover'
+                            }`}
+                            title={user.is_active ? 'Deactivate user' : 'Activate user'}
+                          >
+                            <Power size={16} />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(user)}
@@ -266,7 +520,14 @@ export const UserPage: React.FC = () => {
             {/* Pagination Controls */}
             <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-surface text-xs">
               <div className="text-text-secondary">
-                {startIndex + 1}-{Math.min(endIndex, users.length)} of {users.length}
+                {filteredUsers.length > 0 ? (
+                  <>
+                    {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length}
+                    {hasActiveFilters && ` (${users.length} total)`}
+                  </>
+                ) : (
+                  '0 results'
+                )}
               </div>
               <div className="flex items-center gap-1">
                 <button
@@ -318,7 +579,10 @@ export const UserPage: React.FC = () => {
             name: '',
             email: '',
             role: 'member' as 'member' | 'lead' | 'director' | 'executive' | 'admin',
+            position: '',
             password: '',
+            is_active: true,
+            changePassword: false,
           });
         }}
         title={editingUser ? 'Edit User' : 'Create New User'}
@@ -346,6 +610,19 @@ export const UserPage: React.FC = () => {
               value={userForm.email}
               onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
               placeholder="Enter email address"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-text-primary mb-1.5">
+              Position
+            </label>
+            <input
+              type="text"
+              value={userForm.position}
+              onChange={(e) => setUserForm({ ...userForm, position: e.target.value })}
+              placeholder="Enter position (e.g., Software Engineer, Product Manager)"
               className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
@@ -382,6 +659,48 @@ export const UserPage: React.FC = () => {
             </div>
           )}
 
+          {editingUser && (
+            <>
+              {/* Password Change Option */}
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={userForm.changePassword}
+                    onChange={(e) => setUserForm({ ...userForm, changePassword: e.target.checked, password: '' })}
+                    className="w-4 h-4 text-primary border-border rounded focus:ring-primary/50"
+                  />
+                  <span className="text-xs font-medium text-text-primary">Change Password</span>
+                </label>
+                {userForm.changePassword && (
+                  <input
+                    type="password"
+                    value={userForm.password}
+                    onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                    placeholder="Enter new password (min 8 characters)"
+                    className="w-full mt-2 px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                )}
+              </div>
+
+              {/* Active Status Toggle */}
+              <div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={userForm.is_active}
+                    onChange={(e) => setUserForm({ ...userForm, is_active: e.target.checked })}
+                    className="w-4 h-4 text-primary border-border rounded focus:ring-primary/50"
+                  />
+                  <span className="text-xs font-medium text-text-primary">Active User</span>
+                </label>
+                <p className="text-xs text-text-secondary mt-1 ml-6">
+                  {userForm.is_active ? 'User can log in and access the system' : 'User cannot log in'}
+                </p>
+              </div>
+            </>
+          )}
+
           <div className="flex gap-2 justify-end pt-2">
             <button
               type="button"
@@ -392,7 +711,10 @@ export const UserPage: React.FC = () => {
                   name: '',
                   email: '',
                   role: 'member' as 'member' | 'lead' | 'director' | 'executive' | 'admin',
+                  position: '',
                   password: '',
+                  is_active: true,
+                  changePassword: false,
                 });
               }}
               className="px-3 py-2 text-sm border border-border rounded-lg hover:bg-surface-hover transition-colors font-medium"

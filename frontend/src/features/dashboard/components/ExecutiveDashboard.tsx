@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Users, TrendingUp, Activity, ShieldCheck, Map } from 'lucide-react';
+import { Building2, Users, TrendingUp, Activity, Map } from 'lucide-react';
 
 interface ExecutiveDashboardProps {
   data: any;
@@ -32,10 +32,6 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({ data, on
         <div>
           <h1 className="text-3xl font-bold mb-2 text-text-primary tracking-tight">Executive Dashboard</h1>
           <p className="text-base text-text-secondary">Organizational performance and strategic overview</p>
-        </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-surface border border-border rounded-lg shadow-sm">
-           <ShieldCheck className="text-primary" size={16} />
-           <span className="font-bold text-xs text-text-primary">STRATEGIC VIEW 2024</span>
         </div>
       </div>
 

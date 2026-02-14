@@ -28,6 +28,7 @@ import { AddEditOKRPage } from '../features/okrs/pages/AddEditOKRPage';
 import { OKRMeasurementPage } from '../features/okrs/pages/OKRMeasurementPage';
 import { DirectorOKRListPage } from '../features/okrs/pages/DirectorOKRListPage';
 import { ExecutiveOKRListPage } from '../features/okrs/pages/ExecutiveOKRListPage';
+import { OKRValidatorPage } from '../features/okrs/pages/OKRValidatorPage';
 
 // BAU pages
 import { BAUActivitiesPage } from '../features/bau/pages/BAUActivitiesPage';
@@ -188,6 +189,14 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <OKRPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/okrs/validator"
+        element={
+          <ProtectedRoute>
+            <OKRValidatorPage />
           </ProtectedRoute>
         }
       />

@@ -1,7 +1,7 @@
 """User management endpoints."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.core.database import get_db
 from app.models import *
 from app.schemas import *
@@ -17,8 +17,39 @@ def list_users(
     current_user: User = Depends(get_current_user)
 ):
     """List all users."""
-    users = db.query(User).all()
-    return users
+    users = db.query(User).options(
+        joinedload(User.team).joinedload(Team.department)
+    ).all()
+    
+    # Convert to response format with team_name and department_name
+    result = []
+    for user in users:
+        # Get department name from team if user has a team
+        department_name = None
+        if user.team and user.team.department:
+            department_name = user.team.department.name
+        else:
+            # If no team, check if user is a director of a department
+            department = db.query(Department).filter(Department.director_id == user.id).first()
+            if department:
+                department_name = department.name
+        
+        user_dict = {
+            'id': user.id,
+            'name': user.name,
+            'email': user.email,
+            'position': user.position,
+            'role': user.role,
+            'team_id': user.team_id,
+            'team_name': user.team.name if user.team else None,
+            'department_name': department_name,
+            'is_active': user.is_active,
+            'created_at': user.created_at,
+            'updated_at': user.updated_at,
+        }
+        result.append(UserResponse(**user_dict))
+    
+    return result
 
 
 @router.get("/{user_id}", response_model=UserResponse)
@@ -28,7 +59,9 @@ def get_user(
     current_user: User = Depends(get_current_user)
 ):
     """Get user details."""
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).options(
+        joinedload(User.team).joinedload(Team.department)
+    ).filter(User.id == user_id).first()
     
     if not user:
         raise HTTPException(
@@ -36,7 +69,31 @@ def get_user(
             detail="User not found"
         )
     
-    return user
+    # Get department name from team if user has a team
+    department_name = None
+    if user.team and user.team.department:
+        department_name = user.team.department.name
+    else:
+        # If no team, check if user is a director of a department
+        department = db.query(Department).filter(Department.director_id == user.id).first()
+        if department:
+            department_name = department.name
+    
+    # Convert to response format with team_name and department_name
+    user_dict = {
+        'id': user.id,
+        'name': user.name,
+        'email': user.email,
+        'position': user.position,
+        'role': user.role,
+        'team_id': user.team_id,
+        'team_name': user.team.name if user.team else None,
+        'department_name': department_name,
+        'is_active': user.is_active,
+        'created_at': user.created_at,
+        'updated_at': user.updated_at,
+    }
+    return UserResponse(**user_dict)
 
 
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -60,6 +117,7 @@ def create_user(
         name=user_data.name,
         email=user_data.email,
         role=user_data.role,
+        position=user_data.position,
         password_hash=hashed_password
     )
     
@@ -67,7 +125,36 @@ def create_user(
     db.commit()
     db.refresh(new_user)
     
-    return new_user
+    # Reload with relationships for response
+    db.refresh(new_user)
+    user = db.query(User).options(
+        joinedload(User.team).joinedload(Team.department)
+    ).filter(User.id == new_user.id).first()
+    
+    # Get department name from team if user has a team
+    department_name = None
+    if user.team and user.team.department:
+        department_name = user.team.department.name
+    else:
+        # If no team, check if user is a director of a department
+        department = db.query(Department).filter(Department.director_id == user.id).first()
+        if department:
+            department_name = department.name
+    
+    user_dict = {
+        'id': user.id,
+        'name': user.name,
+        'email': user.email,
+        'position': user.position,
+        'role': user.role,
+        'team_id': user.team_id,
+        'team_name': user.team.name if user.team else None,
+        'department_name': department_name,
+        'is_active': user.is_active,
+        'created_at': user.created_at,
+        'updated_at': user.updated_at,
+    }
+    return UserResponse(**user_dict)
 
 
 @router.put("/{user_id}", response_model=UserResponse)
@@ -101,12 +188,46 @@ def update_user(
         user.email = user_data.email
     if user_data.role:
         user.role = user_data.role
+    if user_data.position is not None:
+        user.position = user_data.position
+    if user_data.password:
+        # Update password if provided
+        user.password_hash = hash_password(user_data.password)
     if user_data.is_active is not None:
         user.is_active = user_data.is_active
     
     db.commit()
     db.refresh(user)
-    return user
+    
+    # Reload with relationships for response
+    user = db.query(User).options(
+        joinedload(User.team).joinedload(Team.department)
+    ).filter(User.id == user.id).first()
+    
+    # Get department name from team if user has a team
+    department_name = None
+    if user.team and user.team.department:
+        department_name = user.team.department.name
+    else:
+        # If no team, check if user is a director of a department
+        department = db.query(Department).filter(Department.director_id == user.id).first()
+        if department:
+            department_name = department.name
+    
+    user_dict = {
+        'id': user.id,
+        'name': user.name,
+        'email': user.email,
+        'position': user.position,
+        'role': user.role,
+        'team_id': user.team_id,
+        'team_name': user.team.name if user.team else None,
+        'department_name': department_name,
+        'is_active': user.is_active,
+        'created_at': user.created_at,
+        'updated_at': user.updated_at,
+    }
+    return UserResponse(**user_dict)
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)

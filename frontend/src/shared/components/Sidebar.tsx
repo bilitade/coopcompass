@@ -11,6 +11,7 @@ import {
   Users,
   Building2,
   Layers,
+  Sparkles,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -34,9 +35,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
         { label: 'My Team', path: '/my-team', icon: <Users size={20} /> },
         { label: 'OKRs', path: '/okrs', icon: <Target size={20} /> },
+        { label: 'OKR Validator', path: '/okrs/validator', icon: <Sparkles size={20} /> },
         { label: 'BAU Activities', path: '/bau-activities', icon: <Activity size={20} /> },
         { label: 'Monthly Heads-Up', path: '/monthly-headsup', icon: <Calendar size={20} /> },
-        { label: 'Weekly Priority', path: '/weekly-priority', icon: <Target size={20} /> },
         { label: 'Tasks', path: '/tasks', icon: <CheckSquare size={20} /> },
       ];
     }
@@ -67,9 +68,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
         { label: 'Users', path: '/users', icon: <Users size={20} /> },
         { label: 'Departments', path: '/manage-departments', icon: <Building2 size={20} /> },
-        { label: 'Teams', path: '/manage-teams', icon: <Layers size={20} /> },
-        { label: 'Organization View', path: '/departments', icon: <Building2 size={20} /> },
+        { label: 'Teams', path: '/teams', icon: <Layers size={20} /> },
         { label: 'OKRs Overview', path: '/executive/okrs', icon: <Target size={20} /> },
+        { label: 'OKR Validator', path: '/okrs/validator', icon: <Sparkles size={20} /> },
         { label: 'BAU Overview', path: '/executive/bau', icon: <Activity size={20} /> },
       ];
     }

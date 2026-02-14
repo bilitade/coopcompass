@@ -6,7 +6,7 @@ import { Modal } from '../../../shared/components/Modal';
 import { useAuth } from '../../../app/context/AuthContext';
 import { api } from '../../../shared/services/api';
 import type { Team, TeamDetail, User } from '../../../shared/types';
-import { Plus, Edit2, Trash2, Users, Mail, UserCheck, X, Building2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Users, Mail, UserCheck, X, Building2, Crown, Shield, Briefcase } from 'lucide-react';
 
 export const TeamPage: React.FC = () => {
   const { user } = useAuth();
@@ -24,11 +24,12 @@ export const TeamPage: React.FC = () => {
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   
   // Form states
-  const [teamForm, setTeamForm] = useState({ name: '' });
+  const [teamForm, setTeamForm] = useState({ name: '', description: '' });
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [selectedTeamForDelete, setSelectedTeamForDelete] = useState<Team | null>(null);
   const [selectedUserToAdd, setSelectedUserToAdd] = useState<User | null>(null);
+  const [newMemberRole, setNewMemberRole] = useState<'member' | 'lead'>('member');
 
   useEffect(() => {
     loadTeams();
@@ -59,10 +60,10 @@ export const TeamPage: React.FC = () => {
   const handleOpenTeamModal = (team?: Team) => {
     if (team) {
       setEditingTeam(team);
-      setTeamForm({ name: team.name });
+      setTeamForm({ name: team.name, description: team.description || '' });
     } else {
       setEditingTeam(null);
-      setTeamForm({ name: '' });
+      setTeamForm({ name: '', description: '' });
     }
     setShowTeamModal(true);
   };
@@ -77,15 +78,21 @@ export const TeamPage: React.FC = () => {
     try {
       if (editingTeam) {
         // Update team
-        await api.updateTeam(editingTeam.id, { name: teamForm.name });
+        await api.updateTeam(editingTeam.id, { 
+          name: teamForm.name,
+          description: teamForm.description || undefined
+        });
         setSuccess('Team updated successfully');
       } else {
         // Create team
-        await api.createTeam({ name: teamForm.name });
+        await api.createTeam({ 
+          name: teamForm.name,
+          description: teamForm.description || undefined
+        });
         setSuccess('Team created successfully');
       }
       setShowTeamModal(false);
-      setTeamForm({ name: '' });
+      setTeamForm({ name: '', description: '' });
       setEditingTeam(null);
       await loadTeams();
     } catch (err: any) {
@@ -108,10 +115,18 @@ export const TeamPage: React.FC = () => {
     if (!selectedTeam || !selectedUserToAdd) return;
 
     try {
+      // First add user to team
       await api.addUserToTeam(selectedTeam.id, selectedUserToAdd.id);
-      setSuccess('Member added successfully');
+      
+      // Then update role if needed
+      if (newMemberRole === 'lead') {
+        await api.updateUser(selectedUserToAdd.id, { role: 'lead' });
+      }
+      
+      setSuccess(`User added as ${newMemberRole} successfully`);
       setShowAddMemberModal(false);
       setSelectedUserToAdd(null);
+      setNewMemberRole('member');
       
       // Reload team details and available users
       const details = await api.getTeam(selectedTeam.id);
@@ -140,6 +155,48 @@ export const TeamPage: React.FC = () => {
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to remove member');
     }
+  };
+
+  const handleSetTeamLead = async (userId: number) => {
+    if (!selectedTeam) return;
+
+    try {
+      // Update user role to 'lead'
+      await api.updateUser(userId, { role: 'lead' });
+      setSuccess('Team lead assigned successfully');
+      
+      // Reload team details
+      const details = await api.getTeam(selectedTeam.id);
+      setTeamDetails(prev => ({ ...prev, [selectedTeam.id]: details }));
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to set team lead');
+    }
+  };
+
+  const handleChangeRole = async (userId: number, newRole: 'member' | 'lead') => {
+    if (!selectedTeam) return;
+
+    try {
+      await api.updateUser(userId, { role: newRole });
+      setSuccess(`User role updated to ${newRole} successfully`);
+      
+      // Reload team details
+      const details = await api.getTeam(selectedTeam.id);
+      setTeamDetails(prev => ({ ...prev, [selectedTeam.id]: details }));
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to update user role');
+    }
+  };
+
+  // Helper functions
+  const getTeamLead = (users: User[] | undefined): User | null => {
+    if (!users) return null;
+    return users.find(u => u.role === 'lead') || null;
+  };
+
+  const getTeamMembers = (users: User[] | undefined): User[] => {
+    if (!users) return [];
+    return users.filter(u => u.role !== 'lead');
   };
 
   const handleDeleteClick = (team: Team) => {
@@ -242,11 +299,18 @@ export const TeamPage: React.FC = () => {
 
                 {/* Team Info */}
                 <div className="space-y-3 mb-4">
+                  {/* Description */}
+                  {team.description && (
+                    <div className="text-sm text-text-secondary line-clamp-2">
+                      {team.description}
+                    </div>
+                  )}
+                  
                   {/* Department */}
                   {team.department ? (
                     <div className="flex items-center gap-2 text-sm text-text-secondary">
                       <Building2 size={16} className="text-primary" />
-                      <span>{team.department.name}</span>
+                      <span className="font-medium">{team.department.name}</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 text-sm text-text-secondary">
@@ -255,16 +319,48 @@ export const TeamPage: React.FC = () => {
                     </div>
                   )}
                   
-                  {/* Member Count */}
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-semibold">
-                      {team.users?.length || 0} members
-                    </span>
+                  {/* Team Lead */}
+                  {(() => {
+                    const teamLead = getTeamLead(team.users);
+                    return teamLead ? (
+                      <div className="flex items-center gap-2 text-sm p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                        <Crown size={16} className="text-amber-600" />
+                        <div className="flex-1 min-w-0">
+                          <span className="font-semibold text-text-primary">{teamLead.name}</span>
+                          {teamLead.position && (
+                            <span className="text-text-secondary ml-2">• {teamLead.position}</span>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-sm text-text-secondary p-2 bg-surface border border-border rounded-lg">
+                        <Crown size={16} className="text-text-secondary/50" />
+                        <span>No team lead assigned</span>
+                      </div>
+                    );
+                  })()}
+                  
+                  {/* Member Stats */}
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <Users size={14} className="text-primary" />
+                      <span className="font-semibold text-text-primary">
+                        {team.users?.length || 0} {team.users?.length === 1 ? 'member' : 'members'}
+                      </span>
+                    </div>
+                    {team.users && team.users.length > 0 && (
+                      <div className="flex items-center gap-1.5">
+                        <Crown size={14} className="text-amber-600" />
+                        <span className="text-text-secondary">
+                          {team.users.filter(u => u.role === 'lead').length} lead{team.users.filter(u => u.role === 'lead').length !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Created Date */}
-                  <div className="flex items-center gap-2 text-sm text-text-secondary">
-                    <span className="text-xs">Created:</span>
+                  <div className="flex items-center gap-2 text-xs text-text-secondary">
+                    <span>Created:</span>
                     <span>{new Date(team.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
@@ -289,7 +385,7 @@ export const TeamPage: React.FC = () => {
         onClose={() => {
           setShowTeamModal(false);
           setEditingTeam(null);
-          setTeamForm({ name: '' });
+          setTeamForm({ name: '', description: '' });
         }}
         title={editingTeam ? 'Edit Team' : 'Create New Team'}
       >
@@ -301,10 +397,23 @@ export const TeamPage: React.FC = () => {
             <input
               type="text"
               value={teamForm.name}
-              onChange={(e) => setTeamForm({ name: e.target.value })}
+              onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })}
               placeholder="Enter team name"
               className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
               autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-2">
+              Description
+            </label>
+            <textarea
+              value={teamForm.description}
+              onChange={(e) => setTeamForm({ ...teamForm, description: e.target.value })}
+              placeholder="Enter team description (optional)"
+              rows={4}
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
             />
           </div>
 
@@ -314,7 +423,7 @@ export const TeamPage: React.FC = () => {
               onClick={() => {
                 setShowTeamModal(false);
                 setEditingTeam(null);
-                setTeamForm({ name: '' });
+                setTeamForm({ name: '', description: '' });
               }}
               className="px-4 py-2 border border-border rounded-lg hover:bg-surface-hover transition-colors font-medium"
             >
@@ -352,42 +461,141 @@ export const TeamPage: React.FC = () => {
           )}
 
           {teamDetailsCurrent && teamDetailsCurrent.users && teamDetailsCurrent.users.length > 0 ? (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {teamDetailsCurrent.users.map((teamUser) => (
-                <div
-                  key={teamUser.id}
-                  className="p-3 border border-border rounded-lg bg-surface-light flex items-start justify-between"
-                >
-                  <div className="flex-1">
-                    <p className="font-medium text-text-primary">{teamUser.name}</p>
-                    <div className="flex items-center gap-1 text-sm text-text-secondary mt-1">
-                      <Mail size={14} />
-                      <span>{teamUser.email}</span>
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {/* Team Lead Section */}
+              {(() => {
+                const teamLead = getTeamLead(teamDetailsCurrent.users);
+                return teamLead ? (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Crown size={18} className="text-amber-600" />
+                      <h3 className="text-sm font-bold text-text-primary">Team Lead</h3>
                     </div>
-                    <div className="mt-2 flex gap-2">
-                      <span className="inline-block px-2 py-1 bg-primary/10 text-primary text-xs rounded font-medium capitalize">
-                        {teamUser.role}
-                      </span>
-                      {teamUser.is_active ? (
-                        <span className="inline-block px-2 py-1 bg-green-500/10 text-green-600 text-xs rounded font-medium">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="inline-block px-2 py-1 bg-red-500/10 text-red-600 text-xs rounded font-medium">
-                          Inactive
-                        </span>
-                      )}
+                    <div className="p-3 border-2 border-amber-500/30 rounded-lg bg-amber-500/5 flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-bold text-text-primary">{teamLead.name}</p>
+                          <span className="inline-block px-2 py-0.5 bg-amber-500/20 text-amber-700 text-xs rounded font-bold">
+                            LEAD
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-text-secondary mt-1">
+                          <Mail size={14} />
+                          <span>{teamLead.email}</span>
+                        </div>
+                        {teamLead.position && (
+                          <div className="flex items-center gap-1 text-sm text-text-secondary mt-1">
+                            <Briefcase size={14} />
+                            <span>{teamLead.position}</span>
+                          </div>
+                        )}
+                        <div className="mt-2 flex gap-2">
+                          {teamLead.is_active ? (
+                            <span className="inline-block px-2 py-1 bg-green-500/10 text-green-600 text-xs rounded font-medium">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="inline-block px-2 py-1 bg-red-500/10 text-red-600 text-xs rounded font-medium">
+                              Inactive
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-1 ml-2">
+                        <button
+                          onClick={() => handleChangeRole(teamLead.id, 'member')}
+                          className="p-2 text-text-secondary hover:text-primary hover:bg-surface-hover rounded-lg transition-colors"
+                          title="Remove as team lead"
+                        >
+                          <Shield size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleRemoveMember(teamLead.id)}
+                          className="p-2 text-text-secondary hover:text-red-500 hover:bg-surface-hover rounded-lg transition-colors"
+                          title="Remove from team"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleRemoveMember(teamUser.id)}
-                    className="ml-2 p-2 text-text-secondary hover:text-red-500 hover:bg-surface-hover rounded-lg transition-colors"
-                    title="Remove from team"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              ))}
+                ) : (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Crown size={18} className="text-text-secondary/50" />
+                      <h3 className="text-sm font-bold text-text-primary">Team Lead</h3>
+                    </div>
+                    <div className="p-3 border border-border rounded-lg bg-surface text-center text-sm text-text-secondary">
+                      No team lead assigned. Select a member below to set as lead.
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Team Members Section */}
+              {(() => {
+                const members = getTeamMembers(teamDetailsCurrent.users);
+                return members.length > 0 ? (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users size={18} className="text-primary" />
+                      <h3 className="text-sm font-bold text-text-primary">Team Members ({members.length})</h3>
+                    </div>
+                    <div className="space-y-2">
+                      {members.map((teamUser) => (
+                        <div
+                          key={teamUser.id}
+                          className="p-3 border border-border rounded-lg bg-surface-light flex items-start justify-between"
+                        >
+                          <div className="flex-1">
+                            <p className="font-medium text-text-primary">{teamUser.name}</p>
+                            <div className="flex items-center gap-1 text-sm text-text-secondary mt-1">
+                              <Mail size={14} />
+                              <span>{teamUser.email}</span>
+                            </div>
+                            {teamUser.position && (
+                              <div className="flex items-center gap-1 text-sm text-text-secondary mt-1">
+                                <Briefcase size={14} />
+                                <span>{teamUser.position}</span>
+                              </div>
+                            )}
+                            <div className="mt-2 flex gap-2">
+                              <span className="inline-block px-2 py-1 bg-primary/10 text-primary text-xs rounded font-medium capitalize">
+                                {teamUser.role}
+                              </span>
+                              {teamUser.is_active ? (
+                                <span className="inline-block px-2 py-1 bg-green-500/10 text-green-600 text-xs rounded font-medium">
+                                  Active
+                                </span>
+                              ) : (
+                                <span className="inline-block px-2 py-1 bg-red-500/10 text-red-600 text-xs rounded font-medium">
+                                  Inactive
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-1 ml-2">
+                            <button
+                              onClick={() => handleSetTeamLead(teamUser.id)}
+                              className="p-2 text-text-secondary hover:text-amber-600 hover:bg-surface-hover rounded-lg transition-colors"
+                              title="Set as team lead"
+                            >
+                              <Crown size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleRemoveMember(teamUser.id)}
+                              className="p-2 text-text-secondary hover:text-red-500 hover:bg-surface-hover rounded-lg transition-colors"
+                              title="Remove from team"
+                            >
+                              <X size={18} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
             </div>
           ) : (
             <div className="text-center py-8">
@@ -451,40 +659,87 @@ export const TeamPage: React.FC = () => {
         onClose={() => {
           setShowAddMemberModal(false);
           setSelectedUserToAdd(null);
+          setNewMemberRole('member');
         }}
         title={selectedTeam ? `Add Member to ${selectedTeam.name}` : 'Add Member'}
       >
         <div className="space-y-4">
           {availableUsers.length > 0 ? (
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-3">
-                Select a user to add
-              </label>
-              <div className="space-y-2 max-h-96 overflow-y-auto border border-border rounded-lg">
-                {availableUsers.map((availableUser) => (
-                  <div
-                    key={availableUser.id}
-                    onClick={() => setSelectedUserToAdd(availableUser)}
-                    className={`p-3 cursor-pointer transition-colors ${
-                      selectedUserToAdd?.id === availableUser.id
-                        ? 'bg-primary/10 border-l-4 border-l-primary'
-                        : 'hover:bg-surface-hover'
-                    }`}
-                  >
-                    <p className="font-medium text-text-primary">{availableUser.name}</p>
-                    <div className="flex items-center gap-1 text-sm text-text-secondary mt-1">
-                      <Mail size={14} />
-                      <span>{availableUser.email}</span>
+            <>
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-3">
+                  Select a user to add
+                </label>
+                <div className="space-y-2 max-h-64 overflow-y-auto border border-border rounded-lg">
+                  {availableUsers.map((availableUser) => (
+                    <div
+                      key={availableUser.id}
+                      onClick={() => setSelectedUserToAdd(availableUser)}
+                      className={`p-3 cursor-pointer transition-colors ${
+                        selectedUserToAdd?.id === availableUser.id
+                          ? 'bg-primary/10 border-l-4 border-l-primary'
+                          : 'hover:bg-surface-hover'
+                      }`}
+                    >
+                      <p className="font-medium text-text-primary">{availableUser.name}</p>
+                      <div className="flex items-center gap-1 text-sm text-text-secondary mt-1">
+                        <Mail size={14} />
+                        <span>{availableUser.email}</span>
+                      </div>
+                      {availableUser.position && (
+                        <div className="flex items-center gap-1 text-sm text-text-secondary mt-1">
+                          <Briefcase size={14} />
+                          <span>{availableUser.position}</span>
+                        </div>
+                      )}
+                      <div className="mt-2 flex gap-2">
+                        <span className="inline-block px-2 py-1 bg-primary/10 text-primary text-xs rounded font-medium capitalize">
+                          {availableUser.role}
+                        </span>
+                      </div>
                     </div>
-                    <div className="mt-2 flex gap-2">
-                      <span className="inline-block px-2 py-1 bg-primary/10 text-primary text-xs rounded font-medium capitalize">
-                        {availableUser.role}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+
+              {selectedUserToAdd && (
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">
+                    Role in Team
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setNewMemberRole('member')}
+                      className={`flex-1 px-4 py-2 rounded-lg border transition-colors font-medium ${
+                        newMemberRole === 'member'
+                          ? 'bg-primary text-white border-primary'
+                          : 'bg-surface border-border text-text-primary hover:bg-surface-hover'
+                      }`}
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Users size={16} />
+                        <span>Member</span>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewMemberRole('lead')}
+                      className={`flex-1 px-4 py-2 rounded-lg border transition-colors font-medium ${
+                        newMemberRole === 'lead'
+                          ? 'bg-amber-500 text-white border-amber-500'
+                          : 'bg-surface border-border text-text-primary hover:bg-surface-hover'
+                      }`}
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Crown size={16} />
+                        <span>Team Lead</span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-8">
               <Users size={40} className="mx-auto text-text-secondary/50 mb-2" />
@@ -497,6 +752,7 @@ export const TeamPage: React.FC = () => {
               onClick={() => {
                 setShowAddMemberModal(false);
                 setSelectedUserToAdd(null);
+                setNewMemberRole('member');
               }}
               className="px-4 py-2 border border-border rounded-lg hover:bg-surface-hover transition-colors font-medium"
             >
@@ -507,7 +763,7 @@ export const TeamPage: React.FC = () => {
               disabled={!selectedUserToAdd}
               className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
             >
-              Add Member
+              Add as {newMemberRole === 'lead' ? 'Team Lead' : 'Member'}
             </button>
           </div>
         </div>

@@ -10,6 +10,7 @@ from app.modules.users.schemas import UserResponse
 class TeamCreate(BaseModel):
     """Team creation schema."""
     name: str = Field(..., min_length=1)
+    description: Optional[str] = None
     department_id: Optional[int] = None
 
 
@@ -17,6 +18,7 @@ class TeamResponse(BaseModel):
     """Team response schema."""
     id: int
     name: str
+    description: Optional[str] = None
     department_id: Optional[int] = None
     department: Optional['DepartmentResponse'] = None
     users: Optional[List[UserResponse]] = None
@@ -30,6 +32,7 @@ class TeamResponse(BaseModel):
 class TeamUpdate(BaseModel):
     """Team update schema."""
     name: Optional[str] = Field(None, min_length=1)
+    description: Optional[str] = None
     department_id: Optional[int] = None
 
 

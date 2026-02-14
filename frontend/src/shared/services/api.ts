@@ -103,7 +103,7 @@ class ApiService {
     return response.data;
   }
 
-  async createTeam(data: { name: string; department_id?: number }): Promise<Team> {
+  async createTeam(data: { name: string; description?: string; department_id?: number }): Promise<Team> {
     const response = await this.client.post<Team>('/api/teams', data);
     return response.data;
   }
@@ -132,7 +132,7 @@ class ApiService {
     await this.client.delete(`/api/teams/${teamId}/users/${userId}`);
   }
 
-  async updateTeam(teamId: number, data: { name?: string; department_id?: number }): Promise<Team> {
+  async updateTeam(teamId: number, data: { name?: string; description?: string; department_id?: number }): Promise<Team> {
     const response = await this.client.put<Team>(`/api/teams/${teamId}`, data);
     return response.data;
   }
@@ -157,7 +157,7 @@ class ApiService {
     return response.data;
   }
 
-  async updateUser(userId: number, data: { name?: string; email?: string; role?: string; is_active?: boolean }): Promise<User> {
+  async updateUser(userId: number, data: { name?: string; email?: string; role?: string; position?: string; password?: string; is_active?: boolean }): Promise<User> {
     const response = await this.client.put<User>(`/api/users/${userId}`, data);
     return response.data;
   }

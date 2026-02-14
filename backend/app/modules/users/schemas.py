@@ -25,6 +25,7 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     position: Optional[str] = None
     role: Optional[str] = Field(None, pattern="^(member|lead|director|executive|admin)$")
+    password: Optional[str] = Field(None, min_length=8)
     is_active: Optional[bool] = None
 
 
@@ -33,6 +34,7 @@ class UserResponse(UserBase):
     id: int
     team_id: Optional[int] = None
     team_name: Optional[str] = None
+    department_name: Optional[str] = None
     position: Optional[str] = None
     is_active: bool
     created_at: datetime

@@ -39,12 +39,20 @@ def create_team(
     """Create a new team."""
     new_team = Team(
         name=team_data.name,
+        description=team_data.description,
         department_id=team_data.department_id
     )
     db.add(new_team)
     db.commit()
     db.refresh(new_team)
-    return new_team
+    
+    # Reload with relationships
+    team = db.query(Team).options(
+        joinedload(Team.department),
+        joinedload(Team.users)
+    ).filter(Team.id == new_team.id).first()
+    
+    return team
 
 
 @router.get("/{team_id}", response_model=TeamDetailResponse)
@@ -205,11 +213,21 @@ def update_team(
     if team_data.name:
         team.name = team_data.name
     
+    if team_data.description is not None:
+        team.description = team_data.description
+    
     if team_data.department_id is not None:
         team.department_id = team_data.department_id
     
     db.commit()
     db.refresh(team)
+    
+    # Reload with relationships
+    team = db.query(Team).options(
+        joinedload(Team.department),
+        joinedload(Team.users)
+    ).filter(Team.id == team_id).first()
+    
     return team
 
 

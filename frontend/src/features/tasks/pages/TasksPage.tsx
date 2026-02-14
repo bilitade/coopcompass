@@ -5,7 +5,9 @@ import { Alert } from '../../../shared/components/Alert';
 import { Modal } from '../../../shared/components/Modal';
 import { useAuth } from '../../../app/context/AuthContext';
 import { api } from '../../../shared/services/api';
-import type { Task, WorkItem } from '../../../shared/types';
+import { tasksApi } from '../services/tasksApi';
+import type { Task, TaskWithWorkItem } from '../types';
+import type { WorkItem } from '../../../shared/types';
 import {
   Plus,
   CheckCircle,
@@ -13,10 +15,6 @@ import {
   Filter,
   TrendingUp,
 } from 'lucide-react';
-
-interface TaskWithWorkItem extends Task {
-  work_item?: WorkItem;
-}
 
 export const TasksPage: React.FC = () => {
   const { user } = useAuth();
@@ -54,7 +52,7 @@ export const TasksPage: React.FC = () => {
 
     try {
       const [tasksData, workItemsData] = await Promise.all([
-        api.getTeamTasks(user.team_id),
+        tasksApi.getTeamTasks(user.team_id),
         api.getWorkItems({ team_id: user.team_id }),
       ]);
       setTasks(tasksData);
@@ -75,7 +73,7 @@ export const TasksPage: React.FC = () => {
     }
 
     try {
-      await api.createTask(parseInt(taskForm.work_item_id), {
+      await tasksApi.createTask(parseInt(taskForm.work_item_id), {
         description: taskForm.description,
         assignee_id: taskForm.assignee_id ? parseInt(taskForm.assignee_id) : null,
         effort_hours: taskForm.effort_hours ? parseInt(taskForm.effort_hours) : null,
@@ -96,7 +94,7 @@ export const TasksPage: React.FC = () => {
 
   const handleUpdateTaskStatus = async (taskId: number, status: Task['status']) => {
     try {
-      await api.updateTask(taskId, { status });
+      await tasksApi.updateTask(taskId, { status });
       setSuccess('Task updated successfully');
       loadData();
     } catch (err: any) {
@@ -470,4 +468,3 @@ export const TasksPage: React.FC = () => {
     </Layout>
   );
 };
-

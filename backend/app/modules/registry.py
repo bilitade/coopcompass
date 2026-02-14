@@ -13,6 +13,7 @@ ENABLED_MODULES = [
     "okrs",
     "bau",
     "work_items",
+    "tasks",
     "weekly_priority",
 ]
 

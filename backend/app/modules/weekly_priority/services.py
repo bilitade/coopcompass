@@ -52,10 +52,9 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
     ).all()
     
     bau_healths = []
-    bau_executions = []
+    bau_healths = []
     for activity in bau_activities:
         health = calculate_bau_health(db, activity.id)
-        execution = calculate_bau_execution(db, activity.id)
         metrics_data = [
             {
                 "id": m.id,
@@ -75,19 +74,12 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
             "activity_id": activity.id,
             "activity_name": activity.name,
             "health": health,
-            "execution": execution,
             "metrics": metrics_data
         })
-        bau_executions.append(execution)
     
     avg_bau_health = (
         sum(b["health"] for b in bau_healths) / len(bau_healths)
         if bau_healths else 0.0
-    )
-    
-    avg_bau_execution = (
-        sum(bau_executions) / len(bau_executions)
-        if bau_executions else 0.0
     )
     
     # Get current week priorities
@@ -114,7 +106,6 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
         "team_id": team_id,
         "okr_progress": okr_progress,
         "bau_health": round(avg_bau_health, 2),
-        "bau_execution": round(avg_bau_execution, 2),
         "okrs": okrs_data,
         "bau_activities": bau_healths,
         "current_week_priorities": current_priorities,
@@ -152,15 +143,13 @@ def get_department_dashboard(db: Session, department_id: int) -> dict:
             team_count_with_data += 1
             total_okr_progress += team_dashboard["okr_progress"]
             total_bau_health += team_dashboard["bau_health"]
-            total_bau_execution += team_dashboard.get("bau_execution", 0.0)
         
         teams_data.append({
             "team_id": team.id,
             "team_name": team.name,
             "members_count": len(members),
             "okr_progress": team_dashboard["okr_progress"],
-            "bau_health": team_dashboard["bau_health"],
-            "bau_execution": team_dashboard.get("bau_execution", 0.0)
+            "bau_health": team_dashboard["bau_health"]
         })
     
     avg_okr_progress = (
@@ -171,10 +160,6 @@ def get_department_dashboard(db: Session, department_id: int) -> dict:
         total_bau_health / team_count_with_data
         if team_count_with_data > 0 else 0.0
     )
-    avg_bau_execution = (
-        total_bau_execution / team_count_with_data
-        if team_count_with_data > 0 else 0.0
-    )
     
     return {
         "department_id": department_id,
@@ -182,7 +167,6 @@ def get_department_dashboard(db: Session, department_id: int) -> dict:
         "total_members": total_members,
         "average_okr_progress": round(avg_okr_progress, 2),
         "average_bau_health": round(avg_bau_health, 2),
-        "average_bau_execution": round(avg_bau_execution, 2),
         "teams": teams_data,
         "updated_at": datetime.utcnow()
     }
@@ -219,7 +203,6 @@ def get_organization_dashboard(db: Session) -> dict:
             dept_count_with_data += 1
             total_okr_progress += dept_dashboard["average_okr_progress"]
             total_bau_health += dept_dashboard["average_bau_health"]
-            total_bau_execution += dept_dashboard.get("average_bau_execution", 0.0)
         
         # Get director name if director_id exists
         director_name = None
@@ -235,8 +218,7 @@ def get_organization_dashboard(db: Session) -> dict:
             "teams_count": dept_dashboard["total_teams"],
             "members_count": dept_dashboard["total_members"],
             "okr_progress": dept_dashboard["average_okr_progress"],
-            "bau_health": dept_dashboard["average_bau_health"],
-            "bau_execution": dept_dashboard.get("average_bau_execution", 0.0)
+            "bau_health": dept_dashboard["average_bau_health"]
         })
     
     avg_okr_progress = (
@@ -247,10 +229,6 @@ def get_organization_dashboard(db: Session) -> dict:
         total_bau_health / dept_count_with_data
         if dept_count_with_data > 0 else 0.0
     )
-    avg_bau_execution = (
-        total_bau_execution / dept_count_with_data
-        if dept_count_with_data > 0 else 0.0
-    )
     
     return {
         "total_departments": total_departments,
@@ -259,7 +237,6 @@ def get_organization_dashboard(db: Session) -> dict:
         "total_directors": total_directors,
         "average_okr_progress": round(avg_okr_progress, 2),
         "average_bau_health": round(avg_bau_health, 2),
-        "average_bau_execution": round(avg_bau_execution, 2),
         "departments": departments_data,
         "updated_at": datetime.utcnow()
     }

@@ -5,7 +5,9 @@ import { Alert } from '../../../shared/components/Alert';
 import { Modal } from '../../../shared/components/Modal';
 import { useAuth } from '../../../app/context/AuthContext';
 import { api } from '../../../shared/services/api';
-import type { WorkItem, Task } from '../../../shared/types';
+import { tasksApi } from '../../tasks/services/tasksApi';
+import type { WorkItem } from '../../../shared/types';
+import type { Task } from '../../tasks/types';
 import type { WeeklyPriority } from '../types';
 import { Plus, Star, CheckCircle, Circle, AlertCircle } from 'lucide-react';
 
@@ -49,7 +51,7 @@ export const PriorityPage: React.FC = () => {
       const [workItemsData, prioritiesData, tasksData] = await Promise.all([
         api.getWorkItems({ team_id: user.team_id }),
         api.getWeeklyPriorities({ week: selectedWeek, team_id: user.team_id }),
-        api.getTeamTasks(user.team_id),
+        tasksApi.getTeamTasks(user.team_id),
       ]);
       setWorkItems(workItemsData);
       setPriorities(prioritiesData);
@@ -98,7 +100,7 @@ export const PriorityPage: React.FC = () => {
     }
 
     try {
-      await api.createTask(selectedWorkItemForTask.id, {
+      await tasksApi.createTask(selectedWorkItemForTask.id, {
         description: taskForm.description,
         effort_hours: taskForm.effort_hours ? parseInt(taskForm.effort_hours) : undefined,
         assignee_id: taskForm.assignee_id ? parseInt(taskForm.assignee_id) : undefined,
@@ -501,4 +503,3 @@ function getWeekNumber(date: Date): number {
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
 }
-

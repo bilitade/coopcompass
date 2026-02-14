@@ -203,28 +203,4 @@ def delete_team(
     db.commit()
 
 
-@router.get("/{team_id}/tasks", response_model=list[TaskWithWorkItemResponse])
-def get_team_tasks(
-    team_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Get all tasks for a team (grouped by work items)."""
-    # Verify user belongs to the team
-    if current_user.team_id != team_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have access to this team's tasks"
-        )
-    
-    # Get all work items for the team
-    work_items = db.query(WorkItem).filter(WorkItem.team_id == team_id).all()
-    
-    # Get all tasks for these work items with eager loading of work_item relationship
-    task_ids = [wi.id for wi in work_items]
-    tasks = db.query(Task).filter(Task.work_item_id.in_(task_ids)).options(
-        joinedload(Task.work_item)
-    ).all() if task_ids else []
-    
-    return tasks
 

@@ -37,7 +37,7 @@ import { ExecutiveBAUListPage } from '../features/bau/pages/ExecutiveBAUListPage
 
 // Work Items pages
 import { WorkItemsPage } from '../features/workItems/pages/WorkItemsPage';
-import { TasksPage } from '../features/workItems/pages/TasksPage';
+import { TasksPage } from '../features/tasks/pages/TasksPage';
 
 // Priorities pages
 import { PriorityPage } from '../features/priorities/pages/PriorityPage';

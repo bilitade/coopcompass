@@ -124,3 +124,51 @@ def update_kr_current_value(db: Session, kr_id: int, new_value: Decimal) -> KeyR
     return kr
 
 
+
+def calculate_kr_progress(db: Session, kr_id: int) -> float:
+    """
+    Calculate Key Result progress as percentage (0-100).
+    
+    Args:
+        db: Database session
+        kr_id: Key Result ID
+    
+    Returns:
+        Progress percentage (0.0 to 100.0)
+    """
+    kr = db.query(KeyResult).filter(KeyResult.id == kr_id).first()
+    
+    if not kr:
+        return 0.0
+    
+    score = calculate_kr_score(kr.base_value, kr.target_value, kr.current_value)
+    return round(score * 100, 1)
+
+
+def calculate_okr_progress(db: Session, okr_id: int) -> float:
+    """
+    Calculate OKR progress as percentage (0-100).
+    
+    Args:
+        db: Database session
+        okr_id: OKR ID
+    
+    Returns:
+        Progress percentage (0.0 to 100.0)
+    """
+    okr = db.query(OKR).filter(OKR.id == okr_id).first()
+    
+    if not okr:
+        return 0.0
+    
+    # Calculate scores for each key result to get objective score
+    kr_data = []
+    for kr in okr.key_results:
+        score = calculate_kr_score(kr.base_value, kr.target_value, kr.current_value)
+        kr_data.append({
+            'score': score,
+            'weight': kr.weight
+        })
+    
+    objective_score = calculate_objective_score(kr_data)
+    return round(objective_score * 100, 1)

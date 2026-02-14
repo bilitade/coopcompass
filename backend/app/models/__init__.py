@@ -6,7 +6,8 @@ from app.modules.teams.models import Team
 from app.modules.departments.models import Department
 from app.modules.okrs.models import OKR, KeyResult
 from app.modules.bau.models import BAUActivity, BAUMetric
-from app.modules.work_items.models import WorkItem, Task, WeeklyPriority
+from app.modules.work_items.models import WorkItem, WeeklyPriority
+from app.modules.tasks.models import Task
 from app.modules.snapshots.models import WeeklySnapshot
 
 # Export Base for migrations

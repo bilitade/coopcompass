@@ -3,10 +3,9 @@ import type {
   User, UserCreate, UserLogin, TokenResponse,
   Department, DepartmentDetail, Team, TeamDetail,
   OKR, OKRDetail, OKRCreate, KeyResultCreate, KeyResult, OKRWithScores,
-  BAUActivity, BAUActivityDetail, BAUActivityCreate, BAUActivityUpdate, BAUMetric, BAUMetricCreate, 
+  BAUActivity, BAUActivityDetail, BAUActivityCreate, BAUActivityUpdate, BAUMetric, BAUMetricCreate,
   BAUActivityWithScore, BAUOverallHealth,
   WorkItem, WorkItemDetail, WorkItemCreate,
-  Task, TaskDetail, TaskCreate, TaskUpdate,
   WeeklyPriority, WeeklyPriorityCreate,
   Dashboard, PerformanceTrend
 } from '../../shared/types';
@@ -189,14 +188,14 @@ class ApiService {
     return response.data;
   }
 
-  async updateOKR(okrId: number, data: { 
+  async updateOKR(okrId: number, data: {
     okr_level?: 'strategic' | 'operational' | 'tactical';
-    year?: number; 
-    quarter?: 'Q1' | 'Q2' | 'Q3' | 'Q4'; 
-    objective?: string; 
+    year?: number;
+    quarter?: 'Q1' | 'Q2' | 'Q3' | 'Q4';
+    objective?: string;
     description?: string;
     status?: 'draft' | 'active' | 'completed';
-    is_active?: boolean 
+    is_active?: boolean
   }): Promise<OKR> {
     const response = await this.client.put<OKR>(`/api/okrs/${okrId}`, data);
     return response.data;
@@ -328,33 +327,6 @@ class ApiService {
     return response.data;
   }
 
-  // Task endpoints
-  async createTask(workItemId: number, data: TaskCreate): Promise<Task> {
-    const response = await this.client.post<Task>(`/api/work-items/${workItemId}/tasks`, data);
-    return response.data;
-  }
-
-  async getTask(taskId: number): Promise<TaskDetail> {
-    const response = await this.client.get<TaskDetail>(`/api/tasks/${taskId}`);
-    return response.data;
-  }
-
-  async updateTask(taskId: number, data: TaskUpdate): Promise<Task> {
-    const response = await this.client.patch<Task>(`/api/tasks/${taskId}`, data);
-    return response.data;
-  }
-
-  async getUserTasks(userId: number, status?: string): Promise<Task[]> {
-    const response = await this.client.get<Task[]>(`/api/users/${userId}/tasks`, {
-      params: status ? { status } : undefined,
-    });
-    return response.data;
-  }
-
-  async getTeamTasks(teamId: number): Promise<Task[]> {
-    const response = await this.client.get<Task[]>(`/api/teams/${teamId}/tasks`);
-    return response.data;
-  }
 
   // Weekly Priority endpoints
   async setWeeklyPriority(data: WeeklyPriorityCreate): Promise<WeeklyPriority> {

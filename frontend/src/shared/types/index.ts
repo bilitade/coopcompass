@@ -5,6 +5,15 @@ import type {
   WeeklyPriorityWithProgress,
 } from '../../features/priorities/types';
 
+import type {
+  Task,
+  TaskDetail,
+  TaskCreate,
+  TaskUpdate,
+} from '../../features/tasks/types';
+
+export type { Task, TaskDetail, TaskCreate, TaskUpdate };
+
 // User types
 export interface User {
   id: number;
@@ -220,37 +229,6 @@ export interface WorkItemCreate {
   month: string;
 }
 
-// Task types
-export interface Task {
-  id: number;
-  work_item_id: number;
-  description: string;
-  assignee_id: number | null;
-  status: 'Not Started' | 'In Progress' | 'Done' | 'Blocked';
-  effort_hours: number | null;
-  blocked_reason: string | null;
-  created_at: string;
-  updated_at: string;
-  completed_at: string | null;
-}
-
-export interface TaskDetail extends Task {
-  assignee: User | null;
-}
-
-export interface TaskCreate {
-  description: string;
-  assignee_id?: number | null;
-  effort_hours?: number | null;
-}
-
-export interface TaskUpdate {
-  description?: string | null;
-  assignee_id?: number | null;
-  status?: 'Not Started' | 'In Progress' | 'Done' | 'Blocked';
-  effort_hours?: number | null;
-  blocked_reason?: string | null;
-}
 
 // Weekly Priority types - re-exported from priorities feature module
 export type { WeeklyPriority, WeeklyPriorityCreate, WeeklyPriorityWithProgress };

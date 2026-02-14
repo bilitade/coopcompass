@@ -174,3 +174,21 @@ def update_metric_current_value(db: Session, metric_id: int, new_value: Decimal)
     db.refresh(metric)
     
     return metric
+
+def calculate_bau_health(db: Session, activity_id: int) -> float:
+    """
+    Calculate BAU Activity health (activity score) 0-100.
+    
+    Args:
+        db: Database session
+        activity_id: BAU Activity ID
+    
+    Returns:
+        Health percentage (0.0 to 100.0)
+    """
+    activity_with_scores = get_bau_activity_with_scores(db, activity_id)
+    if not activity_with_scores:
+        return 0.0
+    return activity_with_scores['activity_score']
+
+

@@ -2,12 +2,25 @@
 
 import os
 from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
 
 # Load environment variables from .env file
 try:
     load_dotenv()
 except:
     pass
+
+class Settings(BaseSettings):
+    """Application settings."""
+    database_url: str = "sqlite:///./tpes.db"
+    secret_key: str = "your-super-secret-key-change-this-in-production"
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+    debug: bool = False
+    
+    class Config:
+        env_file = ".env"
+        extra = "allow"  # Allow extra fields from environment
 
 # Database configuration
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./tpes.db")
@@ -21,6 +34,10 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
 
 # Application configuration
 DEBUG = os.getenv("DEBUG", "False") == "True"
+
+def get_settings() -> Settings:
+    """Get application settings."""
+    return Settings()
 
 # CORS configuration
 CORS_ORIGINS = [

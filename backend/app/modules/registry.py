@@ -16,6 +16,7 @@ ENABLED_MODULES = [
     "tasks",
     "monthly_headsup",
     "weekly_priority",
+    "ai_engine",
 ]
 
 

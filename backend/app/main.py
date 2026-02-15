@@ -75,6 +75,7 @@ def register_modules():
         "tasks": ("app.modules.tasks.routers", "router"),
         "monthly_headsup": ("app.modules.monthly_headsup.routers", "router"),
         "weekly_priority": ("app.modules.weekly_priority.routers", "router"),
+        "ai_engine": ("app.modules.ai_engine.routers", "router"),
     }
     
     for module_name in enabled_modules:

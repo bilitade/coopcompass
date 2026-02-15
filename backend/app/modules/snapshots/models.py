@@ -1,6 +1,6 @@
 """WeeklySnapshot model for historical tracking."""
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, JSON, Text
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, JSON, Text, DECIMAL, UniqueConstraint
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from app.models.base import Base
@@ -20,15 +20,33 @@ class WeeklySnapshot(Base):
     week = Column(String(8), nullable=False)  # e.g., "2026-W01" (ISO week format)
     quarter = Column(String(10), nullable=False)  # e.g., "Q1 2026"
     
-    # OKR Data (JSON structure to store all KRs and their values)
-    okr_data = Column(JSON, nullable=True)  # {"objective": "...", "score": 0.63, "key_results": [{...}]}
+    # Outcomes - OKR
+    okr_objective_score = Column(DECIMAL(3, 2), nullable=True)  # 0.0-1.0
+    kr1_score = Column(DECIMAL(3, 2), nullable=True)
+    kr2_score = Column(DECIMAL(3, 2), nullable=True)
+    kr3_score = Column(DECIMAL(3, 2), nullable=True)
+    kr4_score = Column(DECIMAL(3, 2), nullable=True)
+    kr5_score = Column(DECIMAL(3, 2), nullable=True)
     
-    # BAU Data (JSON structure to store all activities and their metrics)
-    bau_data = Column(JSON, nullable=True)  # {"overall_health": 93.0, "activities": [{...}]}
+    # Outcomes - BAU
+    bau_overall_health = Column(DECIMAL(5, 2), nullable=True)  # 0-100%
     
-    # Aggregated Scores
-    okr_score = Column(String(10), nullable=True)  # "0.63" or "N/A"
-    bau_health = Column(String(10), nullable=True)  # "93.0" or "N/A"
+    # Work Item Execution
+    work_items_planned = Column(Integer, nullable=False, default=0)
+    work_items_completed = Column(Integer, nullable=False, default=0)
+    work_items_completion_rate = Column(DECIMAL(5, 2), nullable=True)  # 0-100%
+    
+    # Task Execution
+    tasks_planned = Column(Integer, nullable=False, default=0)
+    tasks_completed = Column(Integer, nullable=False, default=0)
+    tasks_completion_rate = Column(DECIMAL(5, 2), nullable=True)  # 0-100%
+    
+    # Context
+    team_size = Column(Integer, nullable=False, default=0)
+    
+    # Detailed data stored as JSON for flexibility
+    okr_data = Column(JSON, nullable=True)  # Full OKR details
+    bau_data = Column(JSON, nullable=True)  # Full BAU details
     
     created_at = Column(DateTime, default=get_utc_now)
 
@@ -36,7 +54,8 @@ class WeeklySnapshot(Base):
     team = relationship("Team", foreign_keys=[team_id])
 
     __table_args__ = (
-        Index("idx_snapshots_team_week", "team_id", "week"),
+        UniqueConstraint("team_id", "week", name="unique_team_week"),
+        Index("idx_snapshots_team_quarter", "team_id", "quarter"),
         Index("idx_snapshots_week", "week"),
         Index("idx_snapshots_quarter", "quarter"),
     )

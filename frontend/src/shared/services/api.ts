@@ -8,7 +8,8 @@ import type {
   WorkItem, WorkItemDetail, WorkItemCreate,
   WeeklyPriority, WeeklyPriorityCreate, WeeklyPriorityPlan, WeeklyPriorityPlanCreate,
   MonthlyHeadsUp, MonthlyHeadsUpCreate,
-  Dashboard, PerformanceTrend
+  Dashboard, PerformanceTrend,
+  WeeklySnapshot, WeeklySnapshotList, SnapshotTrend
 } from '../../shared/types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -432,6 +433,64 @@ class ApiService {
 
   async getOrganizationDashboard(): Promise<any> {
     const response = await this.client.get<any>(`/api/organization/dashboard`);
+    return response.data;
+  }
+
+  // Snapshot endpoints
+  async createSnapshot(teamId: number, week?: string): Promise<WeeklySnapshot> {
+    const params = week ? { week } : {};
+    const response = await this.client.post<WeeklySnapshot>(
+      `/api/snapshots/teams/${teamId}/create`,
+      {},
+      { params }
+    );
+    return response.data;
+  }
+
+  async getTeamSnapshots(
+    teamId: number,
+    quarter?: string,
+    limit?: number
+  ): Promise<WeeklySnapshotList> {
+    const params: any = {};
+    if (quarter) params.quarter = quarter;
+    if (limit) params.limit = limit;
+    const response = await this.client.get<WeeklySnapshotList>(
+      `/api/snapshots/teams/${teamId}`,
+      { params }
+    );
+    return response.data;
+  }
+
+  async getSnapshotByWeek(teamId: number, week: string): Promise<WeeklySnapshot> {
+    const response = await this.client.get<WeeklySnapshot>(
+      `/api/snapshots/teams/${teamId}/week/${week}`
+    );
+    return response.data;
+  }
+
+  async getSnapshotTrends(
+    teamId: number,
+    quarter?: string,
+    limit?: number
+  ): Promise<SnapshotTrend[]> {
+    const params: any = {};
+    if (quarter) params.quarter = quarter;
+    if (limit) params.limit = limit;
+    const response = await this.client.get<SnapshotTrend[]>(
+      `/api/snapshots/teams/${teamId}/trends`,
+      { params }
+    );
+    return response.data;
+  }
+
+  async createSnapshotsForAllTeams(week?: string): Promise<WeeklySnapshot[]> {
+    const params = week ? { week } : {};
+    const response = await this.client.post<WeeklySnapshot[]>(
+      `/api/snapshots/create-all`,
+      {},
+      { params }
+    );
     return response.data;
   }
 }

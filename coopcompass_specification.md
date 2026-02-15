@@ -536,7 +536,286 @@ def calculate_bau_health(activities):
 
 ---
 
-## 10. AI Engine (Future)
+## 10. Performance Monitoring
+
+### 10.1 Overview
+
+Compass monitors team performance at three levels: weekly, monthly, and quarterly. All monitoring is built on a single data source: **weekly snapshots**.
+
+### 10.2 Weekly Snapshot
+
+**Purpose:** Capture comprehensive performance data and full context for generating meaningful reports and analysis.
+
+**Frequency:** Automated every Friday at 5:00 PM
+
+**Storage Schema:**
+```sql
+CREATE TABLE weekly_snapshots (
+    id SERIAL PRIMARY KEY,
+    team_id INT REFERENCES teams(id),
+    week VARCHAR(8) NOT NULL,
+    quarter VARCHAR(7) NOT NULL,
+    
+    -- Team Context
+    team_name VARCHAR(255),
+    team_size INT,
+    manager_id INT,
+    manager_name VARCHAR(255),
+    team_members JSONB,
+    
+    -- OKR Context & Scores
+    okr_id INT,
+    okr_objective TEXT,
+    okr_target_score DECIMAL(3,2),
+    okr_current_score DECIMAL(3,2),
+    okr_key_results JSONB,
+    
+    -- BAU Context & Scores
+    bau_activities JSONB,
+    bau_overall_health DECIMAL(5,2),
+    
+    -- Work Items (Planned & Completed)
+    work_items_planned JSONB,
+    work_items_completed JSONB,
+    work_items_count_planned INT,
+    work_items_count_completed INT,
+    
+    -- Weekly Priority Plan
+    weekly_priority_plan JSONB,
+    
+    -- Tasks
+    tasks JSONB,
+    tasks_count_planned INT,
+    tasks_count_completed INT,
+    
+    -- Metadata
+    created_at TIMESTAMP DEFAULT NOW(),
+    snapshot_version VARCHAR(10) DEFAULT '1.0',
+    
+    UNIQUE(team_id, week)
+);
+```
+
+**JSONB Field Structures:**
+
+**team_members:**
+```json
+[{"id": 12, "name": "Tigist Bekele", "role": "Manager"}]
+```
+
+**okr_key_results:**
+```json
+[{
+  "id": 3,
+  "description": "Increase customers 500K → 750K",
+  "base": 500000,
+  "target": 750000,
+  "current": 640000,
+  "unit": "customers",
+  "weight": 0.4,
+  "score": 0.56
+}]
+```
+
+**bau_activities:**
+```json
+[{
+  "id": 10,
+  "name": "Branch Operations",
+  "score": 96,
+  "metrics": [{
+    "name": "Transaction Accuracy",
+    "target": 99.9,
+    "current": 99.95,
+    "achievement": 100
+  }]
+}]
+```
+
+**work_items_planned:**
+```json
+[{
+  "id": 101,
+  "title": "Launch university partnership",
+  "source_type": "OKR",
+  "source_name": "KR1: Increase customers",
+  "priority": "P1"
+}]
+```
+
+**weekly_priority_plan:**
+```json
+{
+  "week_focus": "Launch campaign and maintenance",
+  "p1_items": [{"id": 101, "title": "..."}]
+}
+```
+
+**tasks:**
+```json
+[{
+  "id": 501,
+  "description": "Design materials",
+  "assignee": "Hanna Tesfaye",
+  "status": "Done"
+}]
+```
+### 10.3 Weekly Monitoring
+
+**Purpose:** Track week-to-week progress and detect immediate issues.
+
+**Timing:** Every Friday after snapshot capture
+
+**Metrics Tracked:**
+
+| Metric | Calculation | Interpretation |
+|--------|-------------|----------------|
+| OKR Change | Current - Previous | Weekly velocity |
+| BAU Change | Current - Previous | Operational trend |
+| Work Item Rate | This week completion % | Delivery discipline |
+| Task Rate | This week completion % | Execution discipline |
+
+**Example Weekly Comparison:**
+
+```
+WEEK 7 vs WEEK 6 COMPARISON
+
+OKR Progress:
+├─ Week 6: 0.45
+├─ Week 7: 0.56
+└─ Change: +0.11 ↗️ (Accelerating)
+
+BAU Health:
+├─ Week 6: 95%
+├─ Week 7: 96%
+└─ Change: +1% → (Stable)
+
+Work Items:
+├─ Week 6: 67% completion (2 of 3)
+├─ Week 7: 100% completion (2 of 2)
+└─ Improvement: +33% ✓
+
+Tasks:
+├─ Week 6: 67% completion (8 of 12)
+├─ Week 7: 100% completion (5 of 5)
+└─ Improvement: +33% ✓
+
+Insight:
+Week 7 showed strong execution (100% completion) 
+and best OKR growth (+0.11). Team planned optimal 
+workload (2 P1 items vs Week 6's 3 P1 items).
+```
+
+### 10.4 Monthly Monitoring
+
+**Purpose:** Evaluate if monthly plan is working and identify strategy adjustments.
+
+**Timing:** On-demand or automatic at month-end
+
+**Data Source:** Aggregates 4 weeks of snapshots
+
+**Monthly Summary Structure:**
+
+```
+JANUARY 2026 SUMMARY
+Team: Retail Banking - Addis Branch
+
+OKR Performance:
+├─ Start (Week 1): 0.40
+├─ End (Week 4): 0.56
+├─ Change: +0.16
+├─ Average Velocity: 0.04 per week
+└─ Status: On track
+
+BAU Performance:
+├─ Average Health: 98%
+└─ Status: Excellent
+
+Execution:
+├─ Work Items Completed: 5
+├─ Average Completion: 92%
+├─ Tasks Completed: 20
+└─ Average Completion: 88%
+
+Weekly Breakdown:
+├─ Week 1: OKR 0.40 | Work 100% | Tasks 85%
+├─ Week 2: OKR 0.45 | Work 100% | Tasks 90%
+├─ Week 3: OKR 0.50 | Work 100% | Tasks 95%
+└─ Week 4: OKR 0.56 | Work 67% | Tasks 83%
+
+Trend: Accelerating OKR growth
+```
+
+### 10.5 Quarterly Monitoring
+
+**Purpose:** Assess final OKR achievement and generate learnings for next quarter.
+
+**Timing:** End of quarter (after Week 13)
+
+**Data Source:** Aggregates all 13 weeks of snapshots
+
+**Quarterly Review Structure:**
+
+```
+Q1 2026 QUARTERLY REVIEW
+Team: Retail Banking - Addis Branch
+
+Final Achievement:
+├─ Objective: "Expand Customer Base"
+├─ Target Score: 0.70
+├─ Final Score: 0.73 🟢
+└─ Achievement: 104% (Exceeded target)
+
+Key Results:
+├─ KR1 (Customers): 0.68 (68% achieved)
+├─ KR2 (Deposits): 0.85 (85% achieved)
+└─ Weighted Score: 0.73
+
+BAU Performance:
+├─ Average Health: 94%
+└─ Status: Consistently strong
+
+Execution Discipline:
+├─ Work Items: 15 completed (91% avg)
+├─ Tasks: 65 completed (87% avg)
+└─ Assessment: Good consistency
+
+Quarter Trajectory:
+├─ Month 1: 0.00 → 0.35 | Velocity: 0.09/week
+├─ Month 2: 0.35 → 0.58 | Velocity: 0.08/week
+└─ Month 3: 0.58 → 0.73 | Velocity: 0.06/week
+```
+
+### 10.6 Data Retention
+
+**Storage Policy:**
+
+| Data Type | Retention | Purpose |
+|-----------|-----------|---------|
+| Weekly Snapshots | Permanent | Historical analysis |
+| Monthly Summaries | Not stored | Calculated on-demand |
+| Quarterly Reviews | Not stored | Calculated on-demand |
+
+**Storage Estimate:**
+- Per team per quarter: ~26KB (13 weeks × 2KB)
+- For 500 teams: ~13MB per quarter
+- Annual: ~52MB (negligible)
+
+### 10.7 Access Control
+
+**Monitoring Visibility:**
+
+| Role | Weekly | Monthly | Quarterly | Scope |
+|------|--------|---------|-----------|-------|
+| Manager | ✓ | ✓ | ✓ | Own team only |
+| Team Member | ✓ Summary | ✗ | ✗ | Own team only |
+| Director | ✓ | ✓ | ✓ | Own department |
+| Executive | ✓ | ✓ | ✓ | All teams |
+| Admin | ✓ | ✓ | ✓ | All teams |
+
+---
+
+## 11. AI Engine (Future)
 
 **Capabilities:**
 - Suggest work items based on OKR/BAU gaps
@@ -548,9 +827,9 @@ def calculate_bau_health(activities):
 
 ---
 
-## 11. Validation Criteria
+## 12. Validation Criteria
 
-### 11.1 Business Team
+### 12.1 Business Team
 
 **Must Verify:**
 - [ ] OKR score calculates correctly from values
@@ -564,7 +843,7 @@ def calculate_bau_health(activities):
 - [ ] Friday automation works
 - [ ] Reports are accurate
 
-### 11.2 Engineering Team
+### 12.2 Engineering Team
 
 **Must Implement:**
 - [ ] All formulas correctly
@@ -576,7 +855,7 @@ def calculate_bau_health(activities):
 
 ---
 
-## 12. Success Criteria
+## 13. Success Criteria
 
 **System is ready when:**
 - Pilot with 1 team successful (1 full quarter)
@@ -602,6 +881,7 @@ def calculate_bau_health(activities):
 | **Weekly Priority Plan** | Weekly plan container with focus |
 | **P1/P2/P3** | Priority levels: Critical / Important / Nice to have |
 | **Task** | Individual work assignment |
+| **Weekly Snapshot** | Automated capture of all performance data every Friday |
 
 ---
 

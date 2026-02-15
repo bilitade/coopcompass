@@ -13,6 +13,7 @@ import {
   Layers,
   Sparkles,
   Clock,
+  BarChart3,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -32,6 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
 
     // LEAD - Manages own team: OKRs, BAU, Work Items, Priorities, Tasks
     if (role === 'lead') {
+      const teamId = user.team_id;
       return [
         { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
         { label: 'My Team', path: '/my-team', icon: <Users size={20} /> },
@@ -41,6 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         { label: 'Monthly Heads-Up', path: '/monthly-headsup', icon: <Calendar size={20} /> },
         { label: 'Weekly Priority', path: '/weekly-priority', icon: <Clock size={20} /> },
         { label: 'Tasks', path: '/tasks', icon: <CheckSquare size={20} /> },
+        ...(teamId ? [{ label: 'Performance Snapshots', path: `/teams/${teamId}/snapshots`, icon: <BarChart3 size={20} /> }] : []),
       ];
     }
 
@@ -78,10 +81,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     }
 
     // MEMBER - Basic view (team dashboard and personal tasks)
+    const teamId = user.team_id;
     return [
       { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
       { label: 'My Team', path: '/my-team', icon: <Users size={20} /> },
       { label: 'My Tasks', path: '/tasks', icon: <CheckSquare size={20} /> },
+      ...(teamId ? [{ label: 'Performance Snapshots', path: `/teams/${teamId}/snapshots`, icon: <BarChart3 size={20} /> }] : []),
     ];
   };
 

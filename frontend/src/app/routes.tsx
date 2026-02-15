@@ -47,6 +47,9 @@ import { TaskDetailPage } from '../features/tasks/pages/TaskDetailPage';
 import { MonthlyHeadsupPage } from '../features/monthlyHeadsup/pages/MonthlyHeadsupPage';
 import { WeeklyPriorityPage } from '../features/weeklyPriority/pages/WeeklyPriorityPage';
 
+// Snapshot pages
+import { TeamSnapshotsPage } from '../features/snapshots/pages/TeamSnapshotsPage';
+
 // User pages
 import { UserPage } from '../features/users/pages/UserPage';
 
@@ -322,6 +325,14 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <WeeklyPriorityPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teams/:id/snapshots"
+        element={
+          <ProtectedRoute>
+            <TeamSnapshotsPage />
           </ProtectedRoute>
         }
       />

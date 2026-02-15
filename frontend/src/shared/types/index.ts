@@ -283,3 +283,41 @@ export interface PerformanceTrend {
   bau_health: number;
 }
 
+// Snapshot types
+export interface WeeklySnapshot {
+  id: number;
+  team_id: number;
+  week: string;
+  quarter: string;
+  okr_objective_score: number | null;
+  kr1_score: number | null;
+  kr2_score: number | null;
+  kr3_score: number | null;
+  kr4_score: number | null;
+  kr5_score: number | null;
+  bau_overall_health: number | null;
+  work_items_planned: number;
+  work_items_completed: number;
+  work_items_completion_rate: number | null;
+  tasks_planned: number;
+  tasks_completed: number;
+  tasks_completion_rate: number | null;
+  team_size: number;
+  okr_data: any | null;
+  bau_data: any | null;
+  created_at: string;
+}
+
+export interface WeeklySnapshotList {
+  snapshots: WeeklySnapshot[];
+  total: number;
+}
+
+export interface SnapshotTrend {
+  week: string;
+  okr_score: number | null;
+  bau_health: number | null;
+  work_items_completion_rate: number | null;
+  tasks_completion_rate: number | null;
+}
+

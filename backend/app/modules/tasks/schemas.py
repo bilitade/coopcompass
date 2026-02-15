@@ -43,11 +43,6 @@ class TaskResponse(BaseModel):
         from_attributes = True
 
 
-class TaskDetailResponse(TaskResponse):
-    """Task detail response with assignee."""
-    assignee: Optional[UserResponse] = None
-
-
 class WorkItemSmallResponse(BaseModel):
     """Small work item response for embedding in tasks."""
     id: int
@@ -57,6 +52,12 @@ class WorkItemSmallResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class TaskDetailResponse(TaskResponse):
+    """Task detail response with assignee and work item."""
+    assignee: Optional[UserResponse] = None
+    work_item: Optional[WorkItemSmallResponse] = None
 
 
 class TaskWithWorkItemResponse(TaskResponse):

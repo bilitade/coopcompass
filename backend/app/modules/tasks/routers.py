@@ -7,6 +7,7 @@ from datetime import datetime
 from app.core.database import get_db
 from app.api.v1.deps import get_current_user, get_current_team_lead
 from app.modules.users.models import User
+from app.modules.teams.models import Team
 from app.modules.tasks.models import Task
 from app.modules.tasks.schemas import (
     TaskCreate,
@@ -107,7 +108,10 @@ def get_task(
     current_user: User = Depends(get_current_user)
 ):
     """Get task details."""
-    task = db.query(Task).filter(Task.id == task_id).first()
+    task = db.query(Task).options(
+        joinedload(Task.work_item),
+        joinedload(Task.assignee)
+    ).filter(Task.id == task_id).first()
     
     if not task:
         raise HTTPException(

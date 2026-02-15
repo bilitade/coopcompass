@@ -28,7 +28,7 @@ import { AddEditOKRPage } from '../features/okrs/pages/AddEditOKRPage';
 import { OKRMeasurementPage } from '../features/okrs/pages/OKRMeasurementPage';
 import { DirectorOKRListPage } from '../features/okrs/pages/DirectorOKRListPage';
 import { ExecutiveOKRListPage } from '../features/okrs/pages/ExecutiveOKRListPage';
-import { OKRValidatorPage } from '../features/okrs/pages/OKRValidatorPage';
+import { OKRValidatorPage } from '../features/okr_validator/pages/OKRValidatorPage';
 
 // BAU pages
 import { BAUActivitiesPage } from '../features/bau/pages/BAUActivitiesPage';
@@ -41,6 +41,7 @@ import { WorkItemsPage } from '../features/workItems/pages/WorkItemsPage';
 import { TasksPage } from '../features/tasks/pages/TasksPage';
 import { TaskEditPage } from '../features/tasks/pages/TaskEditPage';
 import { TaskCreatePage } from '../features/tasks/pages/TaskCreatePage';
+import { TaskDetailPage } from '../features/tasks/pages/TaskDetailPage';
 
 // Priorities pages
 import { MonthlyHeadsupPage } from '../features/monthlyHeadsup/pages/MonthlyHeadsupPage';
@@ -297,6 +298,14 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <TaskEditPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tasks/:id"
+        element={
+          <ProtectedRoute>
+            <TaskDetailPage />
           </ProtectedRoute>
         }
       />

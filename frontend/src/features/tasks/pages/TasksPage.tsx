@@ -12,6 +12,9 @@ import {
   Filter,
   TrendingUp,
   Edit,
+  Eye,
+  Trash2,
+  X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -29,6 +32,14 @@ export const TasksPage: React.FC = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; taskId: number | null; taskTitle: string }>({
+    show: false,
+    taskId: null,
+    taskTitle: '',
+  });
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -90,6 +101,38 @@ export const TasksPage: React.FC = () => {
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize);
     setCurrentPage(1);
+  };
+
+  const handleDeleteClick = (taskId: number, taskTitle: string) => {
+    setDeleteConfirm({
+      show: true,
+      taskId,
+      taskTitle,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm.taskId) return;
+
+    setDeleting(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      await tasksApi.deleteTask(deleteConfirm.taskId);
+      setSuccess('Task deleted successfully');
+      setDeleteConfirm({ show: false, taskId: null, taskTitle: '' });
+      await loadData(); // Reload tasks
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to delete task');
+      setDeleteConfirm({ show: false, taskId: null, taskTitle: '' });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirm({ show: false, taskId: null, taskTitle: '' });
   };
 
   if (loading) return <Layout><LoadingSpinner /></Layout>;
@@ -282,13 +325,29 @@ export const TasksPage: React.FC = () => {
                           </span>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <button
-                            onClick={() => navigate(`/tasks/${task.id}/edit`)}
-                            className="btn btn-ghost p-2 hover:bg-primary/10 text-primary"
-                            title="Edit Task"
-                          >
-                            <Edit size={16} />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => navigate(`/tasks/${task.id}`)}
+                              className="btn btn-ghost p-2 hover:bg-primary/10 text-primary"
+                              title="View Task"
+                            >
+                              <Eye size={16} />
+                            </button>
+                            <button
+                              onClick={() => navigate(`/tasks/${task.id}/edit`)}
+                              className="btn btn-ghost p-2 hover:bg-primary/10 text-primary"
+                              title="Edit Task"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteClick(task.id, task.title)}
+                              className="btn btn-ghost p-2 hover:bg-red-500/10 text-red-500"
+                              title="Delete Task"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -379,6 +438,50 @@ export const TasksPage: React.FC = () => {
             </>
           )}
         </div>
+
+        {/* Delete Confirmation Modal */}
+        {deleteConfirm.show && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-surface border border-border rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-text-primary">Delete Task</h3>
+                <button
+                  onClick={handleDeleteCancel}
+                  className="btn btn-ghost p-1 hover:bg-surface-hover"
+                  disabled={deleting}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <p className="text-text-primary mb-2">
+                Are you sure you want to delete this task?
+              </p>
+              <div className="bg-surface-hover border border-border rounded-lg p-3 mb-4">
+                <p className="text-sm font-semibold text-text-primary">{deleteConfirm.taskTitle}</p>
+              </div>
+              <p className="text-sm text-text-secondary mb-6">
+                This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleDeleteCancel}
+                  className="btn btn-secondary flex-1"
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  className="btn bg-red-500 hover:bg-red-600 text-white flex-1 flex items-center justify-center gap-2"
+                  disabled={deleting}
+                >
+                  <Trash2 size={16} />
+                  <span>{deleting ? 'Deleting...' : 'Delete'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );

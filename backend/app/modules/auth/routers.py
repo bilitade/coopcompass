@@ -1,7 +1,6 @@
 """Authentication endpoints following OAuth2 and JWT standards."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session, joinedload
 from app.core.database import get_db
 from app.core.security import hash_password, verify_password, create_access_token
@@ -89,7 +88,8 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
 
 @router.post("/token", response_model=OAuth2TokenResponse)
 def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    username: str = Form(...),
+    password: str = Form(...),
     db: Session = Depends(get_db)
 ):
     """OAuth2 RFC 6749 compliant token endpoint.
@@ -98,7 +98,8 @@ def login_for_access_token(
     Returns an access token that can be used with Bearer authentication.
 
     Args:
-        form_data: OAuth2 password request form with username/password
+        username: User email address (OAuth2 username field)
+        password: User password
         db: Database session
 
     Returns:
@@ -109,7 +110,7 @@ def login_for_access_token(
         - Password field contains the user's password
     """
     # Validate user credentials
-    user = db.query(User).filter(User.email == form_data.username).first()
+    user = db.query(User).filter(User.email == username).first()
 
     if not user:
         raise HTTPException(
@@ -118,7 +119,7 @@ def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    if not verify_password(form_data.password, user.password_hash):
+    if not verify_password(password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",

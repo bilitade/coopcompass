@@ -127,7 +127,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ data }) => {
         <div className="bg-surface border border-border rounded-xl p-6 flex flex-col h-full hover:border-primary/30 transition-all duration-200">
           <div className="flex items-center gap-2.5 mb-5">
             <div className="p-1.5 bg-emerald-500/10 rounded-lg"><TrendingUp className="text-emerald-500 w-5 h-5" /></div>
-            <h2 className="text-xl font-bold">Current Team OKRs</h2>
+            <h2 className="text-xl font-bold">OKR</h2>
           </div>
           <div className="space-y-3 flex-1 overflow-y-auto">
             {!data.okrs || data.okrs.length === 0 ? (
@@ -323,7 +323,7 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ data }) => {
       <div className="bg-surface border border-border rounded-xl p-6">
         <div className="flex items-center gap-2.5 mb-8">
            <div className="p-1.5 bg-indigo-500/10 rounded-lg"><Clock className="text-indigo-500 w-5 h-5" /></div>
-           <h2 className="text-xl font-black">OKR Strategic Timeline</h2>
+           <h2 className="text-xl font-black">OKRS Timeline</h2>
         </div>
         
         <div className="relative">

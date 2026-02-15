@@ -16,6 +16,7 @@ export interface Task {
 
 export interface TaskDetail extends Task {
     assignee: User | null;
+    work_item?: WorkItem | null;
 }
 
 export interface TaskCreate {

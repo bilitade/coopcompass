@@ -12,6 +12,7 @@ import {
   Building2,
   Layers,
   Sparkles,
+  Clock,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -38,6 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         { label: 'OKR Validator', path: '/okrs/validator', icon: <Sparkles size={20} /> },
         { label: 'BAU Activities', path: '/bau-activities', icon: <Activity size={20} /> },
         { label: 'Monthly Heads-Up', path: '/monthly-headsup', icon: <Calendar size={20} /> },
+        { label: 'Weekly Priority', path: '/weekly-priority', icon: <Clock size={20} /> },
         { label: 'Tasks', path: '/tasks', icon: <CheckSquare size={20} /> },
       ];
     }

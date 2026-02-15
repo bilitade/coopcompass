@@ -54,6 +54,10 @@ class TasksApiService {
         const response = await this.client.get<any[]>(`/api/teams/${teamId}/prioritized-work-items`);
         return response.data;
     }
+
+    async deleteTask(taskId: number): Promise<void> {
+        await this.client.delete(`/api/tasks/${taskId}`);
+    }
 }
 
 export const tasksApi = new TasksApiService();

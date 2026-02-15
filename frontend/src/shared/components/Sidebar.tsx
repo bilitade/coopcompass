@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         { label: 'Monthly Heads-Up', path: '/monthly-headsup', icon: <Calendar size={20} /> },
         { label: 'Weekly Priority', path: '/weekly-priority', icon: <Clock size={20} /> },
         { label: 'Tasks', path: '/tasks', icon: <CheckSquare size={20} /> },
-        ...(teamId ? [{ label: 'Performance Snapshots', path: `/teams/${teamId}/snapshots`, icon: <BarChart3 size={20} /> }] : []),
+        ...(teamId ? [{ label: 'Snapshots', path: `/teams/${teamId}/snapshots`, icon: <BarChart3 size={20} /> }] : []),
       ];
     }
 

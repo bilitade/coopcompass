@@ -1,5 +1,8 @@
 """Database models - centralized imports for SQLAlchemy relationships."""
 
+# Import Base first to avoid circular imports
+from app.models.base import Base
+
 # Import all models so SQLAlchemy relationships work correctly
 from app.modules.users.models import User
 from app.modules.teams.models import Team
@@ -10,10 +13,13 @@ from app.modules.monthly_headsup.models import MonthlyHeadsUp
 from app.modules.weekly_priority.models import WeeklyPriority, WeeklyPriorityPlan
 from app.modules.work_items.models import WorkItem
 from app.modules.tasks.models import Task
-from app.modules.snapshots.models import WeeklySnapshot
 
-# Export Base for migrations
-from app.models.base import Base
+# Import WeeklySnapshot with try-except to handle potential circular imports
+try:
+    from app.modules.snapshots.models import WeeklySnapshot
+except ImportError:
+    # Will be available after all modules are loaded
+    WeeklySnapshot = None
 
 # Export all models for easy access
 __all__ = [

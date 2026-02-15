@@ -49,6 +49,7 @@ import { WeeklyPriorityPage } from '../features/weeklyPriority/pages/WeeklyPrior
 
 // Snapshot pages
 import { TeamSnapshotsPage } from '../features/snapshots/pages/TeamSnapshotsPage';
+import { SnapshotDetailPage } from '../features/snapshots/pages/SnapshotDetailPage';
 
 // User pages
 import { UserPage } from '../features/users/pages/UserPage';
@@ -333,6 +334,14 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <TeamSnapshotsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teams/:teamId/snapshots/:week"
+        element={
+          <ProtectedRoute>
+            <SnapshotDetailPage />
           </ProtectedRoute>
         }
       />

@@ -284,27 +284,123 @@ export interface PerformanceTrend {
 }
 
 // Snapshot types
+// Team Member in snapshot
+export interface SnapshotTeamMember {
+  id: number;
+  name: string;
+  role: string;
+  position?: string | null;
+}
+
+// OKR Key Result in snapshot
+export interface SnapshotKeyResult {
+  id: number;
+  description: string;
+  base: number;
+  target: number;
+  current: number;
+  unit: string;
+  weight: number;
+  score: number;
+}
+
+// BAU Activity in snapshot
+export interface SnapshotBAUActivity {
+  id: number;
+  name: string;
+  score: number;
+  metrics: Array<{
+    name: string;
+    target: number;
+    current: number;
+    achievement: number;
+  }>;
+}
+
+// Work Item in snapshot
+export interface SnapshotWorkItem {
+  id: number;
+  title: string;
+  source_type: 'OKR' | 'BAU';
+  source_name: string;
+  priority: string;
+}
+
+// Weekly Priority Plan in snapshot
+export interface SnapshotWeeklyPriorityPlan {
+  week_focus: string;
+  p1_items: Array<{ id: number; title: string }>;
+  p2_items: Array<{ id: number; title: string }>;
+  p3_items: Array<{ id: number; title: string }>;
+}
+
+// Task in snapshot
+export interface SnapshotTask {
+  id: number;
+  description: string;
+  title: string;
+  assignee: string;
+  status: string;
+  work_item_id: number;
+  effort_hours?: number | null;
+}
+
 export interface WeeklySnapshot {
   id: number;
   team_id: number;
   week: string;
   quarter: string;
+  
+  // Team Context
+  team_name: string | null;
+  team_size: number;
+  manager_id: number | null;
+  manager_name: string | null;
+  team_members: SnapshotTeamMember[] | null;
+  
+  // OKR Context & Scores
+  okr_id: number | null;
+  okr_objective: string | null;
+  okr_target_score: number | null;
+  okr_current_score: number | null;
+  okr_key_results: SnapshotKeyResult[] | null;
+  
+  // Legacy OKR fields (for backward compatibility)
   okr_objective_score: number | null;
   kr1_score: number | null;
   kr2_score: number | null;
   kr3_score: number | null;
   kr4_score: number | null;
   kr5_score: number | null;
+  okr_data: any | null;
+  
+  // BAU Context & Scores
+  bau_activities: SnapshotBAUActivity[] | null;
   bau_overall_health: number | null;
-  work_items_planned: number;
-  work_items_completed: number;
+  bau_data: any | null; // Legacy field
+  
+  // Work Items
+  work_items_planned: SnapshotWorkItem[] | null;
+  work_items_completed: SnapshotWorkItem[] | null;
+  work_items_count_planned: number;
+  work_items_count_completed: number;
   work_items_completion_rate: number | null;
+  
+  // Weekly Priority Plan
+  weekly_priority_plan: SnapshotWeeklyPriorityPlan | null;
+  
+  // Tasks
+  tasks: SnapshotTask[] | null;
+  tasks_count_planned: number;
+  tasks_count_completed: number;
+  tasks_completion_rate: number | null;
+  
+  // Legacy task fields
   tasks_planned: number;
   tasks_completed: number;
-  tasks_completion_rate: number | null;
-  team_size: number;
-  okr_data: any | null;
-  bau_data: any | null;
+  
+  // Metadata
+  snapshot_version: string;
   created_at: string;
 }
 

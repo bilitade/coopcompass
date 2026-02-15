@@ -6,7 +6,7 @@ import { Layout } from '../../../shared/components/Layout';
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner';
 import { Alert } from '../../../shared/components/Alert';
 import { useAuth } from '../../../app/context/AuthContext';
-import { Plus } from 'lucide-react';
+import { Plus, FileText, Trash2 } from 'lucide-react';
 
 export const TeamSnapshotsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,20 +16,21 @@ export const TeamSnapshotsPage: React.FC = () => {
   const [trends, setTrends] = useState<SnapshotTrend[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [quarter, setQuarter] = useState<string>('');
+  const [snapshotToDelete, setSnapshotToDelete] = useState<WeeklySnapshot | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchSnapshots();
       fetchTrends();
     }
-  }, [id, quarter]);
+  }, [id]);
 
   const fetchSnapshots = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await api.getTeamSnapshots(parseInt(id!), quarter || undefined);
+      const data = await api.getTeamSnapshots(parseInt(id!));
       setSnapshots(data.snapshots);
     } catch (err: any) {
       console.error('Error fetching snapshots:', err);
@@ -41,8 +42,13 @@ export const TeamSnapshotsPage: React.FC = () => {
 
   const fetchTrends = async () => {
     try {
-      const data = await api.getSnapshotTrends(parseInt(id!), quarter || undefined, 20);
-      setTrends(data);
+      const data = await api.getSnapshotTrends(parseInt(id!), undefined, 4);
+      // Sort by week descending (latest first) and take first 4
+      const sortedTrends = [...data]
+        .sort((a, b) => b.week.localeCompare(a.week))
+        .slice(0, 4)
+        .reverse(); // Reverse to show oldest to newest (left to right)
+      setTrends(sortedTrends);
     } catch (err: any) {
       console.error('Error fetching trends:', err);
     }
@@ -56,6 +62,31 @@ export const TeamSnapshotsPage: React.FC = () => {
     } catch (err: any) {
       setError('Failed to create snapshot');
     }
+  };
+
+  const handleDeleteClick = (snapshot: WeeklySnapshot, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click navigation
+    setSnapshotToDelete(snapshot);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!snapshotToDelete) return;
+    
+    try {
+      setDeleting(true);
+      await api.deleteSnapshot(snapshotToDelete.id);
+      setSnapshotToDelete(null);
+      fetchSnapshots();
+      fetchTrends();
+    } catch (err: any) {
+      setError('Failed to delete snapshot');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setSnapshotToDelete(null);
   };
 
   const formatScore = (score: number | null | undefined): string => {
@@ -89,6 +120,7 @@ export const TeamSnapshotsPage: React.FC = () => {
     }
   };
 
+
   if (loading) {
     return <Layout><LoadingSpinner /></Layout>;
   }
@@ -115,63 +147,146 @@ export const TeamSnapshotsPage: React.FC = () => {
 
         {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
 
-        {/* Filter */}
-        <div className="bg-surface border border-border rounded-xl p-4">
-          <label className="block text-sm font-medium text-text-primary mb-2">
-            Filter by Quarter (optional)
-          </label>
-          <input
-            type="text"
-            value={quarter}
-            onChange={(e) => setQuarter(e.target.value)}
-            placeholder="e.g., Q1 2026"
-            className="w-full md:w-64 px-4 py-2 bg-background border border-border rounded-lg text-text-primary placeholder-text-secondary focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-          />
-        </div>
-
         {/* Trends Chart */}
         {trends.length > 0 && (
           <div className="bg-surface border border-border rounded-xl p-6">
             <h2 className="text-xl font-semibold text-text-primary mb-4">Performance Trends</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* OKR Score Chart */}
               <div>
-                <h3 className="text-sm font-medium text-text-secondary mb-2">OKR Score</h3>
-                <div className="h-48 flex items-end space-x-1">
-                  {trends.map((trend, idx) => (
-                    <div key={idx} className="flex-1 flex flex-col items-center">
-                      <div
-                        className="w-full bg-blue-500 rounded-t"
-                        style={{
-                          height: trend.okr_score ? `${trend.okr_score * 100}%` : '0%',
-                          minHeight: trend.okr_score ? '4px' : '0px'
-                        }}
-                        title={`Week ${trend.week}: ${formatScore(trend.okr_score)}`}
-                      />
-                      <span className="text-xs text-text-secondary mt-1 transform -rotate-45 origin-top-left">
-                        {trend.week.split('-W')[1]}
-                      </span>
+                <h3 className="text-sm font-medium text-text-secondary mb-4">OKR Score (Latest 4 Weeks)</h3>
+                <div className="relative" style={{ height: '256px' }}>
+                  {/* Y-axis labels - positioned to align with chart grid */}
+                  {/* Chart area is 216px, 0% at baseline (border), 100% at top */}
+                  <div className="absolute left-0 w-8" style={{ height: '216px', top: '0px' }}>
+                    <div className="relative h-full">
+                      {/* Labels positioned to match bar heights exactly */}
+                      <span className="absolute text-xs text-text-secondary" style={{ top: '0px', right: '4px' }}>100%</span>
+                      <span className="absolute text-xs text-text-secondary" style={{ top: '54px', right: '4px' }}>75%</span>
+                      <span className="absolute text-xs text-text-secondary" style={{ top: '108px', right: '4px' }}>50%</span>
+                      <span className="absolute text-xs text-text-secondary" style={{ top: '162px', right: '4px' }}>25%</span>
+                      <span className="absolute text-xs text-text-secondary" style={{ bottom: '0px', right: '4px' }}>0%</span>
                     </div>
-                  ))}
+                  </div>
+                  {/* Chart area - bars align to bottom at baseline (border) */}
+                  <div className="ml-10 flex items-end justify-center space-x-2 border-b border-border" style={{ height: '216px', alignItems: 'flex-end' }}>
+                    {trends.map((trend, idx) => {
+                      // OKR score comes as 0.0-1.0 from backend, convert to percentage
+                      const okrScore = trend.okr_score !== null && trend.okr_score !== undefined 
+                        ? (typeof trend.okr_score === 'number' ? trend.okr_score : parseFloat(String(trend.okr_score)))
+                        : null;
+                      const okrValue = okrScore !== null ? okrScore * 100 : 0;
+                      // Calculate bar height in pixels (chart area is 216px)
+                      const chartAreaHeight = 216;
+                      const barHeightPx = (okrValue / 100) * chartAreaHeight;
+                      
+                      return (
+                        <div key={idx} className="flex-1 flex flex-col items-center justify-end group relative" style={{ height: '100%' }}>
+                          {/* Value label above bar - always visible */}
+                          <div className="mb-1 text-xs font-medium text-text-primary whitespace-nowrap">
+                            {okrValue > 0 ? `${okrValue.toFixed(1)}%` : 'N/A'}
+                          </div>
+                          {/* Bar - aligned to bottom */}
+                          <div
+                            className="w-full bg-blue-500 rounded-t hover:bg-blue-600 transition-colors relative"
+                            style={{
+                              height: `${barHeightPx}px`,
+                              minHeight: okrValue > 0 ? '4px' : '0px',
+                              maxHeight: `${chartAreaHeight}px`,
+                              alignSelf: 'flex-end'
+                            }}
+                            title={`Week ${trend.week}: ${okrValue > 0 ? `${okrValue.toFixed(1)}%` : 'N/A'}`}
+                          >
+                            {/* Value inside bar if there's space */}
+                            {okrValue > 15 && (
+                              <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-white">
+                                {okrValue.toFixed(1)}%
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* X-axis labels - positioned below chart area */}
+                  <div className="ml-10 flex justify-center space-x-2 mt-2">
+                    {trends.map((trend, idx) => (
+                      <div key={idx} className="flex-1 flex justify-center">
+                        <span className="text-xs text-text-secondary text-center">
+                          W{trend.week.split('-W')[1]}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
+              
+              {/* BAU Health Chart */}
               <div>
-                <h3 className="text-sm font-medium text-text-secondary mb-2">BAU Health</h3>
-                <div className="h-48 flex items-end space-x-1">
-                  {trends.map((trend, idx) => (
-                    <div key={idx} className="flex-1 flex flex-col items-center">
-                      <div
-                        className="w-full bg-green-500 rounded-t"
-                        style={{
-                          height: trend.bau_health ? `${trend.bau_health}%` : '0%',
-                          minHeight: trend.bau_health ? '4px' : '0px'
-                        }}
-                        title={`Week ${trend.week}: ${formatHealth(trend.bau_health)}`}
-                      />
-                      <span className="text-xs text-text-secondary mt-1 transform -rotate-45 origin-top-left">
-                        {trend.week.split('-W')[1]}
-                      </span>
+                <h3 className="text-sm font-medium text-text-secondary mb-4">BAU Health (Latest 4 Weeks)</h3>
+                <div className="relative" style={{ height: '256px' }}>
+                  {/* Y-axis labels - positioned to align with chart grid */}
+                  {/* Chart area is 216px, 0% at baseline (border), 100% at top */}
+                  <div className="absolute left-0 w-8" style={{ height: '216px', top: '0px' }}>
+                    <div className="relative h-full">
+                      {/* Labels positioned to match bar heights exactly */}
+                      <span className="absolute text-xs text-text-secondary" style={{ top: '0px', right: '4px' }}>100%</span>
+                      <span className="absolute text-xs text-text-secondary" style={{ top: '54px', right: '4px' }}>75%</span>
+                      <span className="absolute text-xs text-text-secondary" style={{ top: '108px', right: '4px' }}>50%</span>
+                      <span className="absolute text-xs text-text-secondary" style={{ top: '162px', right: '4px' }}>25%</span>
+                      <span className="absolute text-xs text-text-secondary" style={{ bottom: '0px', right: '4px' }}>0%</span>
                     </div>
-                  ))}
+                  </div>
+                  {/* Chart area - bars align to bottom at baseline (border) */}
+                  <div className="ml-10 flex items-end justify-center space-x-2 border-b border-border" style={{ height: '216px', alignItems: 'flex-end' }}>
+                    {trends.map((trend, idx) => {
+                      // BAU health is already 0-100 percentage from backend
+                      const bauHealth = trend.bau_health !== null && trend.bau_health !== undefined
+                        ? (typeof trend.bau_health === 'number' ? trend.bau_health : parseFloat(String(trend.bau_health)))
+                        : null;
+                      const bauValue = bauHealth !== null ? bauHealth : 0;
+                      // Calculate bar height in pixels (chart area is 216px)
+                      const chartAreaHeight = 216;
+                      const barHeightPx = (bauValue / 100) * chartAreaHeight;
+                      
+                      return (
+                        <div key={idx} className="flex-1 flex flex-col items-center justify-end group relative" style={{ height: '100%' }}>
+                          {/* Value label above bar - always visible */}
+                          <div className="mb-1 text-xs font-medium text-text-primary whitespace-nowrap">
+                            {bauValue > 0 ? `${bauValue.toFixed(1)}%` : 'N/A'}
+                          </div>
+                          {/* Bar - aligned to bottom */}
+                          <div
+                            className="w-full bg-green-500 rounded-t hover:bg-green-600 transition-colors relative"
+                            style={{
+                              height: `${barHeightPx}px`,
+                              minHeight: bauValue > 0 ? '4px' : '0px',
+                              maxHeight: `${chartAreaHeight}px`,
+                              alignSelf: 'flex-end'
+                            }}
+                            title={`Week ${trend.week}: ${bauValue > 0 ? `${bauValue.toFixed(1)}%` : 'N/A'}`}
+                          >
+                            {/* Value inside bar if there's space */}
+                            {bauValue > 15 && (
+                              <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-white">
+                                {bauValue.toFixed(1)}%
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* X-axis labels - positioned below chart area */}
+                  <div className="ml-10 flex justify-center space-x-2 mt-2">
+                    {trends.map((trend, idx) => (
+                      <div key={idx} className="flex-1 flex justify-center">
+                        <span className="text-xs text-text-secondary text-center">
+                          W{trend.week.split('-W')[1]}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -213,14 +328,26 @@ export const TeamSnapshotsPage: React.FC = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                       Date
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                      Details
+                    </th>
+                    {(user?.role === 'lead' || user?.role === 'admin') && (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                        Actions
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="bg-surface divide-y divide-border">
                   {snapshots.map((snapshot) => (
-                    <tr key={snapshot.id} className="hover:bg-surface-hover transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">
-                        {snapshot.week}
-                      </td>
+                    <tr 
+                      key={snapshot.id}
+                      className="hover:bg-surface-hover transition-colors cursor-pointer"
+                      onClick={() => navigate(`/teams/${id}/snapshots/${snapshot.week}`)}
+                    >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">
+                          {snapshot.week}
+                        </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 py-1 rounded text-sm font-medium ${
@@ -248,7 +375,7 @@ export const TeamSnapshotsPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                        {snapshot.work_items_completed} / {snapshot.work_items_planned}
+                        {snapshot.work_items_count_completed} / {snapshot.work_items_count_planned}
                         {snapshot.work_items_completion_rate !== null && snapshot.work_items_completion_rate !== undefined && (
                           <span className="ml-2 text-xs">
                             ({typeof snapshot.work_items_completion_rate === 'number' 
@@ -258,7 +385,7 @@ export const TeamSnapshotsPage: React.FC = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                        {snapshot.tasks_completed} / {snapshot.tasks_planned}
+                        {snapshot.tasks_count_completed} / {snapshot.tasks_count_planned}
                         {snapshot.tasks_completion_rate !== null && snapshot.tasks_completion_rate !== undefined && (
                           <span className="ml-2 text-xs">
                             ({typeof snapshot.tasks_completion_rate === 'number' 
@@ -273,6 +400,29 @@ export const TeamSnapshotsPage: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
                         {new Date(snapshot.created_at).toLocaleDateString()}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/teams/${id}/snapshots/${snapshot.week}`);
+                          }}
+                          className="btn btn-secondary text-sm px-3 py-1"
+                        >
+                          <FileText size={16} className="mr-1" />
+                          View Details
+                        </button>
+                      </td>
+                      {(user?.role === 'lead' || user?.role === 'admin') && (
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                            onClick={(e) => handleDeleteClick(snapshot, e)}
+                            className="btn btn-danger text-sm px-3 py-1"
+                            title="Delete snapshot"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -280,6 +430,35 @@ export const TeamSnapshotsPage: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Delete Confirmation Modal */}
+        {snapshotToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-surface border border-border rounded-xl p-6 max-w-md w-full mx-4">
+              <h3 className="text-xl font-semibold text-text-primary mb-4">Delete Snapshot</h3>
+              <p className="text-text-secondary mb-6">
+                Are you sure you want to delete the snapshot for week <strong>{snapshotToDelete.week}</strong>?
+                This action cannot be undone.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={handleDeleteCancel}
+                  disabled={deleting}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  disabled={deleting}
+                  className="btn btn-danger"
+                >
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );

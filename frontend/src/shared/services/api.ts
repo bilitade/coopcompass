@@ -493,6 +493,10 @@ class ApiService {
     );
     return response.data;
   }
+
+  async deleteSnapshot(snapshotId: number): Promise<void> {
+    await this.client.delete(`/api/snapshots/${snapshotId}`);
+  }
 }
 
 export const api = new ApiService();

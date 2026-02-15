@@ -5,7 +5,10 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.core.database import get_db
 from app.api.v1.deps import get_current_user, get_current_team_lead
-from app.models import User, Team, WeeklySnapshot
+# Import models directly to avoid circular imports
+from app.modules.users.models import User
+from app.modules.teams.models import Team
+from app.modules.snapshots.models import WeeklySnapshot
 from app.modules.snapshots import schemas
 from app.modules.snapshots import services
 
@@ -161,9 +164,16 @@ def get_snapshot_trends(
     
     trends = []
     for snapshot in snapshots:
+        # Use okr_current_score if available, otherwise fall back to okr_objective_score
+        okr_score = None
+        if snapshot.okr_current_score is not None:
+            okr_score = float(snapshot.okr_current_score)
+        elif snapshot.okr_objective_score is not None:
+            okr_score = float(snapshot.okr_objective_score)
+        
         trends.append({
             "week": snapshot.week,
-            "okr_score": float(snapshot.okr_objective_score) if snapshot.okr_objective_score else None,
+            "okr_score": okr_score,
             "bau_health": float(snapshot.bau_overall_health) if snapshot.bau_overall_health else None,
             "work_items_completion_rate": float(snapshot.work_items_completion_rate) if snapshot.work_items_completion_rate else None,
             "tasks_completion_rate": float(snapshot.tasks_completion_rate) if snapshot.tasks_completion_rate else None
@@ -192,4 +202,42 @@ def create_snapshots_for_all_teams(
         return snapshots
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating snapshots: {str(e)}")
+
+
+@router.delete("/{snapshot_id}", status_code=204)
+def delete_snapshot(
+    snapshot_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete a snapshot.
+    
+    Only team leads can delete snapshots for their own team.
+    Admins can delete any snapshot.
+    """
+    # Get snapshot
+    snapshot = db.query(WeeklySnapshot).filter(WeeklySnapshot.id == snapshot_id).first()
+    if not snapshot:
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+    
+    # Check team exists
+    team = db.query(Team).filter(Team.id == snapshot.team_id).first()
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    # Authorization: Only team leads can delete snapshots for their team
+    if current_user.role not in ["admin", "lead"]:
+        raise HTTPException(status_code=403, detail="Only team leads and admins can delete snapshots")
+    
+    if current_user.role == "lead" and current_user.team_id != snapshot.team_id:
+        raise HTTPException(status_code=403, detail="You can only delete snapshots for your own team")
+    
+    try:
+        db.delete(snapshot)
+        db.commit()
+        return None
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error deleting snapshot: {str(e)}")
 

@@ -18,8 +18,8 @@ const OverallScoreCard: React.FC<OverallScoreCardProps> = ({ validationData }) =
   const statusColors = getStatusColor(validationData.decision);
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-      <h3 className="font-semibold text-gray-900 dark:text-white mb-4 text-sm text-center">Overall Health Score</h3>
+    <div className="card card-hover h-full flex flex-col">
+      <h3 className="font-semibold text-text-primary mb-4 text-sm text-center">Overall Health Score</h3>
       <div className="flex-1 flex flex-col justify-center items-center space-y-4">
         <div className={`w-24 h-24 ${statusColors.bg} rounded-full flex items-center justify-center shadow-lg`}>
           <span className="text-3xl font-bold text-white">

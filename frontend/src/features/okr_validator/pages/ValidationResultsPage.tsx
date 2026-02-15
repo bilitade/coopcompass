@@ -42,11 +42,11 @@ const ValidationResultsPage: React.FC<ValidationResultsPageProps> = ({
       {/* Header with Action Buttons */}
       <div className="flex items-start justify-between mb-12 gap-8">
         <div className="flex-1 text-center">
-          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-4xl font-bold text-text-primary mb-4">
             AI Validation Report
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Comprehensive analysis using <span className="text-gray-900 dark:text-white font-semibold">S.C.A.L.E.I.T</span>, <span className="text-gray-900 dark:text-white font-semibold">C.L.E.A.R</span>, and <span className="text-gray-900 dark:text-white font-semibold">OKR Alignment</span> frameworks
+          <p className="text-lg text-text-secondary max-w-2xl mx-auto">
+            Comprehensive analysis using <span className="text-text-primary font-semibold">S.C.A.L.E.I.T</span>, <span className="text-text-primary font-semibold">C.L.E.A.R</span>, and <span className="text-text-primary font-semibold">OKR Alignment</span> frameworks
           </p>
         </div>
 
@@ -54,14 +54,14 @@ const ValidationResultsPage: React.FC<ValidationResultsPageProps> = ({
         <div className="flex flex-col gap-3">
           <button
             onClick={onImprove}
-            className="px-5 py-2.5 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-semibold rounded-lg transition-colors flex items-center gap-2 shadow-sm hover:shadow-md whitespace-nowrap"
+            className="btn btn-secondary whitespace-nowrap"
           >
             <Sparkles className="w-4 h-4" />
             AI Improve
           </button>
           <button
             onClick={handleDownloadDetailAnalysis}
-            className="px-5 py-2.5 bg-gray-900 dark:bg-gray-800 border-2 border-gray-900 dark:border-gray-700 text-white hover:bg-gray-800 dark:hover:bg-gray-700 font-semibold rounded-lg transition-colors flex items-center gap-2 shadow-sm hover:shadow-md whitespace-nowrap"
+            className="btn btn-primary whitespace-nowrap"
           >
             <Download className="w-4 h-4" />
             Report

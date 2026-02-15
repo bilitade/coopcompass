@@ -197,23 +197,23 @@ export const OKRValidatorPage: React.FC = () => {
     switch (pageState) {
       case 'input':
         return (
-          <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto px-4 py-4">
             {/* Header */}
-            <div className="text-center mb-8">
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-3">
-                Validate Your <span className="text-cyan-500">OKRs</span>
+            <div className="text-center mb-4">
+              <h1 className="text-3xl md:text-4xl font-bold text-text-primary mb-2">
+                Validate Your <span className="text-primary">OKRs</span>
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 text-base">
+              <p className="text-text-secondary text-sm">
                 Get instant AI-powered feedback on your Objectives and Key Results
               </p>
             </div>
 
             {/* OKR Input Component */}
-            <div className="mb-8">
-              <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg dark:shadow-xl border border-gray-100 dark:border-gray-700 p-4 sm:p-5 space-y-4 transition-all duration-300">
+            <div className="mb-4">
+              <div className="card space-y-3">
                 <div className="grid grid-cols-1 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    <label className="label">
                       OKR Cycle
                     </label>
                     <input
@@ -221,13 +221,13 @@ export const OKRValidatorPage: React.FC = () => {
                       value={cycle}
                       onChange={(e) => setCycle(e.target.value)}
                       placeholder="e.g., Q1 FY25"
-                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 focus:border-cyan-500 dark:focus:border-cyan-400 transition-all outline-none text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      className="input"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                <div className="space-y-2">
+                  <label className="label">
                     Objectives & Key Results
                   </label>
                   <div className="relative">
@@ -239,31 +239,31 @@ export const OKRValidatorPage: React.FC = () => {
 "I want to become the most trusted digital bank in Ethiopia this quarter by increasing our NPS from 45 to 70, reducing complaint resolution time from 48 to 24 hours, and launching our mobile app with 4.5+ stars."
 
 The AI will automatically extract and structure your objectives and key results.`}
-                      className="w-full min-h-[200px] px-3 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 focus:border-cyan-500 dark:focus:border-cyan-400 transition-all outline-none resize-y font-mono text-xs leading-relaxed text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      className="w-full min-h-[160px] px-3 py-2 bg-surface text-text-primary border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none resize-y font-mono text-xs leading-relaxed placeholder:text-text-secondary/50"
                     />
-                    <div className="absolute bottom-3 right-3 flex space-x-3 text-[10px] font-medium text-gray-400 dark:text-gray-500">
+                    <div className="absolute bottom-2 right-2 flex space-x-2 text-[10px] font-medium text-text-secondary">
                        <span>{wordCount} words</span>
                        <span>{okrText.length} chars</span>
                     </div>
                   </div>
 
                   {/* Quick Examples */}
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2.5 border border-gray-200 dark:border-gray-600">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">Quick Start Templates</span>
-                      <span className="text-[10px] text-gray-500 dark:text-gray-400">Click to autofill</span>
+                  <div className="bg-surface-hover rounded-lg p-2 border border-border">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-semibold text-text-primary">Quick Start Templates</span>
+                      <span className="text-[9px] text-text-secondary">Click to autofill</span>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       <button
                         onClick={() => loadExample(examples.best)}
-                        className="px-2.5 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-md hover:bg-green-200 dark:hover:bg-green-900/50 transition-all font-medium text-[11px] border border-green-300 dark:border-green-600"
+                        className="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-all font-medium text-[10px] border border-emerald-200 dark:border-emerald-800"
                         title="Load a strong OKR example written in natural language"
                       >
                         Best Example
                       </button>
                       <button
                         onClick={() => loadExample(examples.bad)}
-                        className="px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-all font-medium text-[11px] border border-red-300 dark:border-red-600"
+                        className="px-2 py-0.5 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-md hover:bg-red-100 dark:hover:bg-red-900/30 transition-all font-medium text-[10px] border border-red-200 dark:border-red-800"
                         title="Load a weak OKR example to see what to avoid"
                       >
                         Bad Example
@@ -271,13 +271,13 @@ The AI will automatically extract and structure your objectives and key results.
                     </div>
                   </div>
 
-                  <div className="pt-2">
+                  <div>
                     <button
                       onClick={handleValidate}
                       disabled={!hasValidContent}
-                      className="w-full bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-700 dark:hover:bg-cyan-600 text-white font-bold py-3 px-5 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl text-sm"
+                      className="btn btn-primary w-full py-2 text-sm"
                     >
-                      <Target className="w-4 h-4 mr-2" />
+                      <Target className="w-4 h-4" />
                       Validate My OKRs
                     </button>
                   </div>
@@ -286,39 +286,39 @@ The AI will automatically extract and structure your objectives and key results.
             </div>
 
             {/* Feature Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 text-center">
-                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Target className="w-6 h-6 text-red-600 dark:text-red-400" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="card text-center p-4">
+                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Target className="w-5 h-5 text-primary" />
                 </div>
-                <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 className="text-sm font-semibold text-text-primary mb-1">
                   Clear Objective
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-xs text-text-secondary">
                   Describe what you want to achieve
                 </p>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 text-center">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <div className="card text-center p-4">
+                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <BarChart3 className="w-5 h-5 text-primary" />
                 </div>
-                <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 className="text-sm font-semibold text-text-primary mb-1">
                   Measurable KRs
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-xs text-text-secondary">
                   Include numbers and percentages
                 </p>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 text-center">
-                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Clock className="w-6 h-6 text-red-600 dark:text-red-400" />
+              <div className="card text-center p-4">
+                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Clock className="w-5 h-5 text-primary" />
                 </div>
-                <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 className="text-sm font-semibold text-text-primary mb-1">
                   Time-bound
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-xs text-text-secondary">
                   Set clear deadlines
                 </p>
               </div>
@@ -367,17 +367,17 @@ The AI will automatically extract and structure your objectives and key results.
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-background">
         {/* Error Alert */}
         {error && (
-          <div className="max-w-4xl mx-auto pt-8 px-4">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <XCircle className="w-5 h-5 text-red-600" />
-                <span className="text-red-700">{error}</span>
+          <div className="max-w-4xl mx-auto pt-4 px-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <XCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                <span className="text-sm text-red-700 dark:text-red-300">{error}</span>
                 <button
                   onClick={() => setError(null)}
-                  className="ml-auto text-red-500 hover:text-red-700"
+                  className="ml-auto text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                 >
                   ×
                 </button>
@@ -388,11 +388,11 @@ The AI will automatically extract and structure your objectives and key results.
 
         {/* Progress Indicator */}
         {(pageState === 'validating' || pageState === 'correcting') && progress && (
-          <div className="max-w-4xl mx-auto pt-8 px-4">
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <Loader2 className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin" />
-                <span className="text-blue-700 dark:text-blue-300 font-medium">
+          <div className="max-w-4xl mx-auto pt-4 px-4">
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                <span className="text-sm text-primary font-medium">
                   {progress.message || progress.step_name}
                 </span>
               </div>
@@ -405,11 +405,11 @@ The AI will automatically extract and structure your objectives and key results.
 
         {/* Navigation Actions */}
         {pageState !== 'input' && (
-          <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto px-4 py-4">
             <div className="text-center">
               <button
                 onClick={handleReset}
-                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                className="btn btn-ghost text-sm"
               >
                 ← Start Over
               </button>

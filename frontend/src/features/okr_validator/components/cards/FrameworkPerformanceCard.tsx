@@ -9,7 +9,7 @@ interface FrameworkPerformanceCardProps {
 
 const FrameworkPerformanceCard: React.FC<FrameworkPerformanceCardProps> = ({ validationData, onOpenModal }) => {
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+    <div className="card card-hover h-full flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Framework Performance</h3>
         <button

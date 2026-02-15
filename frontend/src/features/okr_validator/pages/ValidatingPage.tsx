@@ -21,32 +21,32 @@ const ValidatingPage: React.FC<ValidatingPageProps> = ({ validationSteps, curren
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="text-center mb-8">
-        <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-          <RefreshCw className="w-10 h-10 text-blue-600 dark:text-blue-400 animate-spin" />
+        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+          <RefreshCw className="w-10 h-10 text-primary animate-spin" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+        <h2 className="text-3xl font-bold text-text-primary mb-3">
           AI Validation in Progress
         </h2>
-        <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+        <p className="text-lg text-text-secondary max-w-2xl mx-auto">
           Analyzing your OKRs using advanced AI frameworks for comprehensive evaluation
         </p>
       </div>
 
       {/* Progress Overview */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm mb-8">
+      <div className="card mb-8">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <span className="text-sm font-medium text-text-secondary">
             Step {displayStep} of {validationSteps.length}
           </span>
-          <span className="text-lg font-bold text-gray-900 dark:text-white">
+          <span className="text-lg font-bold text-text-primary">
             {Math.round(progressPercentage)}%
           </span>
         </div>
         
         {/* Progress Bar */}
-        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-4">
+        <div className="h-3 bg-surface-hover rounded-full overflow-hidden mb-4">
           <div
-            className="h-full bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 transition-all duration-500 ease-out"
+            className="h-full bg-primary transition-all duration-500 ease-out"
             style={{ width: `${progressPercentage}%` }}
           />
         </div>
@@ -65,10 +65,10 @@ const ValidatingPage: React.FC<ValidatingPageProps> = ({ validationSteps, curren
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all duration-300 ${
                   index + 1 < displayStep
-                    ? 'bg-green-500 text-white'
+                    ? 'bg-emerald-500 text-white'
                     : index + 1 === displayStep
-                    ? 'bg-blue-500 text-white ring-4 ring-blue-200 dark:ring-blue-800'
-                    : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
+                    ? 'bg-primary text-white ring-4 ring-primary/20'
+                    : 'bg-surface-hover text-text-secondary'
                 }`}
               >
                 {index + 1 < displayStep ? (
@@ -77,7 +77,7 @@ const ValidatingPage: React.FC<ValidatingPageProps> = ({ validationSteps, curren
                   index + 1
                 )}
               </div>
-              <span className="text-xs text-gray-600 dark:text-gray-400 mt-2 text-center max-w-20">
+              <span className="text-xs text-text-secondary mt-2 text-center max-w-20">
                 {step.name}
               </span>
             </div>
@@ -86,11 +86,11 @@ const ValidatingPage: React.FC<ValidatingPageProps> = ({ validationSteps, curren
       </div>
 
       {/* Current Step Details */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+      <div className="card">
           <div className="flex items-center gap-4">
           <div className="flex-shrink-0">
             {displayStep <= validationSteps.length ? (
-              <div className="w-12 h-12 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
                 {displayStep < validationSteps.length ? (
                   <Loader2 className="w-6 h-6 text-white animate-spin" />
                 ) : (
@@ -98,19 +98,19 @@ const ValidatingPage: React.FC<ValidatingPageProps> = ({ validationSteps, curren
                 )}
               </div>
             ) : (
-              <div className="w-12 h-12 rounded-full bg-green-500 dark:bg-green-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center">
                 <Check className="w-6 h-6 text-white" />
               </div>
             )}
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+            <h3 className="text-lg font-semibold text-text-primary mb-1">
               {displayStep <= validationSteps.length 
                 ? validationSteps[displayStep - 1]?.name || 'Processing Validation...'
                 : 'Validation Complete'
               }
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-text-secondary">
               {displayStep <= validationSteps.length 
                 ? displayStep < validationSteps.length 
                   ? `Processing ${validationSteps[displayStep - 1]?.name?.toLowerCase() || 'validation step'}...`

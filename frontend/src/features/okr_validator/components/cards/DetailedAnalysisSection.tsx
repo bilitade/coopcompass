@@ -41,35 +41,35 @@ const DetailedAnalysisSection: React.FC<DetailedAnalysisSectionProps> = ({
   console.log('OKR alignment:', okr_alignment);
   console.log('Strategy alignment:', strategy_alignment);
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-8 shadow-sm dark:shadow-lg transition-all duration-300">
+    <div className="card p-8">
       <div ref={detailAnalysisRef}>
         <div className="mb-8 text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 font-medium">Detailed OKR Analysis</h2>
-          <p className="text-gray-600 dark:text-gray-300 font-medium">Comprehensive breakdown of all validation scores and improvement suggestions</p>
+          <h2 className="text-2xl font-bold text-text-primary mb-2 font-medium">Detailed OKR Analysis</h2>
+          <p className="text-text-secondary font-medium">Comprehensive breakdown of all validation scores and improvement suggestions</p>
         </div>
 
         {/* Strategic Context */}
         {validationData?.strategic_alignment && (
           <div className="mb-8">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Target className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />
+            <h3 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
+              <Target className="w-5 h-5 text-primary" />
               Strategic Context
             </h3>
-            <div className="bg-blue-50 dark:bg-blue-900/10 rounded-lg p-6 border border-blue-200/50 dark:border-blue-700">
+            <div className="bg-primary/10 rounded-lg p-6 border border-primary/20">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <span className="text-sm font-medium text-blue-600 dark:text-blue-400 block">Primary Pillar</span>
-                  <span className="text-lg font-bold text-gray-900 dark:text-white">{validationData?.strategic_alignment.primary_pillar}</span>
+                  <span className="text-sm font-medium text-primary block">Primary Pillar</span>
+                  <span className="text-lg font-bold text-text-primary">{validationData?.strategic_alignment.primary_pillar}</span>
                 </div>
                 <div>
-                  <span className="text-sm font-medium text-blue-600 dark:text-blue-400 block">Alignment Strength</span>
-                  <span className={`text-lg font-bold ${(validationData?.strategic_alignment?.alignment_strength || validationData?.strategic_alignment?.strength) === 'Strong' ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                  <span className="text-sm font-medium text-primary block">Alignment Strength</span>
+                  <span className={`text-lg font-bold ${(validationData?.strategic_alignment?.alignment_strength || validationData?.strategic_alignment?.strength) === 'Strong' ? 'text-emerald-500' : 'text-amber-500'}`}>
                     {validationData?.strategic_alignment?.alignment_strength || validationData?.strategic_alignment?.strength}
                   </span>
                 </div>
                 <div>
-                  <span className="text-sm font-medium text-blue-600 dark:text-blue-400 block">Score Contribution</span>
-                  <span className="text-lg font-bold text-gray-900 dark:text-white">{Math.round((validationData?.strategic_alignment.score || 0) * 100)}%</span>
+                  <span className="text-sm font-medium text-primary block">Score Contribution</span>
+                  <span className="text-lg font-bold text-text-primary">{Math.round((validationData?.strategic_alignment.score || 0) * 100)}%</span>
                 </div>
               </div>
             </div>
@@ -79,7 +79,7 @@ const DetailedAnalysisSection: React.FC<DetailedAnalysisSectionProps> = ({
         {/* Objectives Analysis */}
         <div className="mb-8">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-            <Target className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+            <Target className="w-5 h-5 text-primary" />
             Objectives Analysis (S.C.A.L.E.I.T Framework)
           </h3>
           <div className="space-y-8">
@@ -90,27 +90,27 @@ const DetailedAnalysisSection: React.FC<DetailedAnalysisSectionProps> = ({
                   {/* Objective Header */}
                   <div className="mb-6">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+                      <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-lg">
                         <span className="text-lg font-bold text-white">O{objIdx + 1}</span>
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h4 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                          <h4 className="text-lg font-bold text-text-primary leading-tight">
                             {obj.text}
                           </h4>
                           {obj.level && (
                             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                               obj.level === 'Strategic'
-                                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700'
+                                ? 'bg-primary/20 text-primary border border-primary/30'
                                 : obj.level === 'Tactical'
-                                ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-700'
-                                : 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-700'
+                                ? 'bg-primary/20 text-primary border border-primary/30'
+                                : 'bg-primary/20 text-primary border border-primary/30'
                             }`}>
                               {obj.level}
                             </span>
                           )}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-text-secondary">
                           S.C.A.L.E.I.T Framework Assessment
                         </div>
                       </div>

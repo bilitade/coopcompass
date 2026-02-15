@@ -19,32 +19,32 @@ const ImprovingPage: React.FC<ImprovingPageProps> = ({ correctionSteps, currentS
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="text-center mb-8">
-        <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-          <RefreshCw className="w-10 h-10 text-green-600 dark:text-green-400 animate-spin" />
+        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+          <RefreshCw className="w-10 h-10 text-primary animate-spin" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+        <h2 className="text-3xl font-bold text-text-primary mb-3">
           AI Improvement in Progress
         </h2>
-        <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+        <p className="text-lg text-text-secondary max-w-2xl mx-auto">
           Enhancing your OKRs using AI-powered optimization for better clarity and impact
         </p>
       </div>
 
       {/* Progress Overview */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm mb-8">
+      <div className="card mb-8">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <span className="text-sm font-medium text-text-secondary">
             Step {currentStep} of {correctionSteps.length}
           </span>
-          <span className="text-lg font-bold text-gray-900 dark:text-white">
+          <span className="text-lg font-bold text-text-primary">
             {Math.round(progressPercentage)}%
           </span>
         </div>
         
         {/* Progress Bar */}
-        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-4">
+        <div className="h-3 bg-surface-hover rounded-full overflow-hidden mb-4">
           <div
-            className="h-full bg-gradient-to-r from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 transition-all duration-500 ease-out"
+            className="h-full bg-primary transition-all duration-500 ease-out"
             style={{ width: `${progressPercentage}%` }}
           />
         </div>
@@ -63,10 +63,10 @@ const ImprovingPage: React.FC<ImprovingPageProps> = ({ correctionSteps, currentS
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
                   index + 1 < currentStep
-                    ? 'bg-green-500 text-white'
+                    ? 'bg-emerald-500 text-white'
                     : index + 1 === currentStep
-                    ? 'bg-green-500 text-white ring-4 ring-green-200 dark:ring-green-800'
-                    : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'
+                    ? 'bg-primary text-white ring-4 ring-primary/20'
+                    : 'bg-surface-hover text-text-secondary'
                 }`}
               >
                 {index + 1 < currentStep ? (
@@ -75,7 +75,7 @@ const ImprovingPage: React.FC<ImprovingPageProps> = ({ correctionSteps, currentS
                   <Sparkles className="w-5 h-5" />
                 )}
               </div>
-              <span className="text-xs text-gray-600 dark:text-gray-400 mt-2 text-center max-w-24">
+              <span className="text-xs text-text-secondary mt-2 text-center max-w-24">
                 {step.name}
               </span>
             </div>
@@ -84,11 +84,11 @@ const ImprovingPage: React.FC<ImprovingPageProps> = ({ correctionSteps, currentS
       </div>
 
       {/* Current Step Details */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+      <div className="card">
         <div className="flex items-center gap-4">
           <div className="flex-shrink-0">
             {currentStep <= correctionSteps.length ? (
-              <div className="w-12 h-12 rounded-full bg-green-500 dark:bg-green-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
                 {currentStep < correctionSteps.length ? (
                   <Loader2 className="w-6 h-6 text-white animate-spin" />
                 ) : (
@@ -96,19 +96,19 @@ const ImprovingPage: React.FC<ImprovingPageProps> = ({ correctionSteps, currentS
                 )}
               </div>
             ) : (
-              <div className="w-12 h-12 rounded-full bg-green-500 dark:bg-green-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center">
                 <Check className="w-6 h-6 text-white" />
               </div>
             )}
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+            <h3 className="text-lg font-semibold text-text-primary mb-1">
               {currentStep <= correctionSteps.length 
                 ? correctionSteps[currentStep - 1]?.name || 'Processing Improvement...'
                 : 'Improvement Complete'
               }
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-text-secondary">
               {currentStep <= correctionSteps.length 
                 ? currentStep < correctionSteps.length 
                   ? `AI is ${correctionSteps[currentStep - 1]?.name?.toLowerCase() || 'improving your OKRs'}...`
@@ -121,14 +121,14 @@ const ImprovingPage: React.FC<ImprovingPageProps> = ({ correctionSteps, currentS
         
         {/* Additional Progress Details */}
         {currentStep === 1 && currentStep <= correctionSteps.length && (
-          <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+          <div className="mt-6 p-4 bg-primary/10 rounded-lg border border-primary/20">
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-green-600 dark:text-green-400" />
-              <span className="text-sm font-medium text-green-800 dark:text-green-300">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-primary">
                 AI Analysis in Progress
               </span>
             </div>
-            <p className="text-xs text-green-700 dark:text-green-400">
+            <p className="text-xs text-text-secondary">
               Our AI is analyzing your OKRs, identifying improvement opportunities, and generating enhanced versions for better clarity, measurability, and impact.
             </p>
           </div>

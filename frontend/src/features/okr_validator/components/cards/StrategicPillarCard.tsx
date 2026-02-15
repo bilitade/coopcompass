@@ -7,8 +7,8 @@ interface StrategicPillarCardProps {
 
 const StrategicPillarCard: React.FC<StrategicPillarCardProps> = ({ validationData }) => {
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-      <h3 className="font-semibold text-gray-900 dark:text-white mb-4 text-sm text-center">Strategic Alignment</h3>
+    <div className="card card-hover h-full flex flex-col">
+      <h3 className="font-semibold text-text-primary mb-4 text-sm text-center">Strategic Alignment</h3>
       <div className="flex-1 flex flex-col justify-center">
         {validationData?.strategic_alignment ? (
           <div className="space-y-4">

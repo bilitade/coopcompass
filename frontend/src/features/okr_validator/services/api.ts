@@ -15,7 +15,9 @@ import {
   normalizeValidationReport
 } from '../types';
 
-const API_BASE_URL = 'http://localhost:8000';
+// Use relative URL if VITE_API_URL is empty (for Docker/production with nginx proxy)
+// Otherwise use the provided URL or default to localhost for development
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '');
 
 // Transformation functions
 const transformValidateRequest = (frontendRequest: ValidateOKRRequest): BackendValidateRequest => ({

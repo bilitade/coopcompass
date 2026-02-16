@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Layout } from '../../../shared/components/Layout';
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner';
 import { Alert } from '../../../shared/components/Alert';
-import { useAuth } from '../../../app/context/AuthContext';
 import { tasksApi } from '../services/tasksApi';
 import type { TaskDetail } from '../types';
 import {
@@ -21,7 +20,6 @@ import {
 export const TaskDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [task, setTask] = useState<TaskDetail | null>(null);

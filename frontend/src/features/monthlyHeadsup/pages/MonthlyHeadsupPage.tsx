@@ -75,7 +75,7 @@ export const MonthlyHeadsupPage: React.FC = () => {
     
     try {
       setGenerating(true);
-      const result = await api.generateAndCreateMonthlyPlan(user.team_id, selectedMonth, true);
+      await api.generateAndCreateMonthlyPlan(user.team_id, selectedMonth, true);
       setShowPreview(false);
       setPreviewPlan(null);
       await loadHeadsup();

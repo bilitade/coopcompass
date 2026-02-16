@@ -1,0 +1,27 @@
+version: '3.8'
+
+# Development override for docker-compose.yml
+# Use: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  backend:
+    volumes:
+      # Mount source code for hot-reload (if using --reload flag)
+      - ./backend:/app
+      - backend_logs:/app/logs
+    # Override command for development with hot-reload
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  frontend:
+    # For development, you might want to use Vite dev server instead
+    # Uncomment below and comment out the build section to use Vite dev server
+    # build:
+    #   context: ./frontend
+    #   dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    # command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+

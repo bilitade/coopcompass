@@ -1,6 +1,14 @@
-"""Script to seed comprehensive demo data into the database."""
+"""Script to seed comprehensive demo data into the database.
+
+Usage:
+    python seed_data.py                    # Seed if database is empty (safe, default)
+    python seed_data.py --clear-existing   # Clear existing data before seeding
+    python seed_data.py --drop-schema       # Drop and recreate schema (destructive!)
+    python seed_data.py --force             # Force seed even if data exists (clears first)
+"""
 
 import os
+import argparse
 from decimal import Decimal
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import create_engine, text
@@ -15,10 +23,40 @@ try:
 except:
     pass
 
+# Parse command line arguments
+parser = argparse.ArgumentParser(
+    description='Seed comprehensive demo data into the database',
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    epilog="""
+Examples:
+  python seed_data.py                    # Safe: only seed if database is empty
+  python seed_data.py --clear-existing   # Clear existing data, then seed
+  python seed_data.py --drop-schema      # Drop schema and recreate (destructive!)
+  python seed_data.py --force            # Force: clear existing data and seed
+    """
+)
+parser.add_argument(
+    '--clear-existing',
+    action='store_true',
+    help='Clear existing data before seeding (equivalent to CLEAR_EXISTING_DATA=true)'
+)
+parser.add_argument(
+    '--drop-schema',
+    action='store_true',
+    help='Drop and recreate database schema before seeding (destructive! equivalent to DROP_SCHEMA=true)'
+)
+parser.add_argument(
+    '--force',
+    action='store_true',
+    help='Force seeding: clear existing data and seed (same as --clear-existing)'
+)
+args = parser.parse_args()
+
 # Get database URL from environment
 database_url = os.getenv("DATABASE_URL")
 if not database_url or "DATABASE_URL=" in database_url:
-    database_url = "postgresql://postgres:12345678@localhost:5432/compass"
+    # Default for Docker Compose setup
+    database_url = "postgresql://postgres:postgres@db:5432/coopcompass"
 
 DATABASE_URL = database_url
 
@@ -26,37 +64,64 @@ DATABASE_URL = database_url
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Drop and recreate schema to ensure fresh schema (PostgreSQL specific)
-with engine.connect() as conn:
-    conn.execute(text("DROP SCHEMA public CASCADE"))
-    conn.execute(text("CREATE SCHEMA public"))
-    conn.commit()
+# Determine if we should drop schema (CLI arg takes precedence over env var)
+DROP_SCHEMA = args.drop_schema or os.getenv("DROP_SCHEMA", "false").lower() == "true"
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+if DROP_SCHEMA:
+    print("⚠️  DROP_SCHEMA detected - dropping and recreating schema...")
+    with engine.connect() as conn:
+        conn.execute(text("DROP SCHEMA public CASCADE"))
+        conn.execute(text("CREATE SCHEMA public"))
+        conn.commit()
+    # Create tables after dropping schema
+    Base.metadata.create_all(bind=engine)
+else:
+    # Just ensure tables exist (won't recreate if they already exist)
+    Base.metadata.create_all(bind=engine)
 
 
-def seed_demo_data():
-    """Seed the database with comprehensive demo data."""
+def seed_demo_data(clear_existing=False, force=False):
+    """Seed the database with comprehensive demo data.
+    
+    Args:
+        clear_existing: If True, clear existing data before seeding
+        force: If True, same as clear_existing (for convenience)
+    """
     db = SessionLocal()
     
     try:
-        # Clear existing data
-        db.query(Task).delete()
-        db.query(WeeklyPriority).delete()
-        db.query(WeeklyPriorityPlan).delete()
-        db.query(WorkItem).delete()
-        db.query(MonthlyHeadsUp).delete()
-        db.query(KeyResult).delete()
-        db.query(OKR).delete()
-        db.query(BAUMetric).delete()
-        db.query(BAUActivity).delete()
-        db.query(User).delete()
-        db.query(Team).delete()
-        db.query(Department).delete()
-        db.commit()
+        # Determine if we should clear existing data
+        # CLI args take precedence over environment variables
+        should_clear = clear_existing or force or args.clear_existing or args.force
+        if not should_clear:
+            # Check environment variable as fallback
+            should_clear = os.getenv("CLEAR_EXISTING_DATA", "false").lower() == "true"
         
-        print("✓ Cleared existing data\n")
+        if should_clear:
+            print("⚠️  Clearing existing data before seeding...")
+            db.query(Task).delete()
+            db.query(WeeklyPriority).delete()
+            db.query(WeeklyPriorityPlan).delete()
+            db.query(WorkItem).delete()
+            db.query(MonthlyHeadsUp).delete()
+            db.query(KeyResult).delete()
+            db.query(OKR).delete()
+            db.query(BAUMetric).delete()
+            db.query(BAUActivity).delete()
+            db.query(User).delete()
+            db.query(Team).delete()
+            db.query(Department).delete()
+            db.commit()
+            print("✓ Cleared existing data\n")
+        else:
+            # Check if data already exists
+            user_count = db.query(User).count()
+            if user_count > 0:
+                print(f"⚠️  Database already contains {user_count} users. Skipping seed.")
+                print("   Use --clear-existing or --force to clear and reseed.")
+                print("   Or set CLEAR_EXISTING_DATA=true environment variable.\n")
+                return
+            print("📊 Database is empty, proceeding with seed...\n")
         
         # ========================================
         # CREATE BANKING DEPARTMENTS
@@ -770,4 +835,4 @@ def seed_demo_data():
 
 if __name__ == "__main__":
     print("🌱 Seeding Compass database with comprehensive demo data...\n")
-    seed_demo_data()
+    seed_demo_data(clear_existing=args.clear_existing or args.force, force=args.force)

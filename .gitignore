@@ -2,6 +2,7 @@
 .env
 .env.local
 .env.*.local
+.env.example.local
 
 # Backend - Python
 backend/venv/
@@ -40,15 +41,27 @@ backend/test.db
 # Backend - Logs
 backend/*.log
 backend/logs/
+backend/**/*.log
+
+# Backend - Alembic cache
+backend/alembic/versions/__pycache__/
 
 # Frontend - Node modules and dependencies
 frontend/node_modules/
-frontend/package-lock.json
-frontend/yarn.lock
+frontend/.npm
+frontend/.yarn
+frontend/.pnpm-store
 
 # Frontend - Build outputs
 frontend/dist/
 frontend/.vite/
+frontend/dist-ssr/
+frontend/build/
+
+# Frontend - Cache
+frontend/.eslintcache
+frontend/.stylelintcache
+frontend/.cache/
 
 # IDE and Editor
 .vscode/
@@ -58,61 +71,44 @@ frontend/.vite/
 *~
 .DS_Store
 .cursor/
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
 
 # OS-specific
 Thumbs.db
 .AppleDouble
 .LSOverride
+._*
+.Spotlight-V100
+.Trashes
 
 # Temporary files
 *.tmp
 *.temp
 .temp/
 
-# OS files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-
-# Node modules cache
-frontend/.eslintcache
-frontend/.stylelintcache
-
-# Miscellaneous
-.cache/
+# Testing
 .pytest_cache/
 .coverage
 htmlcov/
+.tox/
+.coverage.*
+*.cover
+.hypothesis/
 
-# IDE temporary files
-.project
-.pydevproject
-.settings/
-*.sublime-project
-*.sublime-workspace
-
-# Alembic
-backend/alembic/versions/__pycache__/
+# Docker
+.docker/
+docker-compose.override.yml
 
 # Documentation build artifacts
 docs/_build/
+*.pyc
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Miscellaneous
+*.bak
+*.swp
+*.swo
+*~

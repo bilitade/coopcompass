@@ -29,7 +29,10 @@ def create_monthly_headsup(db: Session, team_id: int, obj_in: MonthlyHeadsUpCrea
     db_obj = MonthlyHeadsUp(
         team_id=team_id,
         month=obj_in.month,
-        description=obj_in.description
+        description=obj_in.description,
+        focus_areas=obj_in.focus_areas,
+        strategic_alignment=obj_in.strategic_alignment,
+        risks_and_considerations=obj_in.risks_and_considerations
     )
     db.add(db_obj)
     db.commit()
@@ -41,6 +44,12 @@ def update_monthly_headsup(db: Session, db_obj: MonthlyHeadsUp, obj_in: MonthlyH
     """Update a monthly headsup."""
     if obj_in.description is not None:
         db_obj.description = obj_in.description
+    if obj_in.focus_areas is not None:
+        db_obj.focus_areas = obj_in.focus_areas
+    if obj_in.strategic_alignment is not None:
+        db_obj.strategic_alignment = obj_in.strategic_alignment
+    if obj_in.risks_and_considerations is not None:
+        db_obj.risks_and_considerations = obj_in.risks_and_considerations
     
     db.commit()
     db.refresh(db_obj)

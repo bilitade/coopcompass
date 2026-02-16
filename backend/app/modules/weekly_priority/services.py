@@ -372,6 +372,16 @@ def delete_weekly_priority(db: Session, priority_id: int):
     return True
 
 
+def delete_weekly_priority_plan(db: Session, plan_id: int):
+    """Delete a weekly priority plan and its priorities (cascade)."""
+    db_obj = db.query(WeeklyPriorityPlan).filter(WeeklyPriorityPlan.id == plan_id).first()
+    if not db_obj:
+        return False
+    db.delete(db_obj)
+    db.commit()
+    return True
+
+
 def get_current_priorities(db: Session, team_id: int):
     """Retrieve all work items with their priority level (P1, P2, P3) for a team in the current ISO week."""
     from app.services.calculations import get_current_week

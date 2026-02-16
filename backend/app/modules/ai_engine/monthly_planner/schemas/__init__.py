@@ -1,0 +1,2 @@
+"""Monthly Planner schemas."""
+

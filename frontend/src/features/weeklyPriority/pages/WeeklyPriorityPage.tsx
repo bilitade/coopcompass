@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { Layout } from '../../../shared/components/Layout';
 import { useAuth } from '../../../app/context/AuthContext';
 import { WeeklyPriority } from '../components/WeeklyPriority';
 import { api } from '../../../shared/services/api';
-import { Target, Calendar, FileText, Plus, ArrowRight, AlertCircle } from 'lucide-react';
-import type { MonthlyHeadsUp, WeeklyPriorityPlan } from '../../../shared/types';
+import { Target, Calendar, FileText, Plus, ArrowRight, AlertCircle, Sparkles, X, CheckCircle, ListTodo } from 'lucide-react';
+import type { MonthlyHeadsUp, WeeklyPriorityPlan, WeeklyPlanOutput } from '../../../shared/types';
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner';
 
 export const WeeklyPriorityPage: React.FC = () => {
@@ -16,6 +17,10 @@ export const WeeklyPriorityPage: React.FC = () => {
   const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPriorityPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [previewPlan, setPreviewPlan] = useState<WeeklyPlanOutput | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [workItems, setWorkItems] = useState<any[]>([]);
 
   // Update month when week changes if week doesn't belong to current month
   useEffect(() => {
@@ -32,6 +37,13 @@ export const WeeklyPriorityPage: React.FC = () => {
     }
   }, [user?.team_id, selectedMonth, selectedWeek]);
 
+  // Debug: Log state when preview should be shown
+  useEffect(() => {
+    if (showPreview) {
+      console.log('Preview modal state:', { showPreview, previewPlan, workItems: workItems.length });
+    }
+  }, [showPreview, previewPlan, workItems]);
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -45,15 +57,20 @@ export const WeeklyPriorityPage: React.FC = () => {
       
       setHeadsup(headsupData);
       
-      // If headsup exists, load weekly plan
+      // If headsup exists, load weekly plan and work items
       if (headsupData) {
-        const planData = await api.getWeeklyPriorityPlan(headsupData.id, selectedWeek).catch((err: any) => {
-          if (err.response?.status === 404) return null;
-          throw err;
-        });
+        const [planData, workItemsData] = await Promise.all([
+          api.getWeeklyPriorityPlan(headsupData.id, selectedWeek).catch((err: any) => {
+            if (err.response?.status === 404) return null;
+            throw err;
+          }),
+          api.getWorkItems({ monthly_headsup_id: headsupData.id } as any)
+        ]);
         setWeeklyPlan(planData);
+        setWorkItems(workItemsData);
       } else {
         setWeeklyPlan(null);
+        setWorkItems([]);
       }
     } catch (err) {
       console.error('Error loading data:', err);
@@ -67,6 +84,76 @@ export const WeeklyPriorityPage: React.FC = () => {
   const handlePlanSaved = (savedPlan: WeeklyPriorityPlan) => {
     setWeeklyPlan(savedPlan);
     setIsCreating(false);
+  };
+
+  const handleGenerateWithAI = async () => {
+    if (!headsup) return;
+    
+    try {
+      setGenerating(true);
+      const plan = await api.generateWeeklyPlan(headsup.id, selectedWeek);
+      console.log('Generated weekly plan:', plan);
+      
+      // Ensure work items are loaded for the preview
+      if (workItems.length === 0) {
+        const workItemsData = await api.getWorkItems({ monthly_headsup_id: headsup.id } as any);
+        setWorkItems(workItemsData);
+        console.log('Loaded work items:', workItemsData);
+      }
+      
+      setPreviewPlan(plan);
+      setShowPreview(true);
+      console.log('Preview modal should be visible now, showPreview:', true, 'previewPlan:', plan);
+    } catch (err: any) {
+      console.error('Error generating plan:', err);
+      alert(`Failed to generate plan: ${err.response?.data?.detail || err.message}`);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleCommitPreview = async () => {
+    if (!headsup || !previewPlan) return;
+    
+    try {
+      setGenerating(true);
+      const result = await api.generateAndCreateWeeklyPlan(headsup.id, selectedWeek, true);
+      console.log('Created weekly plan result:', result);
+      
+      setShowPreview(false);
+      setPreviewPlan(null);
+      
+      // Use the response data directly if available, otherwise reload
+      if (result.weekly_plan) {
+        // Convert the response to WeeklyPriorityPlan format
+        const createdPlan: WeeklyPriorityPlan = {
+          id: result.weekly_plan.id,
+          monthly_headsup_id: headsup.id,
+          week: result.weekly_plan.week,
+          week_focus: result.weekly_plan.week_focus,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        setWeeklyPlan(createdPlan);
+        setIsCreating(false);
+        
+        // Reload work items to get updated data
+        const workItemsData = await api.getWorkItems({ monthly_headsup_id: headsup.id } as any);
+        setWorkItems(workItemsData);
+      } else {
+        // Fallback: reload all data
+        await loadData();
+      }
+    } catch (err: any) {
+      console.error('Error creating plan:', err);
+      alert(`Failed to create plan: ${err.response?.data?.detail || err.message}`);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleRegeneratePreview = async () => {
+    await handleGenerateWithAI();
   };
 
   if (!user?.team_id) {
@@ -200,17 +287,137 @@ export const WeeklyPriorityPage: React.FC = () => {
                 </p>
               </div>
 
-              <button
-                onClick={() => setIsCreating(true)}
-                className="btn btn-primary flex items-center space-x-2 px-8 py-3 text-lg"
-              >
-                <Plus size={20} />
-                <span>Create Weekly Priority</span>
-                <ArrowRight size={20} />
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleGenerateWithAI}
+                  disabled={generating}
+                  className="btn btn-primary flex items-center space-x-2 px-8 py-3 text-lg"
+                >
+                  <Sparkles size={20} />
+                  <span>{generating ? 'Generating...' : 'Generate with AI'}</span>
+                </button>
+                <button
+                  onClick={() => setIsCreating(true)}
+                  className="btn btn-secondary flex items-center space-x-2 px-8 py-3 text-lg"
+                >
+                  <Plus size={20} />
+                  <span>Create Manually</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Preview Modal - must be here for empty state */}
+        {showPreview && previewPlan && createPortal(
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowPreview(false);
+              }
+            }}
+          >
+            <div className="bg-surface border border-border rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-surface border-b border-border px-6 py-4 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-text-primary flex items-center gap-2">
+                  <Sparkles className="text-primary" size={24} />
+                  AI-Generated Weekly Plan Preview
+                </h2>
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Week Focus */}
+                <div className="card p-4 bg-surface border border-border">
+                  <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2">
+                    <Target className="text-primary" size={20} />
+                    Week Focus
+                  </h3>
+                  <p className="text-text-secondary">{previewPlan.week_focus || 'No focus defined'}</p>
+                </div>
+
+                {/* Prioritized Work Items */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+                    <ListTodo className="text-primary" size={20} />
+                    Prioritized Work Items
+                  </h3>
+                  
+                  {previewPlan.prioritized_work_items && previewPlan.prioritized_work_items.length > 0 ? (
+                    <div className="space-y-3">
+                      {previewPlan.prioritized_work_items.map((item, idx) => {
+                        const workItem = workItems.find(wi => wi.id === item.work_item_id);
+                        return (
+                          <div key={idx} className="card p-4 bg-surface border border-border">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                                    item.priority === 1 ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400' :
+                                    item.priority === 2 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400' :
+                                    'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                                  }`}>
+                                    P{item.priority} {item.priority === 1 ? '(Must Do)' : item.priority === 2 ? '(Should Do)' : '(Nice to Do)'}
+                                  </span>
+                                </div>
+                                <h4 className="font-semibold text-text-primary mb-1">
+                                  {workItem ? workItem.title : `Work Item #${item.work_item_id}`}
+                                </h4>
+                                <p className="text-sm text-text-secondary">{item.rationale || 'No rationale provided'}</p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-text-secondary">No prioritized work items in this plan.</p>
+                  )}
+                </div>
+
+                {/* Strategic Rationale */}
+                <div className="card p-4 bg-surface border border-border">
+                  <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2">
+                    <CheckCircle className="text-primary" size={20} />
+                    Strategic Rationale
+                  </h3>
+                  <p className="text-text-secondary">{previewPlan.strategic_rationale || 'No rationale provided'}</p>
+                </div>
+
+                {/* Estimated Effort */}
+                <div className="card p-4 bg-surface border border-border">
+                  <h3 className="text-lg font-semibold text-text-primary mb-2">Estimated Effort</h3>
+                  <p className="text-text-secondary">{previewPlan.estimated_effort || 'No estimate provided'}</p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-4 border-t border-border">
+                  <button
+                    onClick={handleRegeneratePreview}
+                    disabled={generating}
+                    className="btn btn-secondary flex-1"
+                  >
+                    {generating ? 'Regenerating...' : 'Regenerate'}
+                  </button>
+                  <button
+                    onClick={handleCommitPreview}
+                    disabled={generating}
+                    className="btn btn-primary flex-1"
+                  >
+                    {generating ? 'Creating...' : 'Create Weekly Plan'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
       </Layout>
     );
   }
@@ -227,6 +434,16 @@ export const WeeklyPriorityPage: React.FC = () => {
           </div>
           
           <div className="flex items-center space-x-3">
+            {weeklyPlan && (
+              <button
+                onClick={handleGenerateWithAI}
+                disabled={generating}
+                className="btn btn-outline-primary flex items-center space-x-2"
+              >
+                <Sparkles size={16} />
+                <span>{generating ? 'Regenerating...' : 'Regenerate with AI'}</span>
+              </button>
+            )}
             <div className="card flex items-center space-x-2 px-3 py-1.5 bg-surface border border-border sm:flex hidden">
               <Calendar size={16} className="text-primary" />
               <input
@@ -255,6 +472,117 @@ export const WeeklyPriorityPage: React.FC = () => {
           isCreating={isCreating}
         />
       </div>
+
+      {/* Preview Modal */}
+      {showPreview && previewPlan && createPortal(
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowPreview(false);
+            }
+          }}
+        >
+          <div className="bg-surface border border-border rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-surface border-b border-border px-6 py-4 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-text-primary flex items-center gap-2">
+                <Sparkles className="text-primary" size={24} />
+                AI-Generated Weekly Plan Preview
+              </h2>
+              <button
+                onClick={() => setShowPreview(false)}
+                className="text-text-secondary hover:text-text-primary transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Week Focus */}
+              <div className="card p-4 bg-surface border border-border">
+                <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2">
+                  <Target className="text-primary" size={20} />
+                  Week Focus
+                </h3>
+                <p className="text-text-secondary">{previewPlan.week_focus || 'No focus defined'}</p>
+              </div>
+
+              {/* Prioritized Work Items */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+                  <ListTodo className="text-primary" size={20} />
+                  Prioritized Work Items
+                </h3>
+                
+                {previewPlan.prioritized_work_items && previewPlan.prioritized_work_items.length > 0 ? (
+                  <div className="space-y-3">
+                    {previewPlan.prioritized_work_items.map((item, idx) => {
+                      const workItem = workItems.find(wi => wi.id === item.work_item_id);
+                      return (
+                        <div key={idx} className="card p-4 bg-surface border border-border">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                                  item.priority === 1 ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400' :
+                                  item.priority === 2 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400' :
+                                  'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                                }`}>
+                                  P{item.priority} {item.priority === 1 ? '(Must Do)' : item.priority === 2 ? '(Should Do)' : '(Nice to Do)'}
+                                </span>
+                              </div>
+                              <h4 className="font-semibold text-text-primary mb-1">
+                                {workItem ? workItem.title : `Work Item #${item.work_item_id}`}
+                              </h4>
+                              <p className="text-sm text-text-secondary">{item.rationale || 'No rationale provided'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-text-secondary">No prioritized work items in this plan.</p>
+                )}
+              </div>
+
+              {/* Strategic Rationale */}
+              <div className="card p-4 bg-surface border border-border">
+                <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2">
+                  <CheckCircle className="text-primary" size={20} />
+                  Strategic Rationale
+                </h3>
+                <p className="text-text-secondary">{previewPlan.strategic_rationale || 'No rationale provided'}</p>
+              </div>
+
+              {/* Estimated Effort */}
+              <div className="card p-4 bg-surface border border-border">
+                <h3 className="text-lg font-semibold text-text-primary mb-2">Estimated Effort</h3>
+                <p className="text-text-secondary">{previewPlan.estimated_effort || 'No estimate provided'}</p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-4 border-t border-border">
+                <button
+                  onClick={handleRegeneratePreview}
+                  disabled={generating}
+                  className="btn btn-secondary flex-1"
+                >
+                  {generating ? 'Regenerating...' : 'Regenerate'}
+                </button>
+                <button
+                  onClick={handleCommitPreview}
+                  disabled={generating}
+                  className="btn btn-primary flex-1"
+                >
+                  {generating ? 'Creating...' : 'Create Weekly Plan'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </Layout>
   );
 };

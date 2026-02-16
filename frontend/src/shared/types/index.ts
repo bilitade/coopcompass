@@ -242,6 +242,9 @@ export interface MonthlyHeadsUp {
   team_id: number;
   month: string; // "YYYY-MM"
   description: string;
+  focus_areas?: string[] | null;
+  strategic_alignment?: string | null;
+  risks_and_considerations?: string[] | null;
   created_at: string;
   updated_at: string;
   work_items?: WorkItem[];
@@ -251,6 +254,105 @@ export interface MonthlyHeadsUp {
 export interface MonthlyHeadsUpCreate {
   month: string;
   description: string;
+  focus_areas?: string[];
+  strategic_alignment?: string;
+  risks_and_considerations?: string[];
+}
+
+// Monthly Planner AI types
+export interface WorkItemSuggestion {
+  title: string;
+  description: string;
+  source_type: 'OKR' | 'BAU';
+  source_id: number;
+  source_name: string;
+  priority: 'High' | 'Medium' | 'Low';
+  rationale: string;
+}
+
+export interface MonthlyPlanOutput {
+  description: string;
+  focus_areas: string[];
+  work_items: WorkItemSuggestion[];
+  strategic_alignment: string;
+  risks_and_considerations: string[];
+}
+
+export interface MonthlyPlanGenerateResponse {
+  plan: MonthlyPlanOutput;
+  headsup?: {
+    id: number;
+    month: string;
+    description: string;
+    focus_areas?: string[];
+    strategic_alignment?: string;
+    risks_and_considerations?: string[];
+  };
+  work_items_created?: Array<{
+    id: number;
+    title: string;
+    source_type: string;
+    source_id: number;
+  }>;
+  message: string;
+}
+
+// Weekly Planner AI types
+export interface PrioritizedWorkItem {
+  work_item_id: number;
+  priority: 1 | 2 | 3; // 1=P1 (Must Do), 2=P2 (Should Do), 3=P3 (Nice to Do)
+  rationale: string;
+}
+
+export interface WeeklyPlanOutput {
+  week_focus: string;
+  prioritized_work_items: PrioritizedWorkItem[];
+  strategic_rationale: string;
+  estimated_effort: string;
+}
+
+export interface WeeklyPlanGenerateResponse {
+  plan: WeeklyPlanOutput;
+  weekly_plan?: {
+    id: number;
+    week: string;
+    week_focus: string;
+  };
+  priorities_created?: Array<{
+    id: number;
+    work_item_id: number;
+    priority: number;
+  }>;
+  message: string;
+}
+
+// Task Generator AI types
+export interface TaskSuggestion {
+  title: string;
+  description: string;
+  work_item_id: number;
+  assignee_id?: number | null;
+  effort_hours?: number | null;
+  rationale: string;
+  dependencies: string[];
+}
+
+export interface TaskGenerationOutput {
+  tasks: TaskSuggestion[];
+  summary: string;
+  estimated_total_effort: string;
+  assignment_strategy: string;
+}
+
+export interface TaskGenerationGenerateResponse {
+  plan: TaskGenerationOutput;
+  created_tasks?: Array<{
+    id: number;
+    title: string;
+    work_item_id: number;
+    assignee_id?: number | null;
+  }>;
+  message: string;
 }
 
 // Weekly Priority types - re-exported from priorities feature module

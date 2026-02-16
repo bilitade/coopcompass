@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Layout } from '../../../shared/components/Layout';
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner';
 import { Alert } from '../../../shared/components/Alert';
 import { useAuth } from '../../../app/context/AuthContext';
 import { tasksApi } from '../services/tasksApi';
+import { api } from '../../../shared/services/api';
 import type { Task, TaskWithWorkItem } from '../types';
+import type { TaskGenerationOutput, WeeklyPriorityPlan } from '../../../shared/types';
 import {
   Plus,
   CheckCircle,
@@ -15,6 +18,10 @@ import {
   Eye,
   Trash2,
   X,
+  Sparkles,
+  Target,
+  User,
+  ListTodo,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,6 +35,14 @@ export const TasksPage: React.FC = () => {
   
   const [filterStatus, setFilterStatus] = useState<'All' | Task['status']>('All');
   const [sortBy, setSortBy] = useState<'recent' | 'priority' | 'assignee'>('recent');
+
+  // Task Generation State
+  const [generatingTasks, setGeneratingTasks] = useState(false);
+  const [previewTasks, setPreviewTasks] = useState<TaskGenerationOutput | null>(null);
+  const [showTaskPreview, setShowTaskPreview] = useState(false);
+  const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPriorityPlan | null>(null);
+  const [workItems, setWorkItems] = useState<any[]>([]);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -43,6 +58,7 @@ export const TasksPage: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    loadWeeklyPlan();
   }, [user]);
 
   const loadData = async () => {
@@ -59,6 +75,84 @@ export const TasksPage: React.FC = () => {
       setError(err.response?.data?.detail || 'Failed to load tasks');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadWeeklyPlan = async () => {
+    if (!user?.team_id) return;
+
+    try {
+      // Get current week
+      const now = new Date();
+      const year = now.getFullYear();
+      const weekNumber = getWeekNumber(now);
+      const currentWeek = `${year}-W${String(weekNumber).padStart(2, '0')}`;
+
+      // Get current month
+      const month = `${year}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+      // Get monthly headsup
+      const headsup = await api.getMonthlyHeadsUp(user.team_id, month).catch(() => null);
+      if (!headsup) return;
+
+      // Get weekly plan
+      const plan = await api.getWeeklyPriorityPlan(headsup.id, currentWeek).catch(() => null);
+      setWeeklyPlan(plan || null);
+
+      if (plan) {
+        // Load work items and team members
+        const [workItemsData, membersData] = await Promise.all([
+          api.getWorkItems({ monthly_headsup_id: headsup.id } as any),
+          api.getTeamUsers(user.team_id)
+        ]);
+        setWorkItems(workItemsData);
+        setTeamMembers(membersData);
+      }
+    } catch (err) {
+      console.warn('Failed to load weekly plan:', err);
+    }
+  };
+
+  const getWeekNumber = (date: Date): number => {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  };
+
+  const handleGenerateTasks = async () => {
+    if (!weeklyPlan) {
+      setError('No weekly plan found for the current week. Please create a weekly priority plan first.');
+      return;
+    }
+
+    try {
+      setGeneratingTasks(true);
+      const taskOutput = await api.generateTasks(weeklyPlan.id);
+      setPreviewTasks(taskOutput);
+      setShowTaskPreview(true);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to generate tasks');
+    } finally {
+      setGeneratingTasks(false);
+    }
+  };
+
+  const handleCommitTasks = async () => {
+    if (!weeklyPlan || !previewTasks) return;
+
+    try {
+      setGeneratingTasks(true);
+      await api.generateAndCreateTasks(weeklyPlan.id, undefined, true);
+      setShowTaskPreview(false);
+      setPreviewTasks(null);
+      setSuccess('Tasks created successfully');
+      await loadData(); // Reload tasks
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to create tasks');
+    } finally {
+      setGeneratingTasks(false);
     }
   };
 
@@ -146,13 +240,25 @@ export const TasksPage: React.FC = () => {
             <h1 className="text-3xl font-bold text-text-primary tracking-tight">Tasks</h1>
             <p className="text-sm text-text-secondary mt-0.5">Manage and track your team's tasks</p>
           </div>
-          <button
-            onClick={() => navigate('/tasks/new')}
-            className="btn btn-primary flex items-center gap-2"
-          >
-            <Plus size={18} />
-            <span>New Task</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {weeklyPlan && (
+              <button
+                onClick={handleGenerateTasks}
+                disabled={generatingTasks}
+                className="btn btn-outline-primary flex items-center gap-2"
+              >
+                <Sparkles size={18} />
+                <span>{generatingTasks ? 'Generating...' : 'Generate Tasks with AI'}</span>
+              </button>
+            )}
+            <button
+              onClick={() => navigate('/tasks/new')}
+              className="btn btn-primary flex items-center gap-2"
+            >
+              <Plus size={18} />
+              <span>New Task</span>
+            </button>
+          </div>
         </div>
 
         {error && <Alert type="error" message={error} onClose={() => setError('')} />}
@@ -481,6 +587,131 @@ export const TasksPage: React.FC = () => {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Task Generation Preview Modal */}
+        {showTaskPreview && previewTasks && createPortal(
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowTaskPreview(false);
+              }
+            }}
+          >
+            <div className="bg-surface border border-border rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-surface border-b border-border px-6 py-4 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-text-primary flex items-center gap-2">
+                  <Sparkles className="text-primary" size={24} />
+                  AI-Generated Tasks Preview
+                </h2>
+                <button
+                  onClick={() => setShowTaskPreview(false)}
+                  className="text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Summary */}
+                <div className="card p-4 bg-surface border border-border">
+                  <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2">
+                    <CheckCircle className="text-primary" size={20} />
+                    Summary
+                  </h3>
+                  <p className="text-text-secondary">{previewTasks.summary}</p>
+                </div>
+
+                {/* Tasks */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+                    <ListTodo className="text-primary" size={20} />
+                    Generated Tasks ({previewTasks.tasks.length})
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    {previewTasks.tasks.map((task, idx) => {
+                      const workItem = workItems.find(wi => wi.id === task.work_item_id);
+                      const assignee = teamMembers.find(m => m.id === task.assignee_id);
+                      return (
+                        <div key={idx} className="card p-4 bg-surface border border-border">
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-text-primary mb-1">{task.title}</h4>
+                                <p className="text-sm text-text-secondary mb-2">{task.description}</p>
+                                <div className="flex flex-wrap items-center gap-3 text-xs text-text-secondary">
+                                  {workItem && (
+                                    <span className="flex items-center gap-1">
+                                      <Target size={14} />
+                                      {workItem.title}
+                                    </span>
+                                  )}
+                                  {assignee && (
+                                    <span className="flex items-center gap-1">
+                                      <User size={14} />
+                                      {assignee.name || assignee.email}
+                                    </span>
+                                  )}
+                                  {task.effort_hours && (
+                                    <span className="flex items-center gap-1">
+                                      <Clock size={14} />
+                                      {task.effort_hours}h
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="pt-2 border-t border-border">
+                              <p className="text-xs text-text-secondary">
+                                <span className="font-semibold">Rationale:</span> {task.rationale}
+                              </p>
+                              {task.dependencies && task.dependencies.length > 0 && (
+                                <p className="text-xs text-text-secondary mt-1">
+                                  <span className="font-semibold">Dependencies:</span> {task.dependencies.join(', ')}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Estimated Effort */}
+                <div className="card p-4 bg-surface border border-border">
+                  <h3 className="text-lg font-semibold text-text-primary mb-2">Estimated Total Effort</h3>
+                  <p className="text-text-secondary">{previewTasks.estimated_total_effort}</p>
+                </div>
+
+                {/* Assignment Strategy */}
+                <div className="card p-4 bg-surface border border-border">
+                  <h3 className="text-lg font-semibold text-text-primary mb-2">Assignment Strategy</h3>
+                  <p className="text-text-secondary">{previewTasks.assignment_strategy}</p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-4 border-t border-border">
+                  <button
+                    onClick={() => setShowTaskPreview(false)}
+                    className="btn btn-secondary flex-1"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCommitTasks}
+                    disabled={generatingTasks}
+                    className="btn btn-primary flex-1"
+                  >
+                    {generatingTasks ? 'Creating...' : 'Create Tasks'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
         )}
       </div>
     </Layout>

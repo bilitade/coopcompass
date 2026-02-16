@@ -1,6 +1,6 @@
 """Monthly Heads-Up models."""
 
-from sqlalchemy import Column, Integer, Text, String, DateTime, ForeignKey, Index
+from sqlalchemy import Column, Integer, Text, String, DateTime, ForeignKey, Index, JSON
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from app.models.base import Base
@@ -19,6 +19,9 @@ class MonthlyHeadsUp(Base):
     team_id = Column(Integer, ForeignKey("teams.id", ondelete="CASCADE"), nullable=False)
     month = Column(String(7), nullable=False)  # "YYYY-MM"
     description = Column(Text, nullable=False)
+    focus_areas = Column(JSON, nullable=True)  # JSONB: ["area1", "area2", ...]
+    strategic_alignment = Column(Text, nullable=True)  # Strategic alignment text
+    risks_and_considerations = Column(JSON, nullable=True)  # JSONB: ["risk1", "risk2", ...]
     created_at = Column(DateTime, default=get_utc_now)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 

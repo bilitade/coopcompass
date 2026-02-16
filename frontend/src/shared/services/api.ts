@@ -8,6 +8,9 @@ import type {
   WorkItem, WorkItemDetail, WorkItemCreate,
   WeeklyPriority, WeeklyPriorityCreate, WeeklyPriorityPlan, WeeklyPriorityPlanCreate,
   MonthlyHeadsUp, MonthlyHeadsUpCreate,
+  MonthlyPlanOutput, MonthlyPlanGenerateResponse,
+  WeeklyPlanOutput, WeeklyPlanGenerateResponse,
+  TaskGenerationOutput, TaskGenerationGenerateResponse,
   Dashboard, PerformanceTrend,
   WeeklySnapshot, WeeklySnapshotList, SnapshotTrend
 } from '../../shared/types';
@@ -314,8 +317,73 @@ class ApiService {
     return response.data;
   }
 
-  async updateMonthlyHeadsUp(headsupId: number, data: { description: string }): Promise<MonthlyHeadsUp> {
+  async updateMonthlyHeadsUp(headsupId: number, data: { description?: string; focus_areas?: string[]; strategic_alignment?: string; risks_and_considerations?: string[] }): Promise<MonthlyHeadsUp> {
     const response = await this.client.put<MonthlyHeadsUp>(`/api/monthly-headsup/${headsupId}`, data);
+    return response.data;
+  }
+
+  async deleteMonthlyHeadsUp(headsupId: number): Promise<void> {
+    await this.client.delete(`/api/monthly-headsup/${headsupId}`);
+  }
+
+  // Monthly Planner AI endpoints
+  async generateMonthlyPlan(teamId: number, month: string): Promise<MonthlyPlanOutput> {
+    const response = await this.client.post<MonthlyPlanOutput>(
+      `/api/ai-engine/monthly-planner/generate`,
+      {},
+      { params: { team_id: teamId, month } }
+    );
+    return response.data;
+  }
+
+  async generateAndCreateMonthlyPlan(teamId: number, month: string, autoCreate: boolean = false): Promise<MonthlyPlanGenerateResponse> {
+    const response = await this.client.post<MonthlyPlanGenerateResponse>(
+      `/api/ai-engine/monthly-planner/generate-and-create`,
+      {},
+      { params: { team_id: teamId, month, auto_create: autoCreate } }
+    );
+    return response.data;
+  }
+
+  // Weekly Planner AI endpoints
+  async generateWeeklyPlan(monthlyHeadsupId: number, week: string): Promise<WeeklyPlanOutput> {
+    const response = await this.client.post<WeeklyPlanOutput>(
+      `/api/ai-engine/weekly-planner/generate`,
+      {},
+      { params: { monthly_headsup_id: monthlyHeadsupId, week } }
+    );
+    return response.data;
+  }
+
+  async generateAndCreateWeeklyPlan(monthlyHeadsupId: number, week: string, autoCreate: boolean = false): Promise<WeeklyPlanGenerateResponse> {
+    const response = await this.client.post<WeeklyPlanGenerateResponse>(
+      `/api/ai-engine/weekly-planner/generate-and-create`,
+      {},
+      { params: { monthly_headsup_id: monthlyHeadsupId, week, auto_create: autoCreate } }
+    );
+    return response.data;
+  }
+
+  // Task Generator AI endpoints
+  async generateTasks(weeklyPlanId: number, focusPriority?: number): Promise<TaskGenerationOutput> {
+    const params: any = { weekly_plan_id: weeklyPlanId };
+    if (focusPriority) params.focus_priority = focusPriority;
+    const response = await this.client.post<TaskGenerationOutput>(
+      `/api/ai-engine/task-generator/generate`,
+      {},
+      { params }
+    );
+    return response.data;
+  }
+
+  async generateAndCreateTasks(weeklyPlanId: number, focusPriority?: number, autoCreate: boolean = false): Promise<TaskGenerationGenerateResponse> {
+    const params: any = { weekly_plan_id: weeklyPlanId, auto_create: autoCreate };
+    if (focusPriority) params.focus_priority = focusPriority;
+    const response = await this.client.post<TaskGenerationGenerateResponse>(
+      `/api/ai-engine/task-generator/generate-and-create`,
+      {},
+      { params }
+    );
     return response.data;
   }
 

@@ -8,6 +8,9 @@ from datetime import datetime
 class MonthlyHeadsUpBase(BaseModel):
     month: str = Field(..., pattern=r"^\d{4}-\d{2}$")  # YYYY-MM
     description: str = Field(..., min_length=1)
+    focus_areas: Optional[List[str]] = None
+    strategic_alignment: Optional[str] = None
+    risks_and_considerations: Optional[List[str]] = None
 
 
 class MonthlyHeadsUpCreate(MonthlyHeadsUpBase):
@@ -16,6 +19,9 @@ class MonthlyHeadsUpCreate(MonthlyHeadsUpBase):
 
 class MonthlyHeadsUpUpdate(BaseModel):
     description: Optional[str] = None
+    focus_areas: Optional[List[str]] = None
+    strategic_alignment: Optional[str] = None
+    risks_and_considerations: Optional[List[str]] = None
 
 
 class MonthlyHeadsUpResponse(MonthlyHeadsUpBase):

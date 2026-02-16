@@ -30,6 +30,7 @@ export const WeeklyPriority: React.FC<WeeklyPriorityProps> = ({ headsup, week, o
     priority: 1 as 1 | 2 | 3,
   });
 
+
   useEffect(() => {
     loadAllData();
   }, [headsup.id, week]);
@@ -43,6 +44,7 @@ export const WeeklyPriority: React.FC<WeeklyPriorityProps> = ({ headsup, week, o
         api.getWeeklyPriorityPlan(headsup.id, week).catch(err => err.response?.status === 404 ? null : Promise.reject(err)),
         api.getWorkItems({ monthly_headsup_id: headsup.id } as any)
       ]);
+      
 
       if (planData) {
         setPlan(planData);
@@ -402,6 +404,7 @@ export const WeeklyPriority: React.FC<WeeklyPriorityProps> = ({ headsup, week, o
           </div>
         </div>
       )}
+
     </div>
   );
 };

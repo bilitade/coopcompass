@@ -1,0 +1,116 @@
+"""Monthly Heads-Up routers."""
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from typing import List
+from app.core.database import get_db
+from app.api.v1 import deps
+from . import services, schemas
+from app.modules.users.models import User
+
+router = APIRouter(prefix="/api/monthly-headsup", tags=["monthly-headsup"])
+
+
+@router.get("/teams/{team_id}/{month}", response_model=schemas.MonthlyHeadsUpResponse)
+def read_headsup_by_month(
+    team_id: int,
+    month: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Get a monthly headsup for a team and month."""
+    # Authorization: Directors can only see planning for teams in their department
+    if current_user.role == "director":
+        from app.models import Team, Department
+        team = db.query(Team).filter(Team.id == team_id).first()
+        if not team or not team.department_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+    db_obj = services.get_monthly_headsup_by_month(db, team_id=team_id, month=month)
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Monthly Heads-Up not found")
+    return db_obj
+
+
+@router.get("/", response_model=List[schemas.MonthlyHeadsUpResponse])
+def read_headsups(
+    team_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Get all monthly headsups for a team."""
+    # Authorization: Directors can only see planning for teams in their department
+    if current_user.role == "director":
+        from app.models import Team, Department
+        team = db.query(Team).filter(Team.id == team_id).first()
+        if not team or not team.department_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+    return services.get_monthly_headsups(db, team_id=team_id)
+
+
+@router.post("/teams/{team_id}", response_model=schemas.MonthlyHeadsUpResponse, status_code=status.HTTP_201_CREATED)
+def create_headsup(
+    team_id: int,
+    obj_in: schemas.MonthlyHeadsUpCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_team_lead)
+):
+    """Create a new monthly headsup."""
+    # Ensure team lead is creating for their own team
+    if team_id != current_user.team_id:
+        raise HTTPException(status_code=403, detail="Not authorized to create for this team")
+        
+    # Check if headsup already exists for this month
+    existing = services.get_monthly_headsup_by_month(db, team_id=team_id, month=obj_in.month)
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Monthly Heads-Up already exists for {obj_in.month}"
+        )
+    return services.create_monthly_headsup(db, team_id=team_id, obj_in=obj_in)
+
+
+@router.get("/{id}", response_model=schemas.MonthlyHeadsUpResponse)
+def read_headsup(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Get a monthly headsup by ID."""
+    db_obj = services.get_monthly_headsup(db, headsup_id=id)
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Monthly Heads-Up not found")
+    return db_obj
+
+
+@router.put("/{id}", response_model=schemas.MonthlyHeadsUpResponse)
+def update_headsup(
+    id: int,
+    obj_in: schemas.MonthlyHeadsUpUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_team_lead)
+):
+    """Update a monthly headsup."""
+    db_obj = services.get_monthly_headsup(db, headsup_id=id)
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Monthly Heads-Up not found")
+    return services.update_monthly_headsup(db, db_obj=db_obj, obj_in=obj_in)
+
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_headsup(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_team_lead)
+):
+    """Delete a monthly headsup."""
+    if not services.delete_monthly_headsup(db, headsup_id=id):
+        raise HTTPException(status_code=404, detail="Monthly Heads-Up not found")
+    return None

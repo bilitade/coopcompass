@@ -15,12 +15,19 @@ def list_teams(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """List all teams with department and member information."""
-    teams = db.query(Team).options(
+    """List teams based on role visibility."""
+    query = db.query(Team).options(
         joinedload(Team.department),
         joinedload(Team.users)
-    ).all()
-    return teams
+    )
+
+    if current_user.role == "director":
+        # Find department(s) led by this director
+        dept_ids = [d.id for d in db.query(Department).filter(Department.director_id == current_user.id).all()]
+        query = query.filter(Team.department_id.in_(dept_ids))
+    
+    # Executives and Admins see all
+    return query.all()
 
 
 @router.post("", response_model=TeamResponse, status_code=status.HTTP_201_CREATED)
@@ -32,12 +39,20 @@ def create_team(
     """Create a new team."""
     new_team = Team(
         name=team_data.name,
+        description=team_data.description,
         department_id=team_data.department_id
     )
     db.add(new_team)
     db.commit()
     db.refresh(new_team)
-    return new_team
+    
+    # Reload with relationships
+    team = db.query(Team).options(
+        joinedload(Team.department),
+        joinedload(Team.users)
+    ).filter(Team.id == new_team.id).first()
+    
+    return team
 
 
 @router.get("/{team_id}", response_model=TeamDetailResponse)
@@ -58,6 +73,14 @@ def get_team(
             detail="Team not found"
         )
     
+    # Authorization: Directors can only see teams in their own department
+    if current_user.role == "director":
+        if not team.department or team.department.director_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: This team does not belong to your department"
+            )
+    
     return team
 
 
@@ -75,6 +98,20 @@ def list_team_users(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Team not found"
         )
+    
+    # Authorization: Directors can only see teams in their own department
+    if current_user.role == "director":
+        if not team.department_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: This team does not belong to your department"
+            )
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: This team does not belong to your department"
+            )
     
     users = db.query(User).filter(User.team_id == team_id).all()
     return users
@@ -176,11 +213,21 @@ def update_team(
     if team_data.name:
         team.name = team_data.name
     
+    if team_data.description is not None:
+        team.description = team_data.description
+    
     if team_data.department_id is not None:
         team.department_id = team_data.department_id
     
     db.commit()
     db.refresh(team)
+    
+    # Reload with relationships
+    team = db.query(Team).options(
+        joinedload(Team.department),
+        joinedload(Team.users)
+    ).filter(Team.id == team_id).first()
+    
     return team
 
 
@@ -203,28 +250,4 @@ def delete_team(
     db.commit()
 
 
-@router.get("/{team_id}/tasks", response_model=list[TaskWithWorkItemResponse])
-def get_team_tasks(
-    team_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Get all tasks for a team (grouped by work items)."""
-    # Verify user belongs to the team
-    if current_user.team_id != team_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have access to this team's tasks"
-        )
-    
-    # Get all work items for the team
-    work_items = db.query(WorkItem).filter(WorkItem.team_id == team_id).all()
-    
-    # Get all tasks for these work items with eager loading of work_item relationship
-    task_ids = [wi.id for wi in work_items]
-    tasks = db.query(Task).filter(Task.work_item_id.in_(task_ids)).options(
-        joinedload(Task.work_item)
-    ).all() if task_ids else []
-    
-    return tasks
 

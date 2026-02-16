@@ -1,4 +1,4 @@
-"""BAU Activity, Metric, and MetricHistory models."""
+"""BAU Activity and Metric models."""
 
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, CheckConstraint, Index, DECIMAL
 from sqlalchemy.orm import relationship
@@ -33,44 +33,27 @@ class BAUActivity(Base):
 
 
 class BAUMetric(Base):
-    """BAU Metrics table."""
+    """BAU Metrics table (KPIs)."""
     __tablename__ = "bau_metrics"
 
     id = Column(Integer, primary_key=True, index=True)
     bau_activity_id = Column(Integer, ForeignKey("bau_activities.id", ondelete="CASCADE"), nullable=False)
     name = Column(String(255), nullable=False)
-    target_value = Column(DECIMAL(10, 2), nullable=False)
-    current_value = Column(DECIMAL(10, 2), default=0)
-    unit = Column(String(50))
-    weight = Column(DECIMAL(3, 2), default=1.0)
-    is_higher_better = Column(Boolean, default=True)
+    target_value = Column(DECIMAL(15, 2), nullable=False)  # Goal value
+    current_value = Column(DECIMAL(15, 2), nullable=False, default=0)  # Actual value (Manager updates weekly)
+    unit = Column(String(50), nullable=False)  # %, minutes, hours, count, etc.
+    weight = Column(DECIMAL(3, 2), nullable=False)  # Importance (0.0-1.0, must sum to 1.0 per Activity)
+    metric_type = Column(String(20), nullable=False, default="Higher is Better")  # "Higher is Better" OR "Lower is Better"
     created_at = Column(DateTime, default=get_utc_now)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 
     # Relationships
     bau_activity = relationship("BAUActivity", back_populates="metrics")
-    metric_history = relationship("MetricHistory", back_populates="metric", cascade="all, delete-orphan")
 
     __table_args__ = (
-        CheckConstraint("weight >= 0 AND weight <= 1"),
+        CheckConstraint("weight >= 0 AND weight <= 1", name="check_weight_range"),
+        CheckConstraint("metric_type IN ('Higher is Better', 'Lower is Better')", name="check_metric_type"),
         Index("idx_bau_metrics_activity", "bau_activity_id"),
     )
 
-
-class MetricHistory(Base):
-    """Metric History table."""
-    __tablename__ = "metric_history"
-
-    id = Column(Integer, primary_key=True, index=True)
-    bau_metric_id = Column(Integer, ForeignKey("bau_metrics.id", ondelete="CASCADE"), nullable=False)
-    value = Column(DECIMAL(10, 2), nullable=False)
-    recorded_at = Column(DateTime, default=get_utc_now)
-
-    # Relationships
-    metric = relationship("BAUMetric", back_populates="metric_history")
-
-    __table_args__ = (
-        Index("idx_metric_history_metric", "bau_metric_id"),
-        Index("idx_metric_history_recorded", "recorded_at"),
-    )
 

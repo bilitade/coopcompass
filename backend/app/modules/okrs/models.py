@@ -17,19 +17,27 @@ class OKR(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     team_id = Column(Integer, ForeignKey("teams.id", ondelete="CASCADE"), nullable=False)
-    quarter = Column(String(10), nullable=False)  # e.g., "Q1 2026"
+    year = Column(Integer, nullable=True, default=2026)  # e.g., 2025, 2026
+    quarters = Column(String(50), nullable=True, default="Q1")  # Comma-separated: "Q1,Q2,Q3" or "Q1" or "Q1,Q2,Q3,Q4"
+    okr_level = Column(String(20), nullable=True, default="strategic")  # "strategic", "operational", "tactical"
     objective = Column(Text, nullable=False)
+    description = Column(Text, nullable=True)
+    status = Column(String(20), nullable=True, default="draft")  # "draft", "active", "completed"
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=get_utc_now)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
+    
+    # Legacy quarter field for backward compatibility
+    quarter = Column(String(10), nullable=True)  # e.g., "Q1 2026" - kept for backward compatibility
 
     # Relationships
     team = relationship("Team", back_populates="okrs")
     key_results = relationship("KeyResult", back_populates="okr", cascade="all, delete-orphan")
 
     __table_args__ = (
-        UniqueConstraint("team_id", "quarter", name="unique_team_quarter"),
-        Index("idx_okrs_team_quarter", "team_id", "quarter"),
+        Index("idx_okrs_team_year", "team_id", "year"),
+        Index("idx_okrs_level", "okr_level"),
+        Index("idx_okrs_status", "status"),
     )
 
 
@@ -40,9 +48,11 @@ class KeyResult(Base):
     id = Column(Integer, primary_key=True, index=True)
     okr_id = Column(Integer, ForeignKey("okrs.id", ondelete="CASCADE"), nullable=False)
     description = Column(Text, nullable=False)
-    target_value = Column(DECIMAL(10, 2), nullable=False)
-    current_value = Column(DECIMAL(10, 2), default=0)
-    unit = Column(String(50))
+    base_value = Column(DECIMAL(15, 2), nullable=False)  # Starting baseline
+    target_value = Column(DECIMAL(15, 2), nullable=False)  # Goal to achieve
+    current_value = Column(DECIMAL(15, 2), nullable=False)  # Actual progress (Manager updates weekly)
+    unit = Column(String(50), nullable=False)  # customers, Birr, %, count, services, etc.
+    weight = Column(DECIMAL(3, 2), nullable=False)  # Importance (0.0-1.0, must sum to 1.0 per Objective)
     created_at = Column(DateTime, default=get_utc_now)
     updated_at = Column(DateTime, default=get_utc_now, onupdate=get_utc_now)
 

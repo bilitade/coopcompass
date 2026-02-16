@@ -1,2 +1,1 @@
-"""Weekly Priority module."""
-
+from .models import WeeklyPriority, WeeklyPriorityPlan

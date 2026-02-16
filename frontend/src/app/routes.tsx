@@ -24,20 +24,32 @@ import { MyTeamPage } from '../features/teams/pages/MyTeamPage';
 
 // OKR pages
 import { OKRPage } from '../features/okrs/pages/OKRPage';
+import { AddEditOKRPage } from '../features/okrs/pages/AddEditOKRPage';
+import { OKRMeasurementPage } from '../features/okrs/pages/OKRMeasurementPage';
 import { DirectorOKRListPage } from '../features/okrs/pages/DirectorOKRListPage';
 import { ExecutiveOKRListPage } from '../features/okrs/pages/ExecutiveOKRListPage';
+import { OKRValidatorPage } from '../features/okr_validator/pages/OKRValidatorPage';
 
 // BAU pages
-import { BAUPage } from '../features/bau/pages/BAUPage';
+import { BAUActivitiesPage } from '../features/bau/pages/BAUActivitiesPage';
+import { ManageMetricsPage } from '../features/bau/pages/ManageMetricsPage';
 import { DirectorBAUListPage } from '../features/bau/pages/DirectorBAUListPage';
 import { ExecutiveBAUListPage } from '../features/bau/pages/ExecutiveBAUListPage';
 
 // Work Items pages
 import { WorkItemsPage } from '../features/workItems/pages/WorkItemsPage';
-import { TasksPage } from '../features/workItems/pages/TasksPage';
+import { TasksPage } from '../features/tasks/pages/TasksPage';
+import { TaskEditPage } from '../features/tasks/pages/TaskEditPage';
+import { TaskCreatePage } from '../features/tasks/pages/TaskCreatePage';
+import { TaskDetailPage } from '../features/tasks/pages/TaskDetailPage';
 
 // Priorities pages
-import { PriorityPage } from '../features/priorities/pages/PriorityPage';
+import { MonthlyHeadsupPage } from '../features/monthlyHeadsup/pages/MonthlyHeadsupPage';
+import { WeeklyPriorityPage } from '../features/weeklyPriority/pages/WeeklyPriorityPage';
+
+// Snapshot pages
+import { TeamSnapshotsPage } from '../features/snapshots/pages/TeamSnapshotsPage';
+import { SnapshotDetailPage } from '../features/snapshots/pages/SnapshotDetailPage';
 
 // User pages
 import { UserPage } from '../features/users/pages/UserPage';
@@ -83,6 +95,14 @@ export const AppRoutes = () => {
       />
       <Route
         path="/dashboard/team/:teamId"
+        element={
+          <ProtectedRoute>
+            <TeamDetailViewPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/department/:departmentId/teams/:teamId"
         element={
           <ProtectedRoute>
             <TeamDetailViewPage />
@@ -178,10 +198,54 @@ export const AppRoutes = () => {
         }
       />
       <Route
-        path="/bau"
+        path="/okrs/validator"
         element={
           <ProtectedRoute>
-            <BAUPage />
+            <OKRValidatorPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/okrs/new"
+        element={
+          <ProtectedRoute>
+            <AddEditOKRPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/okrs/:id/edit"
+        element={
+          <ProtectedRoute>
+            <AddEditOKRPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/okrs/:id/measure"
+        element={
+          <ProtectedRoute>
+            <OKRMeasurementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/bau"
+        element={<Navigate to="/bau-activities" replace />}
+      />
+      <Route
+        path="/bau-activities"
+        element={
+          <ProtectedRoute>
+            <BAUActivitiesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/bau-activities/:activityId/metrics"
+        element={
+          <ProtectedRoute>
+            <ManageMetricsPage />
           </ProtectedRoute>
         }
       />
@@ -226,10 +290,58 @@ export const AppRoutes = () => {
         }
       />
       <Route
+        path="/tasks/new"
+        element={
+          <ProtectedRoute>
+            <TaskCreatePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tasks/:id/edit"
+        element={
+          <ProtectedRoute>
+            <TaskEditPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tasks/:id"
+        element={
+          <ProtectedRoute>
+            <TaskDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/monthly-headsup"
+        element={
+          <ProtectedRoute>
+            <MonthlyHeadsupPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/weekly-priority"
         element={
           <ProtectedRoute>
-            <PriorityPage />
+            <WeeklyPriorityPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teams/:id/snapshots"
+        element={
+          <ProtectedRoute>
+            <TeamSnapshotsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teams/:teamId/snapshots/:week"
+        element={
+          <ProtectedRoute>
+            <SnapshotDetailPage />
           </ProtectedRoute>
         }
       />

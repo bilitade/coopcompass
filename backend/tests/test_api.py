@@ -118,7 +118,7 @@ class TestAuthentication:
         assert response.status_code == 200
         data = response.json()
         assert "access_token" in data
-        assert data["token_type"] == "bearer"
+        assert data["token_type"].lower() == "bearer"
 
     def test_login_invalid_password(self, test_user):
         """Test login with invalid password."""
@@ -167,7 +167,7 @@ class TestCalculations:
         
         work_item = models.WorkItem(
             team_id=team.id,
-            name="Test Work Item",
+            title="Test Work Item",
             source_type="OKR",
             source_id=1,
             month="2026-01"
@@ -189,7 +189,7 @@ class TestCalculations:
         
         work_item = models.WorkItem(
             team_id=team.id,
-            name="Test Work Item",
+            title="Test Work Item",
             source_type="OKR",
             source_id=1,
             month="2026-01"
@@ -242,7 +242,8 @@ class TestCalculations:
             target_value=Decimal("100"),
             current_value=Decimal("80"),
             weight=Decimal("1.0"),
-            is_higher_better=True
+            unit="%",
+            metric_type="Higher is Better"
         )
         db.add(metric)
         db.commit()
@@ -274,7 +275,8 @@ class TestCalculations:
             target_value=Decimal("30"),
             current_value=Decimal("20"),
             weight=Decimal("1.0"),
-            is_higher_better=False
+            unit="seconds",
+            metric_type="Lower is Better"
         )
         db.add(metric)
         db.commit()
@@ -339,8 +341,11 @@ class TestDatabase:
         kr = models.KeyResult(
             okr_id=okr.id,
             description="Test KR",
+            base_value=Decimal("0"),
             target_value=Decimal("10"),
-            unit="items"
+            current_value=Decimal("0"),
+            unit="items",
+            weight=Decimal("1.0")
         )
         db.add(kr)
         db.commit()

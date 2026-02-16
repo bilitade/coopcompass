@@ -7,9 +7,8 @@ from app.models import *
 from app.schemas import *
 from app.api.v1.deps import get_current_user, get_current_team_lead
 from app.modules.work_items.services import calculate_work_item_progress
-from datetime import datetime
 
-router = APIRouter(prefix="/api", tags=["work-items", "tasks"])
+router = APIRouter(prefix="/api", tags=["work-items"])
 
 
 @router.post("/work-items", response_model=WorkItemResponse, status_code=status.HTTP_201_CREATED)
@@ -31,14 +30,23 @@ def create_work_item(
             detail=f"{work_item_data.source_type} source not found"
         )
     
+    # Verify monthly heads-up exists
+    headsup = db.query(MonthlyHeadsUp).filter(MonthlyHeadsUp.id == work_item_data.monthly_headsup_id).first()
+    if not headsup:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Monthly Heads-Up not found"
+        )
+
     new_work_item = WorkItem(
-        team_id=work_item_data.team_id if hasattr(work_item_data, 'team_id') else current_user.team_id,
-        name=work_item_data.name,
+        team_id=headsup.team_id,
+        monthly_headsup_id=work_item_data.monthly_headsup_id,
+        title=work_item_data.title,
         description=work_item_data.description,
         source_type=work_item_data.source_type,
         source_id=work_item_data.source_id,
-        owner_id=work_item_data.owner_id,
-        month=work_item_data.month
+        owner_id=work_item_data.owner_id or current_user.id,
+        status="Not Started"
     )
     
     db.add(new_work_item)
@@ -52,18 +60,37 @@ def create_work_item(
 def list_work_items(
     team_id: int = Query(None),
     month: str = Query(None),
+    monthly_headsup_id: int = Query(None),
     source_type: str = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """List work items with optional filters."""
+    """List work items with optional filters and role-based restriction."""
     query = db.query(WorkItem)
     
-    if team_id:
+    # Role-based restriction for directors
+    if current_user.role == "director":
+        from app.models import Department, Team
+        dept = db.query(Department).filter(Department.director_id == current_user.id).first()
+        if dept:
+            team_ids = [t.id for t in db.query(Team).filter(Team.department_id == dept.id).all()]
+            if team_id:
+                if team_id not in team_ids:
+                    return [] # Or raise 403, but returning empty list is safer for generic listing
+                query = query.filter(WorkItem.team_id == team_id)
+            else:
+                query = query.filter(WorkItem.team_id.in_(team_ids))
+        else:
+            return [] # Director not assigned to any department
+            
+    elif team_id:
         query = query.filter(WorkItem.team_id == team_id)
     
     if month:
         query = query.filter(WorkItem.month == month)
+
+    if monthly_headsup_id:
+        query = query.filter(WorkItem.monthly_headsup_id == monthly_headsup_id)
     
     if source_type:
         query = query.filter(WorkItem.source_type == source_type)
@@ -100,12 +127,13 @@ def list_work_items_with_source(
         wi_dict = {
             'id': wi.id,
             'team_id': wi.team_id,
-            'name': wi.name,
+            'title': wi.title,
             'description': wi.description,
             'source_type': wi.source_type,
             'source_id': wi.source_id,
             'owner_id': wi.owner_id,
             'month': wi.month,
+            'status': wi.status,
             'created_at': wi.created_at,
             'updated_at': wi.updated_at,
             'key_result': None,
@@ -120,9 +148,11 @@ def list_work_items_with_source(
                     'id': kr.id,
                     'okr_id': kr.okr_id,
                     'description': kr.description,
+                    'base_value': kr.base_value,
                     'target_value': kr.target_value,
                     'current_value': kr.current_value,
                     'unit': kr.unit,
+                    'weight': kr.weight,
                     'created_at': kr.created_at,
                     'updated_at': kr.updated_at,
                 }
@@ -158,6 +188,16 @@ def get_work_item(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Work item not found"
         )
+        
+    # Authorization: Directors can only see work items for teams in their department
+    if current_user.role == "director":
+        from app.models import Team, Department
+        team = db.query(Team).filter(Team.id == work_item.team_id).first()
+        if not team or not team.department_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
     
     return work_item
 
@@ -178,8 +218,8 @@ def update_work_item(
             detail="Work item not found"
         )
     
-    if work_item_data.name is not None:
-        work_item.name = work_item_data.name
+    if work_item_data.title is not None:
+        work_item.title = work_item_data.title
     
     if work_item_data.description is not None:
         work_item.description = work_item_data.description
@@ -187,125 +227,28 @@ def update_work_item(
     if work_item_data.owner_id is not None:
         work_item.owner_id = work_item_data.owner_id
     
+    if work_item_data.status is not None:
+        work_item.status = work_item_data.status
+    
     db.commit()
     db.refresh(work_item)
     
     return work_item
 
 
-@router.post("/work-items/{work_item_id}/tasks", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
-def create_task(
+@router.delete("/work-items/{work_item_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_work_item(
     work_item_id: int,
-    task_data: TaskCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_team_lead)
 ):
-    """Create a task for a work item."""
+    """Delete a work item and its associated tasks and priorities."""
     work_item = db.query(WorkItem).filter(WorkItem.id == work_item_id).first()
-    
     if not work_item:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Work item not found"
         )
     
-    new_task = Task(
-        work_item_id=work_item_id,
-        description=task_data.description,
-        assignee_id=task_data.assignee_id,
-        effort_hours=task_data.effort_hours
-    )
-    
-    db.add(new_task)
+    db.delete(work_item)
     db.commit()
-    db.refresh(new_task)
-    
-    return new_task
-
-
-@router.get("/tasks/{task_id}", response_model=TaskDetailResponse)
-def get_task(
-    task_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Get task details."""
-    task = db.query(Task).filter(Task.id == task_id).first()
-    
-    if not task:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Task not found"
-        )
-    
-    return task
-
-
-@router.patch("/tasks/{task_id}", response_model=TaskResponse)
-def update_task(
-    task_id: int,
-    task_data: TaskUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Update a task."""
-    task = db.query(Task).filter(Task.id == task_id).first()
-    
-    if not task:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Task not found"
-        )
-    
-    if task_data.description is not None:
-        task.description = task_data.description
-    
-    if task_data.assignee_id is not None:
-        task.assignee_id = task_data.assignee_id
-    
-    if task_data.status is not None:
-        task.status = task_data.status
-        
-        # Set completed_at when task is marked Done
-        if task_data.status == "Done":
-            task.completed_at = datetime.utcnow()
-        elif task.status == "Done" and task_data.status != "Done":
-            # Reset completed_at if unmarking as done
-            task.completed_at = None
-    
-    if task_data.effort_hours is not None:
-        task.effort_hours = task_data.effort_hours
-    
-    if task_data.blocked_reason is not None:
-        task.blocked_reason = task_data.blocked_reason
-    
-    db.commit()
-    db.refresh(task)
-    
-    return task
-
-
-@router.get("/users/{user_id}/tasks", response_model=list[TaskResponse])
-def get_user_tasks(
-    user_id: int,
-    status: str = Query(None),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Get all tasks assigned to a user."""
-    user = db.query(User).filter(User.id == user_id).first()
-    
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    query = db.query(Task).filter(Task.assignee_id == user_id)
-    
-    if status:
-        query = query.filter(Task.status == status)
-    
-    tasks = query.all()
-    return tasks
-

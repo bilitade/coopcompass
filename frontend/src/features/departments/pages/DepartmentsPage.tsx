@@ -29,7 +29,6 @@ interface DepartmentStats {
   totalMembers: number;
   averageOKRProgress: number;
   averageBAUHealth: number;
-  averageBAUExecution?: number;
 }
 
 export const DepartmentsPage: React.FC = () => {
@@ -67,7 +66,6 @@ export const DepartmentsPage: React.FC = () => {
             totalMembers: deptDashboard.total_members || 0,
             averageOKRProgress: deptDashboard.average_okr_progress || 0,
             averageBAUHealth: deptDashboard.average_bau_health || 0,
-            averageBAUExecution: deptDashboard.average_bau_execution || 0,
           });
         } catch (deptErr) {
           console.error(`Error fetching dashboard for dept ${dept.id}:`, deptErr);
@@ -78,7 +76,6 @@ export const DepartmentsPage: React.FC = () => {
             totalMembers: 0,
             averageOKRProgress: 0,
             averageBAUHealth: 0,
-            averageBAUExecution: 0,
           });
         }
       }
@@ -121,7 +118,9 @@ export const DepartmentsPage: React.FC = () => {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Organization Overview</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            {user.role === 'director' ? 'Department Overview' : 'Organization Overview'}
+          </h1>
         </div>
 
         {/* Summary Cards */}
@@ -129,7 +128,9 @@ export const DepartmentsPage: React.FC = () => {
           <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-text-secondary">Total Departments</p>
+                <p className="text-sm text-text-secondary">
+                  {user.role === 'director' ? 'My Department' : 'Total Departments'}
+                </p>
                 <p className="text-3xl font-bold mt-2">{departments.length}</p>
               </div>
               <Building2 className="w-12 h-12 text-primary" />
@@ -163,9 +164,11 @@ export const DepartmentsPage: React.FC = () => {
           <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-text-secondary">Directors</p>
+                <p className="text-sm text-text-secondary">
+                  {user.role === 'director' ? 'Director Status' : 'Directors'}
+                </p>
                 <p className="text-3xl font-bold mt-2">
-                  {departments.filter(d => d.director_id).length}
+                  {user.role === 'director' ? 'Assigned' : departments.filter(d => d.director_id).length}
                 </p>
               </div>
               <TrendingUp className="w-12 h-12 text-primary" />
@@ -176,7 +179,9 @@ export const DepartmentsPage: React.FC = () => {
         {/* Departments Grid */}
         <div className="bg-surface border border-border rounded-lg p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">All Departments</h2>
+            <h2 className="text-2xl font-bold">
+              {user.role === 'director' ? 'My Department' : 'All Departments'}
+            </h2>
           </div>
 
           {departments.length === 0 ? (
@@ -259,16 +264,6 @@ export const DepartmentsPage: React.FC = () => {
                         </div>
                         <p className="text-2xl font-bold text-green-600">
                           {deptStats?.averageBAUHealth.toFixed(0) || '0'}%
-                        </p>
-                      </div>
-
-                      <div className="bg-surface border border-border rounded-lg p-3 col-span-2">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Activity size={14} className="text-blue-600" />
-                          <p className="text-xs font-medium text-text-secondary">BAU Execution (OCE)</p>
-                        </div>
-                        <p className="text-2xl font-bold text-blue-600">
-                          {(deptStats?.averageBAUExecution || 0).toFixed(0)}%
                         </p>
                       </div>
                     </div>

@@ -1,12 +1,11 @@
 """Authentication endpoints following OAuth2 and JWT standards."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session, joinedload
 from app.core.database import get_db
 from app.core.security import hash_password, verify_password, create_access_token
 from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES
-from app.models import User
+from app.models import User, Team, Department
 from app.schemas import UserResponse, UserCreate, UserLogin, TokenResponse, OAuth2TokenResponse
 from app.api.v1.deps import get_current_user
 
@@ -89,7 +88,8 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
 
 @router.post("/token", response_model=OAuth2TokenResponse)
 def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    username: str = Form(...),
+    password: str = Form(...),
     db: Session = Depends(get_db)
 ):
     """OAuth2 RFC 6749 compliant token endpoint.
@@ -98,7 +98,8 @@ def login_for_access_token(
     Returns an access token that can be used with Bearer authentication.
 
     Args:
-        form_data: OAuth2 password request form with username/password
+        username: User email address (OAuth2 username field)
+        password: User password
         db: Database session
 
     Returns:
@@ -109,7 +110,7 @@ def login_for_access_token(
         - Password field contains the user's password
     """
     # Validate user credentials
-    user = db.query(User).filter(User.email == form_data.username).first()
+    user = db.query(User).filter(User.email == username).first()
 
     if not user:
         raise HTTPException(
@@ -118,7 +119,7 @@ def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    if not verify_password(form_data.password, user.password_hash):
+    if not verify_password(password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",
@@ -146,17 +147,31 @@ def login_for_access_token(
 @router.get("/me", response_model=UserResponse)
 def get_current_user_info(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Get current authenticated user information."""
-    # Reload user with team relationship
-    user = db.query(User).options(joinedload(User.team)).filter(User.id == current_user.id).first()
+    # Reload user with team and department relationships
+    user = db.query(User).options(
+        joinedload(User.team).joinedload(Team.department)
+    ).filter(User.id == current_user.id).first()
     
-    # Create a response dict with team_name
+    # Get department name from team if user has a team
+    department_name = None
+    if user.team and user.team.department:
+        department_name = user.team.department.name
+    else:
+        # If no team, check if user is a director of a department
+        department = db.query(Department).filter(Department.director_id == user.id).first()
+        if department:
+            department_name = department.name
+    
+    # Create a response dict with team_name and department_name
     user_dict = {
         'id': user.id,
         'name': user.name,
         'email': user.email,
+        'position': user.position,
         'role': user.role,
         'team_id': user.team_id,
         'team_name': user.team.name if user.team else None,
+        'department_name': department_name,
         'is_active': user.is_active,
         'created_at': user.created_at,
         'updated_at': user.updated_at,

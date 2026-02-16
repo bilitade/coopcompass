@@ -1,32 +1,28 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../../shared/components/Layout';
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner';
 import { Alert } from '../../../shared/components/Alert';
-import { Modal } from '../../../shared/components/Modal';
 import { useAuth } from '../../../app/context/AuthContext';
 import { api } from '../../../shared/services/api';
-import type { OKRDetail, KeyResult } from '../../../shared/types';
-import { Plus, Target } from 'lucide-react';
+import type { OKRDetail } from '../../../shared/types';
+import { Plus, Target, Edit, Trash2, TrendingUp } from 'lucide-react';
+
+type StatusFilter = 'all' | 'draft' | 'active' | 'completed';
 
 export const OKRPage: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [okrs, setOkrs] = useState<OKRDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
-  const [showOKRModal, setShowOKRModal] = useState(false);
-  const [showKRModal, setShowKRModal] = useState(false);
-  const [editingOKR, setEditingOKR] = useState<OKRDetail | null>(null);
-  const [editingKR, setEditingKR] = useState<KeyResult | null>(null);
-  
-  const [okrForm, setOkrForm] = useState({ quarter: '', objective: '' });
-  const [krForm, setKrForm] = useState({ description: '', target_value: '', unit: '' });
 
-  // Quarter and Year filtering
-  const [selectedQuarter, setSelectedQuarter] = useState<'All' | 'Q1' | 'Q2' | 'Q3' | 'Q4'>('All');
-  const [selectedYear, setSelectedYear] = useState<'All' | string>('All');
-  const [currentOKRIndex, setCurrentOKRIndex] = useState(0);
+  // Filters
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [yearFilter, setYearFilter] = useState<number>(new Date().getFullYear());
+  const [quarterFilter, setQuarterFilter] = useState<'all' | 'Q1' | 'Q2' | 'Q3' | 'Q4'>('all');
+  const [levelFilter, setLevelFilter] = useState<'all' | 'strategic' | 'operational' | 'tactical'>('all');
 
   useEffect(() => {
     loadOKRs();
@@ -49,181 +45,170 @@ export const OKRPage: React.FC = () => {
     }
   };
 
-  const viewOKRDetail = (okrId: number) => {
-    // Find the OKR and switch to its quarter and year view
-    const okr = okrs.find(o => o.id === okrId);
-    if (okr) {
-      const [quarter, year] = okr.quarter.split(' ') as [typeof selectedQuarter, string];
-      setSelectedQuarter(quarter);
-      setSelectedYear(year);
-      // Find index in filtered OKRs
-      const filtered = okrs.filter(o => {
-        const [oQuarter, oYear] = o.quarter.split(' ');
-        return (selectedQuarter === 'All' || oQuarter === quarter) &&
-               (year === 'All' || oYear === year);
-      });
-      const index = filtered.findIndex(o => o.id === okrId);
-      setCurrentOKRIndex(index >= 0 ? index : 0);
-    }
-  };
-
-  const handleCreateOKR = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user?.team_id) return;
-
-    try {
-      if (editingOKR) {
-        // Edit mode
-        await api.updateOKR(editingOKR.id, okrForm);
-        setSuccess('OKR updated successfully');
-      } else {
-        // Create mode
-        await api.createOKR(user.team_id, okrForm);
-        setSuccess('OKR created successfully');
-      }
-      setShowOKRModal(false);
-      setEditingOKR(null);
-      setOkrForm({ quarter: '', objective: '' });
-      loadOKRs();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || (editingOKR ? 'Failed to update OKR' : 'Failed to create OKR'));
-    }
-  };
-
-  const handleCreateKR = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentOKR) return;
-
-    try {
-      if (editingKR) {
-        // Edit mode
-        await api.updateKeyResult(editingKR.id, {
-          description: krForm.description,
-          target_value: parseFloat(krForm.target_value),
-          unit: krForm.unit || undefined,
-        });
-        setSuccess('Key Result updated successfully');
-      } else {
-        // Create mode
-        await api.createKeyResult(currentOKR.id, {
-          ...krForm,
-          target_value: parseFloat(krForm.target_value),
-        });
-        setSuccess('Key Result added successfully');
-      }
-      setShowKRModal(false);
-      setEditingKR(null);
-      setKrForm({ description: '', target_value: '', unit: '' });
-      loadOKRs(); // Reload all OKRs to refresh the current view
-    } catch (err: any) {
-      setError(err.response?.data?.detail || (editingKR ? 'Failed to update Key Result' : 'Failed to add Key Result'));
-    }
-  };
-
-  const handleEditOKR = (okr: OKRDetail) => {
-    setEditingOKR(okr);
-    setOkrForm({ quarter: okr.quarter, objective: okr.objective });
-    setShowOKRModal(true);
-  };
-
-  const handleDeleteOKR = async (okrId: number) => {
-    if (!confirm('Are you sure you want to delete this OKR? This will permanently delete the OKR and all its key results. This action cannot be undone.')) {
-      return;
-    }
+  const handleDelete = async (okrId: number) => {
+    if (!confirm('Delete this OKR? This action cannot be undone.')) return;
 
     try {
       await api.deleteOKR(okrId);
       setSuccess('OKR deleted successfully');
       loadOKRs();
-      // Reset to first OKR if current one was deleted
-      if (currentOKR && currentOKR.id === okrId) {
-        setCurrentOKRIndex(0);
-      }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to delete OKR');
     }
   };
 
-
-  const handleEditKR = (kr: KeyResult) => {
-    setEditingKR(kr);
-    setKrForm({
-      description: kr.description,
-      target_value: kr.target_value.toString(),
-      unit: kr.unit || ''
-    });
-    setShowKRModal(true);
+  const calculateOKRScore = (okr: OKRDetail): number => {
+    if (!okr.key_results || okr.key_results.length === 0) return 0;
+    
+    return okr.key_results.reduce((sum, kr) => {
+      const base = parseFloat(kr.base_value);
+      const target = parseFloat(kr.target_value);
+      const current = parseFloat(kr.current_value);
+      const weight = parseFloat(kr.weight);
+      
+      if (target === base) return sum;
+      const score = Math.max(0, Math.min(1, (current - base) / (target - base)));
+      return sum + (score * weight);
+    }, 0);
   };
 
-  const handleDeleteKR = async (krId: number) => {
-    if (!confirm('Are you sure you want to delete this key result? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      await api.deleteKeyResult(krId);
-      setSuccess('Key result deleted successfully');
-      loadOKRs(); // Reload to refresh the view
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to delete key result');
-    }
+  const getScoreColor = (score: number): string => {
+    if (score >= 0.7) return 'bg-green-500';
+    if (score >= 0.4) return 'bg-yellow-500';
+    return 'bg-red-500';
   };
 
-  const getCurrentYear = (): string => {
-    return new Date().getFullYear().toString();
-  };
-
-  const handleArchiveOKR = async (okrId: number) => {
-    try {
-      await api.updateOKR(okrId, { is_active: false });
-      setSuccess('OKR archived successfully');
-      loadOKRs();
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to archive OKR');
+  const getLevelColor = (level: string): string => {
+    switch (level) {
+      case 'strategic': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200';
+      case 'operational': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200';
+      case 'tactical': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  // Generate year range from 2024 to 2040
-  const availableYears = Array.from({ length: 2040 - 2024 + 1 }, (_, i) => (2024 + i).toString());
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case 'draft': return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
+      case 'active': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200';
+      case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
-  // Filter OKRs by year and quarter
+  // Filter OKRs
   const filteredOKRs = okrs.filter(okr => {
-    const [quarter, year] = okr.quarter.split(' ');
-
-    // Year filter
-    if (selectedYear !== 'All' && year !== selectedYear) return false;
-
-    // Quarter filter
-    if (selectedQuarter === 'All') return true;
-    return quarter === selectedQuarter;
+    if (statusFilter !== 'all' && okr.status !== statusFilter) return false;
+    if (okr.year !== yearFilter) return false;
+    if (quarterFilter !== 'all' && okr.quarters !== quarterFilter) return false;
+    if (levelFilter !== 'all' && okr.okr_level !== levelFilter) return false;
+    return true;
   });
 
-  // Get current OKR to display (first one or selected index)
-  const currentOKR = filteredOKRs.length > 0 ? filteredOKRs[Math.min(currentOKRIndex, filteredOKRs.length - 1)] : null;
-
-  // Handle quarter change
-  const handleQuarterChange = (quarter: 'All' | 'Q1' | 'Q2' | 'Q3' | 'Q4') => {
-    setSelectedQuarter(quarter);
-    setCurrentOKRIndex(0); // Reset to first OKR when changing quarters
-  };
-
-  // Handle year change
-  const handleYearChange = (year: 'All' | string) => {
-    setSelectedYear(year);
-    setCurrentOKRIndex(0); // Reset to first OKR when changing years
-  };
-
-  // Handle OKR navigation
-  const handleNextOKR = () => {
-    if (filteredOKRs.length > 1) {
-      setCurrentOKRIndex((prev) => (prev + 1) % filteredOKRs.length);
+  const years = Array.from(new Set(okrs.map(o => o.year))).sort((a, b) => b - a);
+  
+  // Update year filter if current selection has no OKRs
+  useEffect(() => {
+    if (okrs.length > 0 && years.length > 0 && !years.includes(yearFilter)) {
+      setYearFilter(years[0]);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [okrs.length]);
 
-  const handlePrevOKR = () => {
-    if (filteredOKRs.length > 1) {
-      setCurrentOKRIndex((prev) => (prev - 1 + filteredOKRs.length) % filteredOKRs.length);
-    }
+  const renderOKRCard = (okr: OKRDetail) => {
+    const score = calculateOKRScore(okr);
+    
+    return (
+      <div key={okr.id} className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            {/* Badges */}
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getLevelColor(okr.okr_level)}`}>
+                {okr.okr_level}
+              </span>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(okr.status)}`}>
+                {okr.status}
+              </span>
+              <span className="text-sm text-text-secondary">
+                {okr.quarters} {okr.year}
+              </span>
+            </div>
+
+            {/* Objective */}
+            <h3 className="text-xl font-semibold text-text-primary mb-1">{okr.objective}</h3>
+            {okr.description && (
+              <p className="text-sm text-text-secondary mb-4">{okr.description}</p>
+            )}
+
+            {/* Key Results */}
+            {okr.key_results && okr.key_results.length > 0 && (
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-text-primary">Key Results</span>
+                  <span className="text-sm font-semibold text-text-primary">{(score * 100).toFixed(1)}%</span>
+                </div>
+                <div className="space-y-2.5">
+                  {okr.key_results.map((kr) => {
+                    const base = parseFloat(kr.base_value);
+                    const target = parseFloat(kr.target_value);
+                    const current = parseFloat(kr.current_value);
+                    const krScore = target === base ? 0 : Math.max(0, Math.min(1, (current - base) / (target - base)));
+                    const krPercentage = (krScore * 100).toFixed(1);
+                    
+                    return (
+                      <div key={kr.id} className="bg-surface-hover/50 border border-border rounded-lg p-3">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <p className="text-sm text-text-primary flex-1">{kr.description}</p>
+                          <span className="text-xs font-semibold text-text-secondary whitespace-nowrap">
+                            {krPercentage}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-border rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all ${getScoreColor(krScore)}`}
+                            style={{ width: `${Math.min(krScore * 100, 100)}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between mt-1.5 text-xs text-text-secondary">
+                          <span>{kr.current_value} / {kr.target_value}</span>
+                          <span className="text-[10px]">Weight: {parseFloat(kr.weight).toFixed(1)}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => navigate(`/okrs/${okr.id}/measure`)}
+              className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+              title="Measure"
+            >
+              <TrendingUp size={18} />
+            </button>
+            <button
+              onClick={() => navigate(`/okrs/${okr.id}/edit`)}
+              className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+              title="Edit"
+            >
+              <Edit size={18} />
+            </button>
+            <button
+              onClick={() => handleDelete(okr.id)}
+              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   if (loading) return <Layout><LoadingSpinner /></Layout>;
@@ -232,376 +217,82 @@ export const OKRPage: React.FC = () => {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-start md:items-center gap-4 flex-col md:flex-row">
+        <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-text-primary">OKRs</h1>
             <p className="text-text-secondary mt-1">Objectives and Key Results</p>
           </div>
           <button
-            onClick={() => {
-              const defaultYear = selectedYear !== 'All' ? selectedYear : getCurrentYear();
-              const defaultQuarter = selectedQuarter !== 'All' ? selectedQuarter : 'Q1';
-              setOkrForm({ quarter: `${defaultQuarter} ${defaultYear}`, objective: '' });
-              setShowOKRModal(true);
-            }}
-            className="btn btn-primary flex items-center space-x-2 whitespace-nowrap"
+            onClick={() => navigate('/okrs/new')}
+            className="btn btn-primary flex items-center gap-2"
           >
             <Plus size={20} />
-            <span>New OKR</span>
+            New OKR
           </button>
-        </div>
-
-        {/* Year and Quarter Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-text-secondary">Year:</span>
-            <select
-              value={selectedYear}
-              onChange={(e) => handleYearChange(e.target.value as 'All' | string)}
-              className="px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-text-primary bg-surface"
-            >
-              <option value="All">All Years</option>
-              {availableYears.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-text-secondary">Quarter:</span>
-            <select
-              value={selectedQuarter}
-              onChange={(e) => handleQuarterChange(e.target.value as 'All' | 'Q1' | 'Q2' | 'Q3' | 'Q4')}
-              className="px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary text-text-primary bg-surface"
-            >
-              <option value="All">All Quarters</option>
-              <option value="Q1">Q1</option>
-              <option value="Q2">Q2</option>
-              <option value="Q3">Q3</option>
-              <option value="Q4">Q4</option>
-            </select>
-          </div>
-
-          {(selectedQuarter !== 'All' || selectedYear !== 'All') && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-text-secondary">
-                {filteredOKRs.length} OKR{filteredOKRs.length !== 1 ? 's' : ''} found
-              </span>
-            </div>
-          )}
         </div>
 
         {error && <Alert type="error" message={error} onClose={() => setError('')} />}
         {success && <Alert type="success" message={success} onClose={() => setSuccess('')} />}
 
-        {/* OKR Display */}
-        {selectedQuarter === 'All' ? (
-          /* All OKRs List View */
-          <div className="space-y-4">
-            {filteredOKRs.length === 0 ? (
-              <div className="text-center py-12">
-                <Target className="mx-auto text-text-secondary/40 dark:text-text-secondary/30" size={48} />
-                <h3 className="mt-4 text-lg font-medium text-text-primary">No OKRs found</h3>
-                <p className="mt-2 text-text-secondary">Create your first OKR to get started</p>
-              </div>
-            ) : (
-              filteredOKRs.map((okr) => (
-                <div key={okr.id} className="bg-surface border border-border rounded-lg p-6 hover:shadow-sm transition-shadow">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                        <Target className="text-primary" size={24} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="mb-2">
-                          <h3 className="text-lg font-semibold text-text-primary">{okr.objective}</h3>
-                        </div>
-                        <p className="text-sm text-text-secondary">{okr.quarter}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="ml-16">
-                    <button
-                      onClick={() => viewOKRDetail(okr.id)}
-                      className="text-sm text-primary hover:text-primary/80 font-medium"
-                    >
-                      View Details →
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        ) : (
-          /* Single OKR Detail View */
-          <div className="space-y-6">
-            {filteredOKRs.length === 0 ? (
-              <div className="text-center py-12">
-                <Target className="mx-auto text-text-secondary/40 dark:text-text-secondary/30" size={48} />
-                <h3 className="mt-4 text-lg font-medium text-text-primary">No OKRs for {selectedQuarter}</h3>
-                <p className="mt-2 text-text-secondary">Create an OKR for this quarter to get started</p>
-              </div>
-            ) : (
-              currentOKR && (
-                <>
-                  {/* OKR Navigation */}
-                  {filteredOKRs.length > 1 && (
-                    <div className="flex items-center justify-between p-4 bg-surface-highlight rounded-lg">
-                      <button
-                        onClick={handlePrevOKR}
-                        className="btn btn-secondary btn-sm"
-                        disabled={filteredOKRs.length <= 1}
-                      >
-                        ← Previous
-                      </button>
-                      <span className="text-sm text-text-secondary">
-                        {currentOKRIndex + 1} of {filteredOKRs.length} OKRs
-                      </span>
-                      <button
-                        onClick={handleNextOKR}
-                        className="btn btn-secondary btn-sm"
-                        disabled={filteredOKRs.length <= 1}
-                      >
-                        Next →
-                      </button>
-                    </div>
-                  )}
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+            className="input text-sm h-9 w-32"
+          >
+            <option value="all">All Status</option>
+            <option value="draft">Draft</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+          </select>
 
-                  {/* OKR Detail */}
-                  <div className="bg-surface border border-border rounded-lg p-6">
-                    <div className="flex items-start justify-between mb-6">
-                        <div className="flex items-start gap-4">
-                          <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center">
-                            <Target className="text-primary" size={32} />
-                          </div>
-                          <div>
-                            <h2 className="text-2xl font-bold text-text-primary mb-2">{currentOKR.objective}</h2>
-                            <div className="flex items-center gap-3">
-                              <span className="text-base text-text-secondary">{currentOKR.quarter}</span>
-                            </div>
-                          </div>
-                        </div>
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => currentOKR && handleEditOKR(currentOKR)}
-                          className="btn btn-secondary flex items-center gap-2"
-                        >
-                          Edit OKR
-                        </button>
-                        {currentOKR?.is_active ? (
-                          <button
-                            onClick={() => currentOKR && handleDeleteOKR(currentOKR.id)}
-                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 text-sm font-medium"
-                          >
-                            Delete OKR
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => currentOKR && handleArchiveOKR(currentOKR.id)}
-                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm font-medium"
-                          >
-                            Unarchive OKR
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setShowKRModal(true)}
-                          className="btn btn-primary flex items-center gap-2"
-                        >
-                          <Plus size={16} />
-                          Add Key Result
-                        </button>
-                      </div>
-                    </div>
+          <select
+            value={yearFilter}
+            onChange={(e) => setYearFilter(parseInt(e.target.value))}
+            className="input text-sm h-9 w-24"
+          >
+            {years.map((year) => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
 
-                    {/* Key Results */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-text-primary">Key Results</h3>
-                      {currentOKR.key_results && currentOKR.key_results.length === 0 ? (
-                        <div className="text-center py-8 bg-surface-highlight rounded-lg">
-                          <Target className="mx-auto text-gray-400" size={32} />
-                          <p className="mt-2 text-text-secondary">No key results yet</p>
-                          <p className="text-sm text-text-secondary">Add your first key result to track progress</p>
-                        </div>
-                      ) : (
-                        <div className="grid gap-4">
-                          {currentOKR.key_results?.map((kr) => (
-                            <div key={kr.id} className="border border-border rounded-lg p-4">
-                              <div className="flex justify-between items-start mb-3">
-                                <p className="text-text-primary font-medium flex-1">{kr.description}</p>
-                                <div className="flex items-center gap-2">
-                                  <div className="text-right mr-4">
-                                    <div className="text-lg font-bold text-primary">
-                                      {Math.round((parseFloat(kr.current_value) / parseFloat(kr.target_value)) * 100)}%
-                                    </div>
-                                  </div>
-                                  <button
-                                    onClick={() => handleEditKR(kr)}
-                                    className="p-1 text-text-secondary hover:text-primary transition-colors"
-                                    title="Edit key result"
-                                  >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteKR(kr.id)}
-                                    className="p-1 text-gray-500 hover:text-red-600 transition-colors"
-                                    title="Delete key result"
-                                  >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                  </button>
-                                </div>
-                              </div>
-                              <div className="flex justify-between text-sm text-text-secondary mb-3">
-                                <span>Current: {kr.current_value} {kr.unit}</span>
-                                <span>Target: {kr.target_value} {kr.unit}</span>
-                              </div>
-                              <div className="w-full bg-border rounded-full h-3">
-                                <div
-                                  className="bg-primary h-3 rounded-full transition-all duration-300"
-                                  style={{
-                                    width: `${Math.min((parseFloat(kr.current_value) / parseFloat(kr.target_value)) * 100, 100)}%`
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )
-            )}
-          </div>
-        )}
+          <select
+            value={quarterFilter}
+            onChange={(e) => setQuarterFilter(e.target.value as any)}
+            className="input text-sm h-9 w-32"
+          >
+            <option value="all">All Quarters</option>
+            <option value="Q1">Q1</option>
+            <option value="Q2">Q2</option>
+            <option value="Q3">Q3</option>
+            <option value="Q4">Q4</option>
+          </select>
 
+          <select
+            value={levelFilter}
+            onChange={(e) => setLevelFilter(e.target.value as any)}
+            className="input text-sm h-9 w-36"
+          >
+            <option value="all">All Levels</option>
+            <option value="strategic">Strategic</option>
+            <option value="operational">Operational</option>
+            <option value="tactical">Tactical</option>
+          </select>
+        </div>
 
-        {/* Create/Edit OKR Modal */}
-        <Modal
-          isOpen={showOKRModal}
-          onClose={() => {
-            setShowOKRModal(false);
-            setEditingOKR(null);
-            setOkrForm({ quarter: '', objective: '' });
-          }}
-          title={editingOKR ? "Edit OKR" : "Create New OKR"}
-        >
-          <form onSubmit={handleCreateOKR} className="space-y-4">
-            <div>
-              <label className="label">Quarter (e.g., Q1 2026)</label>
-              <input
-                type="text"
-                required
-                className="input"
-                value={okrForm.quarter}
-                onChange={(e) => setOkrForm({ ...okrForm, quarter: e.target.value })}
-                placeholder="Q1 2026"
-              />
+        {/* OKR List */}
+        <div className="space-y-4">
+          {filteredOKRs.length === 0 ? (
+            <div className="text-center py-12 bg-surface border border-border rounded-lg">
+              <Target className="mx-auto text-text-secondary/40" size={48} />
+              <h3 className="mt-4 text-lg font-medium text-text-primary">No OKRs found</h3>
+              <p className="mt-2 text-text-secondary">Create your first OKR to get started</p>
             </div>
-
-            <div>
-              <label className="label">Objective</label>
-              <textarea
-                required
-                className="input"
-                rows={3}
-                value={okrForm.objective}
-                onChange={(e) => setOkrForm({ ...okrForm, objective: e.target.value })}
-                placeholder="Describe your strategic objective..."
-              />
-            </div>
-
-            <div className="flex space-x-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowOKRModal(false);
-                  setEditingOKR(null);
-                  setOkrForm({ quarter: '', objective: '' });
-                }}
-                className="btn btn-secondary flex-1"
-              >
-                Cancel
-              </button>
-              <button type="submit" className="btn btn-primary flex-1">
-                {editingOKR ? 'Update OKR' : 'Create OKR'}
-              </button>
-            </div>
-          </form>
-        </Modal>
-
-        {/* Add/Edit Key Result Modal */}
-        <Modal
-          isOpen={showKRModal}
-          onClose={() => {
-            setShowKRModal(false);
-            setEditingKR(null);
-            setKrForm({ description: '', target_value: '', unit: '' });
-          }}
-          title={editingKR ? "Edit Key Result" : "Add Key Result"}
-        >
-          <form onSubmit={handleCreateKR} className="space-y-4">
-            <div>
-              <label className="label">Description</label>
-              <textarea
-                required
-                className="input"
-                rows={2}
-                value={krForm.description}
-                onChange={(e) => setKrForm({ ...krForm, description: e.target.value })}
-                placeholder="What do you want to achieve?"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="label">Target Value</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  className="input"
-                  value={krForm.target_value}
-                  onChange={(e) => setKrForm({ ...krForm, target_value: e.target.value })}
-                  placeholder="100"
-                />
-              </div>
-
-              <div>
-                <label className="label">Unit</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={krForm.unit}
-                  onChange={(e) => setKrForm({ ...krForm, unit: e.target.value })}
-                  placeholder="e.g., users, %, $"
-                />
-              </div>
-            </div>
-
-            <div className="flex space-x-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowKRModal(false);
-                  setEditingKR(null);
-                  setKrForm({ description: '', target_value: '', unit: '' });
-                }}
-                className="btn btn-secondary flex-1"
-              >
-                Cancel
-              </button>
-              <button type="submit" className="btn btn-primary flex-1">
-                {editingKR ? 'Update Key Result' : 'Add Key Result'}
-              </button>
-            </div>
-          </form>
-        </Modal>
+          ) : (
+            filteredOKRs.map(okr => renderOKRCard(okr))
+          )}
+        </div>
       </div>
     </Layout>
   );

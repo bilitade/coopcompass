@@ -95,9 +95,17 @@ export const TeamDetailPage: React.FC = () => {
       // Fetch execution for each activity
       const activitiesWithExecution = await Promise.all(
         bauActivities.map(async (activity: any) => {
+          // Calculate activity score from metrics achievement
           let execution = 0;
+          
+          // Get detailed activity with metrics
           try {
-            execution = await api.getBAUExecution(activity.id);
+            const activityDetail = await api.getBAUActivity(activity.id);
+            if (activityDetail.metrics && activityDetail.metrics.length > 0) {
+              execution = activityDetail.metrics.reduce((sum, metric) => {
+                return sum + (metric.achievement || 0) * parseFloat(metric.weight.toString());
+              }, 0);
+            }
           } catch (err) {
             console.error(`Failed to fetch execution for activity ${activity.id}:`, err);
           }
@@ -234,6 +242,9 @@ export const TeamDetailPage: React.FC = () => {
                   <div className="flex-1">
                     <h4 className="font-semibold text-text-primary">{member.name}</h4>
                     <p className="text-sm text-text-secondary">{member.email}</p>
+                    {member.position && (
+                      <p className="text-xs text-text-secondary mt-1">{member.position}</p>
+                    )}
                     <p className="text-xs text-text-secondary mt-1 capitalize">{member.role}</p>
                   </div>
                 </div>

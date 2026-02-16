@@ -1,7 +1,8 @@
 """Work Items service logic."""
 
 from sqlalchemy.orm import Session
-from app.models import Task, WorkItem
+from app.models import WorkItem
+from app.modules.tasks.models import Task
 
 
 def calculate_work_item_progress(db: Session, work_item_id: int) -> float:

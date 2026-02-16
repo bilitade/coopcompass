@@ -1,15 +1,25 @@
 """Database models - centralized imports for SQLAlchemy relationships."""
 
+# Import Base first to avoid circular imports
+from app.models.base import Base
+
 # Import all models so SQLAlchemy relationships work correctly
 from app.modules.users.models import User
 from app.modules.teams.models import Team
 from app.modules.departments.models import Department
 from app.modules.okrs.models import OKR, KeyResult
-from app.modules.bau.models import BAUActivity, BAUMetric, MetricHistory
-from app.modules.work_items.models import WorkItem, Task, WeeklyPriority
+from app.modules.bau.models import BAUActivity, BAUMetric
+from app.modules.monthly_headsup.models import MonthlyHeadsUp
+from app.modules.weekly_priority.models import WeeklyPriority, WeeklyPriorityPlan
+from app.modules.work_items.models import WorkItem
+from app.modules.tasks.models import Task
 
-# Export Base for migrations
-from app.models.base import Base
+# Import WeeklySnapshot with try-except to handle potential circular imports
+try:
+    from app.modules.snapshots.models import WeeklySnapshot
+except ImportError:
+    # Will be available after all modules are loaded
+    WeeklySnapshot = None
 
 # Export all models for easy access
 __all__ = [
@@ -21,9 +31,12 @@ __all__ = [
     "KeyResult",
     "BAUActivity",
     "BAUMetric",
-    "MetricHistory",
+    "MonthlyHeadsUp",
+    "WeeklyPriorityPlan",
+    "WeeklyPriority",
     "WorkItem",
     "Task",
-    "WeeklyPriority",
+    "WeeklySnapshot",
 ]
+
 

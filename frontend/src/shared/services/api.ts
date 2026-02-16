@@ -2,15 +2,22 @@ import axios, { type AxiosInstance, type AxiosError } from 'axios';
 import type {
   User, UserCreate, UserLogin, TokenResponse,
   Department, DepartmentDetail, Team, TeamDetail,
-  OKR, OKRDetail, OKRCreate, KeyResultCreate, KeyResult, OKRProgress, KRProgress,
-  BAUActivity, BAUActivityDetail, BAUActivityCreate, BAUMetric, BAUMetricCreate, BAUHealth,
+  OKR, OKRDetail, OKRCreate, KeyResultCreate, KeyResult, OKRWithScores,
+  BAUActivity, BAUActivityDetail, BAUActivityCreate, BAUActivityUpdate, BAUMetric, BAUMetricCreate,
+  BAUActivityWithScore, BAUOverallHealth,
   WorkItem, WorkItemDetail, WorkItemCreate,
-  Task, TaskDetail, TaskCreate, TaskUpdate,
-  WeeklyPriority, WeeklyPriorityCreate,
-  Dashboard, PerformanceTrend
+  WeeklyPriority, WeeklyPriorityCreate, WeeklyPriorityPlan, WeeklyPriorityPlanCreate,
+  MonthlyHeadsUp, MonthlyHeadsUpCreate,
+  MonthlyPlanOutput, MonthlyPlanGenerateResponse,
+  WeeklyPlanOutput, WeeklyPlanGenerateResponse,
+  TaskGenerationOutput, TaskGenerationGenerateResponse,
+  Dashboard, PerformanceTrend,
+  WeeklySnapshot, WeeklySnapshotList, SnapshotTrend
 } from '../../shared/types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Use relative URL if VITE_API_URL is empty (for Docker/production with nginx proxy)
+// Otherwise use the provided URL or default to localhost for development
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '');
 
 class ApiService {
   private client: AxiosInstance;
@@ -102,7 +109,7 @@ class ApiService {
     return response.data;
   }
 
-  async createTeam(data: { name: string; department_id?: number }): Promise<Team> {
+  async createTeam(data: { name: string; description?: string; department_id?: number }): Promise<Team> {
     const response = await this.client.post<Team>('/api/teams', data);
     return response.data;
   }
@@ -131,7 +138,7 @@ class ApiService {
     await this.client.delete(`/api/teams/${teamId}/users/${userId}`);
   }
 
-  async updateTeam(teamId: number, data: { name?: string; department_id?: number }): Promise<Team> {
+  async updateTeam(teamId: number, data: { name?: string; description?: string; department_id?: number }): Promise<Team> {
     const response = await this.client.put<Team>(`/api/teams/${teamId}`, data);
     return response.data;
   }
@@ -156,7 +163,7 @@ class ApiService {
     return response.data;
   }
 
-  async updateUser(userId: number, data: { name?: string; email?: string; role?: string; is_active?: boolean }): Promise<User> {
+  async updateUser(userId: number, data: { name?: string; email?: string; role?: string; position?: string; password?: string; is_active?: boolean }): Promise<User> {
     const response = await this.client.put<User>(`/api/users/${userId}`, data);
     return response.data;
   }
@@ -166,13 +173,18 @@ class ApiService {
   }
 
   // OKR endpoints
+  async addOKR(data: OKRCreate): Promise<OKR> {
+    const response = await this.client.post<OKR>('/api/okrs/add', data);
+    return response.data;
+  }
+
   async createOKR(teamId: number, data: OKRCreate): Promise<OKR> {
     const response = await this.client.post<OKR>(`/api/okrs/teams/${teamId}/okrs`, data);
     return response.data;
   }
 
-  async getTeamOKRs(teamId: number, quarter?: string): Promise<OKRDetail[]> {
-    const response = await this.client.get<OKRDetail[]>(`/api/okrs/teams/${teamId}/okrs`, {
+  async getTeamOKRs(teamId: number, quarter?: string): Promise<OKRWithScores[]> {
+    const response = await this.client.get<OKRWithScores[]>(`/api/okrs/teams/${teamId}/okrs`, {
       params: quarter ? { quarter } : undefined,
     });
     return response.data;
@@ -183,7 +195,15 @@ class ApiService {
     return response.data;
   }
 
-  async updateOKR(okrId: number, data: { quarter?: string; objective?: string; is_active?: boolean }): Promise<OKR> {
+  async updateOKR(okrId: number, data: {
+    okr_level?: 'strategic' | 'operational' | 'tactical';
+    year?: number;
+    quarter?: 'Q1' | 'Q2' | 'Q3' | 'Q4';
+    objective?: string;
+    description?: string;
+    status?: 'draft' | 'active' | 'completed';
+    is_active?: boolean
+  }): Promise<OKR> {
     const response = await this.client.put<OKR>(`/api/okrs/${okrId}`, data);
     return response.data;
   }
@@ -201,18 +221,22 @@ class ApiService {
     return response.data;
   }
 
-  async updateKeyResult(krId: number, data: Partial<KeyResultCreate>): Promise<KeyResult> {
+  async updateKeyResult(krId: number, data: Partial<KeyResultCreate & { current_value?: number | string }>): Promise<KeyResult> {
     const response = await this.client.put<KeyResult>(`/api/okrs/key-results/${krId}`, data);
     return response.data;
   }
 
-  async getKRProgress(krId: number): Promise<KRProgress> {
-    const response = await this.client.get<KRProgress>(`/api/okrs/${krId}/progress`);
+  async updateKRCurrentValue(krId: number, currentValue: number | string): Promise<{ id: number; current_value: string; message: string }> {
+    const response = await this.client.patch<{ id: number; current_value: string; message: string }>(
+      `/api/okrs/key-results/${krId}/current-value`,
+      null,
+      { params: { current_value: currentValue } }
+    );
     return response.data;
   }
 
-  async getOKRProgress(okrId: number): Promise<OKRProgress> {
-    const response = await this.client.get<OKRProgress>(`/api/okrs/${okrId}/progress`);
+  async getOKRWithScores(okrId: number): Promise<OKRWithScores> {
+    const response = await this.client.get<OKRWithScores>(`/api/okrs/${okrId}/with-scores`);
     return response.data;
   }
 
@@ -232,7 +256,7 @@ class ApiService {
     return response.data;
   }
 
-  async updateBAUActivity(bauId: number, data: Partial<BAUActivityCreate>): Promise<BAUActivity> {
+  async updateBAUActivity(bauId: number, data: BAUActivityUpdate): Promise<BAUActivity> {
     const response = await this.client.put<BAUActivity>(`/api/bau/${bauId}`, data);
     return response.data;
   }
@@ -247,13 +271,22 @@ class ApiService {
     return response.data;
   }
 
-  async getBAUHealth(bauId: number): Promise<BAUHealth> {
-    const response = await this.client.get<BAUHealth>(`/api/bau/${bauId}/health`);
+  async updateMetricCurrentValue(metricId: number, currentValue: number | string): Promise<{ id: number; current_value: string; message: string }> {
+    const response = await this.client.patch<{ id: number; current_value: string; message: string }>(
+      `/api/bau-metrics/${metricId}/current-value`,
+      null,
+      { params: { current_value: currentValue } }
+    );
     return response.data;
   }
 
-  async getBAUExecution(bauId: number): Promise<number> {
-    const response = await this.client.get<number>(`/api/bau/${bauId}/execution`);
+  async getBAUActivityWithScores(bauId: number): Promise<BAUActivityWithScore> {
+    const response = await this.client.get<BAUActivityWithScore>(`/api/bau/${bauId}/with-scores`);
+    return response.data;
+  }
+
+  async getTeamBAUHealth(teamId: number): Promise<BAUOverallHealth> {
+    const response = await this.client.get<BAUOverallHealth>(`/api/teams/${teamId}/bau/health`);
     return response.data;
   }
 
@@ -272,6 +305,87 @@ class ApiService {
 
   async getBAUMetric(metricId: number): Promise<BAUMetric> {
     const response = await this.client.get<BAUMetric>(`/api/bau-metrics/${metricId}`);
+    return response.data;
+  }
+
+  // Monthly Heads-Up endpoints
+  async createMonthlyHeadsUp(teamId: number, data: MonthlyHeadsUpCreate): Promise<MonthlyHeadsUp> {
+    const response = await this.client.post<MonthlyHeadsUp>(`/api/monthly-headsup/teams/${teamId}`, data);
+    return response.data;
+  }
+
+  async getMonthlyHeadsUp(teamId: number, month: string): Promise<MonthlyHeadsUp> {
+    const response = await this.client.get<MonthlyHeadsUp>(`/api/monthly-headsup/teams/${teamId}/${month}`);
+    return response.data;
+  }
+
+  async updateMonthlyHeadsUp(headsupId: number, data: { description?: string; focus_areas?: string[]; strategic_alignment?: string; risks_and_considerations?: string[] }): Promise<MonthlyHeadsUp> {
+    const response = await this.client.put<MonthlyHeadsUp>(`/api/monthly-headsup/${headsupId}`, data);
+    return response.data;
+  }
+
+  async deleteMonthlyHeadsUp(headsupId: number): Promise<void> {
+    await this.client.delete(`/api/monthly-headsup/${headsupId}`);
+  }
+
+  // Monthly Planner AI endpoints
+  async generateMonthlyPlan(teamId: number, month: string): Promise<MonthlyPlanOutput> {
+    const response = await this.client.post<MonthlyPlanOutput>(
+      `/api/ai-engine/monthly-planner/generate`,
+      {},
+      { params: { team_id: teamId, month } }
+    );
+    return response.data;
+  }
+
+  async generateAndCreateMonthlyPlan(teamId: number, month: string, autoCreate: boolean = false): Promise<MonthlyPlanGenerateResponse> {
+    const response = await this.client.post<MonthlyPlanGenerateResponse>(
+      `/api/ai-engine/monthly-planner/generate-and-create`,
+      {},
+      { params: { team_id: teamId, month, auto_create: autoCreate } }
+    );
+    return response.data;
+  }
+
+  // Weekly Planner AI endpoints
+  async generateWeeklyPlan(monthlyHeadsupId: number, week: string): Promise<WeeklyPlanOutput> {
+    const response = await this.client.post<WeeklyPlanOutput>(
+      `/api/ai-engine/weekly-planner/generate`,
+      {},
+      { params: { monthly_headsup_id: monthlyHeadsupId, week } }
+    );
+    return response.data;
+  }
+
+  async generateAndCreateWeeklyPlan(monthlyHeadsupId: number, week: string, autoCreate: boolean = false): Promise<WeeklyPlanGenerateResponse> {
+    const response = await this.client.post<WeeklyPlanGenerateResponse>(
+      `/api/ai-engine/weekly-planner/generate-and-create`,
+      {},
+      { params: { monthly_headsup_id: monthlyHeadsupId, week, auto_create: autoCreate } }
+    );
+    return response.data;
+  }
+
+  // Task Generator AI endpoints
+  async generateTasks(weeklyPlanId: number, focusPriority?: number): Promise<TaskGenerationOutput> {
+    const params: any = { weekly_plan_id: weeklyPlanId };
+    if (focusPriority) params.focus_priority = focusPriority;
+    const response = await this.client.post<TaskGenerationOutput>(
+      `/api/ai-engine/task-generator/generate`,
+      {},
+      { params }
+    );
+    return response.data;
+  }
+
+  async generateAndCreateTasks(weeklyPlanId: number, focusPriority?: number, autoCreate: boolean = false): Promise<TaskGenerationGenerateResponse> {
+    const params: any = { weekly_plan_id: weeklyPlanId, auto_create: autoCreate };
+    if (focusPriority) params.focus_priority = focusPriority;
+    const response = await this.client.post<TaskGenerationGenerateResponse>(
+      `/api/ai-engine/task-generator/generate-and-create`,
+      {},
+      { params }
+    );
     return response.data;
   }
 
@@ -296,57 +410,79 @@ class ApiService {
     return response.data;
   }
 
-  async updateWorkItem(workItemId: number, data: { name?: string; description?: string; owner_id?: number }): Promise<WorkItem> {
+  async updateWorkItem(workItemId: number, data: { title?: string; description?: string; owner_id?: number; status?: string }): Promise<WorkItem> {
     const response = await this.client.put<WorkItem>(`/api/work-items/${workItemId}`, data);
     return response.data;
   }
 
+  async deleteWorkItem(workItemId: number): Promise<void> {
+    await this.client.delete(`/api/work-items/${workItemId}`);
+  }
+
   // Task endpoints
-  async createTask(workItemId: number, data: TaskCreate): Promise<Task> {
-    const response = await this.client.post<Task>(`/api/work-items/${workItemId}/tasks`, data);
+  async createTask(workItemId: number, data: { description: string; assignee_id?: number; effort_hours?: number }): Promise<any> {
+    const response = await this.client.post<any>(`/api/work-items/${workItemId}/tasks`, data);
     return response.data;
   }
 
-  async getTask(taskId: number): Promise<TaskDetail> {
-    const response = await this.client.get<TaskDetail>(`/api/tasks/${taskId}`);
+  async getTask(taskId: number): Promise<any> {
+    const response = await this.client.get<any>(`/api/tasks/${taskId}`);
     return response.data;
   }
 
-  async updateTask(taskId: number, data: TaskUpdate): Promise<Task> {
-    const response = await this.client.patch<Task>(`/api/tasks/${taskId}`, data);
+  async updateTask(taskId: number, data: { description?: string; assignee_id?: number; status?: string; effort_hours?: number; blocked_reason?: string }): Promise<any> {
+    const response = await this.client.put<any>(`/api/tasks/${taskId}`, data);
     return response.data;
   }
 
-  async getUserTasks(userId: number, status?: string): Promise<Task[]> {
-    const response = await this.client.get<Task[]>(`/api/users/${userId}/tasks`, {
-      params: status ? { status } : undefined,
-    });
+  async deleteTask(taskId: number): Promise<void> {
+    await this.client.delete(`/api/tasks/${taskId}`);
+  }
+
+  async getTasksByWorkItem(workItemId: number): Promise<any[]> {
+    const response = await this.client.get<any[]>(`/api/work-items/${workItemId}/tasks`);
     return response.data;
   }
 
-  async getTeamTasks(teamId: number): Promise<Task[]> {
-    const response = await this.client.get<Task[]>(`/api/teams/${teamId}/tasks`);
+  async getUserTasks(userId: number): Promise<any[]> {
+    const response = await this.client.get<any[]>(`/api/users/${userId}/tasks`);
+    return response.data;
+  }
+
+  // Weekly Priority Plan endpoints
+  async createWeeklyPriorityPlan(data: WeeklyPriorityPlanCreate): Promise<WeeklyPriorityPlan> {
+    const response = await this.client.post<WeeklyPriorityPlan>('/api/weekly-priority/plans', data);
+    return response.data;
+  }
+
+  async getWeeklyPriorityPlan(headsupId: number, week: string): Promise<WeeklyPriorityPlan> {
+    const response = await this.client.get<WeeklyPriorityPlan>(`/api/weekly-priority/headsup/${headsupId}/plans/${week}`);
+    return response.data;
+  }
+
+  async updateWeeklyPriorityPlan(planId: number, data: { week_focus: string }): Promise<WeeklyPriorityPlan> {
+    const response = await this.client.put<WeeklyPriorityPlan>(`/api/weekly-priority/plans/${planId}`, data);
     return response.data;
   }
 
   // Weekly Priority endpoints
   async setWeeklyPriority(data: WeeklyPriorityCreate): Promise<WeeklyPriority> {
-    const response = await this.client.post<WeeklyPriority>('/api/weekly-priorities', data);
+    const response = await this.client.post<WeeklyPriority>('/api/weekly-priority/priorities', data);
     return response.data;
   }
 
-  async getWeeklyPriorities(filters?: { week?: string; team_id?: number }): Promise<WeeklyPriority[]> {
-    const response = await this.client.get<WeeklyPriority[]>('/api/weekly-priorities', { params: filters });
+  async getWeeklyPriorities(planId: number): Promise<WeeklyPriority[]> {
+    const response = await this.client.get<WeeklyPriority[]>(`/api/weekly-priority/plans/${planId}/priorities`);
     return response.data;
   }
 
   async updateWeeklyPriority(priorityId: number, priority: 1 | 2 | 3): Promise<WeeklyPriority> {
-    const response = await this.client.put<WeeklyPriority>(`/api/weekly-priorities/${priorityId}`, { priority });
+    const response = await this.client.put<WeeklyPriority>(`/api/weekly-priority/priorities/${priorityId}`, { priority });
     return response.data;
   }
 
   async deleteWeeklyPriority(priorityId: number): Promise<void> {
-    await this.client.delete(`/api/weekly-priorities/${priorityId}`);
+    await this.client.delete(`/api/weekly-priority/priorities/${priorityId}`);
   }
 
   // Dashboard endpoints
@@ -368,6 +504,68 @@ class ApiService {
   async getOrganizationDashboard(): Promise<any> {
     const response = await this.client.get<any>(`/api/organization/dashboard`);
     return response.data;
+  }
+
+  // Snapshot endpoints
+  async createSnapshot(teamId: number, week?: string): Promise<WeeklySnapshot> {
+    const params = week ? { week } : {};
+    const response = await this.client.post<WeeklySnapshot>(
+      `/api/snapshots/teams/${teamId}/create`,
+      {},
+      { params }
+    );
+    return response.data;
+  }
+
+  async getTeamSnapshots(
+    teamId: number,
+    quarter?: string,
+    limit?: number
+  ): Promise<WeeklySnapshotList> {
+    const params: any = {};
+    if (quarter) params.quarter = quarter;
+    if (limit) params.limit = limit;
+    const response = await this.client.get<WeeklySnapshotList>(
+      `/api/snapshots/teams/${teamId}`,
+      { params }
+    );
+    return response.data;
+  }
+
+  async getSnapshotByWeek(teamId: number, week: string): Promise<WeeklySnapshot> {
+    const response = await this.client.get<WeeklySnapshot>(
+      `/api/snapshots/teams/${teamId}/week/${week}`
+    );
+    return response.data;
+  }
+
+  async getSnapshotTrends(
+    teamId: number,
+    quarter?: string,
+    limit?: number
+  ): Promise<SnapshotTrend[]> {
+    const params: any = {};
+    if (quarter) params.quarter = quarter;
+    if (limit) params.limit = limit;
+    const response = await this.client.get<SnapshotTrend[]>(
+      `/api/snapshots/teams/${teamId}/trends`,
+      { params }
+    );
+    return response.data;
+  }
+
+  async createSnapshotsForAllTeams(week?: string): Promise<WeeklySnapshot[]> {
+    const params = week ? { week } : {};
+    const response = await this.client.post<WeeklySnapshot[]>(
+      `/api/snapshots/create-all`,
+      {},
+      { params }
+    );
+    return response.data;
+  }
+
+  async deleteSnapshot(snapshotId: number): Promise<void> {
+    await this.client.delete(`/api/snapshots/${snapshotId}`);
   }
 }
 

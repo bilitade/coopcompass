@@ -15,9 +15,12 @@ def list_departments(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """List all departments."""
-    departments = db.query(Department).all()
-    return departments
+    """List departments based on role visibility."""
+    if current_user.role == "director":
+        return db.query(Department).filter(Department.director_id == current_user.id).all()
+    
+    # Executives and Admins see all
+    return db.query(Department).all()
 
 
 @router.get("/director", response_model=DepartmentDetailResponse)
@@ -100,6 +103,13 @@ def get_department(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Department not found"
+        )
+    
+    # Authorization: Directors can only see their own department
+    if current_user.role == "director" and department.director_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: You are not the director of this department"
         )
     
     return department
@@ -192,6 +202,13 @@ def get_department_teams(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Department not found"
+        )
+    
+    # Authorization: Directors can only see teams in their own department
+    if current_user.role == "director" and department.director_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: You are not the director of this department"
         )
     
     teams = db.query(Team).filter(

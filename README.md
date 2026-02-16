@@ -1,332 +1,409 @@
-# Compass - Team Performance & Execution System
+# CoopCompass - Team Performance & Execution System
 
-[![Status](https://img.shields.io/badge/status-operational-brightgreen)]()
-[![Backend](https://img.shields.io/badge/backend-FastAPI-009688)]()
-[![Frontend](https://img.shields.io/badge/frontend-React-61DAFB)]()
-[![Database](https://img.shields.io/badge/database-PostgreSQL-336791)]()
+A comprehensive team performance management system for tracking OKRs, BAU activities, work items, and tasks with AI-powered planning and validation.
 
-## 🎯 Overview
+## Architecture
 
-Compass is a comprehensive team performance and execution system designed for banking organizations. It provides unified tracking of both strategic goals (OKRs) and operational health (BAU) with role-based visibility across the organization.
+- **Backend**: FastAPI (Python 3.12)
+- **Frontend**: React + TypeScript + Vite
+- **Database**: PostgreSQL
+- **AI Engine**: LangChain + OpenAI for planning and validation
 
-## 📚 Documentation
-
-- **[Business Requirements](./Business%20requirement.md)** - Complete business requirements and system specifications
-- **[Implementation Plan](./implementation.md)** - Technical implementation details and architecture
-
-## ✨ Key Features
-
-### Core Capabilities
-- **OKR Management** - Quarterly objective setting with measurable key results
-- **BAU Tracking** - Operational health metrics and continuous monitoring
-- **Work Item Management** - Monthly planning linked to strategic and operational goals
-- **Weekly Priorities** - Focused weekly execution with task breakdown
-- **Automated Calculations** - Real-time progress and health score computation
-- **Role-Based Dashboards** - Customized views for each organizational level
-
-### Organizational Structure
-- **Hierarchical Organization** - Organization → Departments → Teams
-- **Role-Based Access Control** - 5 roles (Member, Lead, Director, Executive, Admin)
-- **Department Management** - Director assignment and department-level oversight
-- **Team Management** - Team composition and member assignment
-
-### User Experience
-- **Professional UI** - Clean, business-focused interface
-- **Hierarchical Navigation** - Drill-down from organization to team level
-- **Breadcrumb Navigation** - Easy traversal between levels
-- **Dark Mode** - Full dark mode support
-- **Responsive Design** - Works on all screen sizes
-
-## 🏗️ Architecture
-
-### Technology Stack
-
-**Backend:**
-- FastAPI 0.104+ (Python 3.11+)
-- PostgreSQL 15
-- SQLAlchemy 2.0 ORM
-- JWT Authentication
-- Alembic Migrations
-
-**Frontend:**
-- React 18
-- TypeScript 5.0+
-- Vite 5
-- Tailwind CSS
-- React Router v6
-- Axios
-- Lucide React Icons
-
-### Project Structure
-
-The project follows a **feature-sliced architecture** for better scalability and maintainability.
+## Project Structure
 
 ```
 coopcompasslatest/
-├── backend/
-│   ├── app/
-│   │   ├── modules/         # Feature modules (domain-driven)
-│   │   │   ├── auth/        # Authentication module
-│   │   │   ├── bau/         # BAU activities & metrics
-│   │   │   ├── departments/ # Department management
-│   │   │   ├── okrs/        # OKR management
-│   │   │   ├── teams/       # Team management
-│   │   │   ├── users/       # User management
-│   │   │   ├── weekly_priority/ # Weekly priorities
-│   │   │   └── work_items/  # Work items & tasks
-│   │   ├── core/            # Core functionality
-│   │   │   ├── config.py    # Configuration
-│   │   │   ├── database.py  # Database connection
-│   │   │   └── security.py  # Security utilities
-│   │   ├── api/             # API versioning
-│   │   ├── models/          # Base models
-│   │   ├── services/        # Shared services
-│   │   │   └── calculations.py # Progress/health calculations
-│   │   ├── utils/           # Utilities
-│   │   └── main.py          # FastAPI application
-│   ├── alembic/             # Database migrations
-│   ├── tests/               # Test suite
-│   └── seed_data.py         # Database seeding script
-│
-├── frontend/
+├── backend/                    # FastAPI backend
+│   ├── app/                   # Application code
+│   │   ├── api/              # API routes
+│   │   ├── core/             # Core configuration (database, security, config)
+│   │   ├── models/            # SQLAlchemy models
+│   │   ├── modules/           # Feature modules
+│   │   │   ├── auth/         # Authentication
+│   │   │   ├── users/        # User management
+│   │   │   ├── teams/        # Team management
+│   │   │   ├── departments/  # Department management
+│   │   │   ├── okrs/         # OKR management
+│   │   │   ├── bau/          # BAU activities
+│   │   │   ├── tasks/        # Task management
+│   │   │   ├── work_items/   # Work items
+│   │   │   ├── snapshots/    # Weekly snapshots
+│   │   │   └── ai_engine/    # AI-powered features
+│   │   ├── routers/          # Router definitions
+│   │   ├── schemas/          # Pydantic schemas
+│   │   ├── services/         # Business logic
+│   │   └── utils/            # Utility functions
+│   ├── migrations/            # Database migrations
+│   ├── scripts/              # Utility scripts
+│   ├── tests/                # Test files
+│   ├── Dockerfile            # Backend Docker image
+│   ├── requirements.txt     # Python dependencies
+│   ├── seed_data.py         # Database seeding script
+│   ├── init-db.sh           # Database initialization script
+│   └── .env                  # Backend environment variables
+├── frontend/                  # React frontend
 │   ├── src/
-│   │   ├── app/             # Application-level code
-│   │   │   ├── context/     # React contexts (Auth, Theme)
-│   │   │   ├── hooks/       # Custom React hooks
-│   │   │   └── routes.tsx   # Centralized routing
+│   │   ├── app/             # App configuration (routes, context)
 │   │   ├── features/        # Feature modules
-│   │   │   ├── auth/        # Authentication feature
-│   │   │   │   ├── pages/   # Login, Register, Landing
-│   │   │   │   ├── components/
-│   │   │   │   ├── services/
-│   │   │   │   └── types/
-│   │   │   ├── bau/         # BAU feature
-│   │   │   │   ├── pages/   # BAU pages, Director/Executive lists
-│   │   │   │   └── ...
-│   │   │   ├── dashboard/   # Dashboard feature
-│   │   │   │   ├── pages/   # Role-specific dashboards
-│   │   │   │   └── components/ # UnifiedDashboard
-│   │   │   ├── departments/ # Departments feature
-│   │   │   ├── okrs/        # OKRs feature
-│   │   │   ├── priorities/  # Weekly priorities feature
-│   │   │   ├── teams/       # Teams feature
-│   │   │   ├── users/       # Users feature
-│   │   │   └── workItems/   # Work items & tasks feature
-│   │   └── shared/          # Shared resources
-│   │       ├── components/  # Reusable UI components
-│   │       ├── services/    # API service layer
-│   │       ├── types/       # TypeScript type definitions
-│   │       └── utils/       # Utility functions
-│   └── public/              # Static assets
-│
-├── Business requirement.md   # Business specifications
-└── implementation.md         # Technical documentation
+│   │   └── shared/          # Shared components and utilities
+│   ├── Dockerfile           # Frontend Docker image
+│   ├── nginx.conf           # Nginx configuration
+│   └── package.json         # Node dependencies
+├── docker-compose.yml        # Docker Compose configuration
+├── docker.sh                 # Docker helper script
+└── README.md                 # This file
 ```
 
-#### Architecture Principles
+## Prerequisites
 
-**Backend:**
-- **Modular Design**: Each feature is self-contained with its own models, schemas, routers, and services
-- **Separation of Concerns**: Core functionality separated from business logic
-- **Domain-Driven**: Modules organized by business domain (OKRs, BAU, Teams, etc.)
+- **Docker** (version 20.10+)
+- **Docker Compose** (version 2.0+)
+- **Git**
 
-**Frontend:**
-- **Feature-Sliced Design**: Features are independent modules with their own pages, components, services, and types
-- **Shared Resources**: Common components, services, and types in `shared/` directory
-- **Application Layer**: App-level concerns (routing, context) separated from features
-- **Type Safety**: Centralized type definitions with feature-specific type extensions
+## Running Locally
 
-#### Feature Modules Overview
+### Option 1: Docker (Recommended)
 
-**Backend Modules** (`app/modules/`):
-- `auth/` - Authentication and authorization
-- `bau/` - BAU activities, metrics, and health tracking
-- `departments/` - Department management and hierarchy
-- `okrs/` - OKR objectives, key results, and progress tracking
-- `teams/` - Team management and composition
-- `users/` - User management and profiles
-- `weekly_priority/` - Weekly priority setting and tracking
-- `work_items/` - Work items and task management
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd coopcompasslatest
+   ```
 
-**Frontend Features** (`src/features/`):
-- `auth/` - Authentication pages (Login, Register, Landing)
-- `bau/` - BAU pages and role-specific list views
-- `dashboard/` - Role-based dashboards (Member, Lead, Director, Executive, Admin)
-- `departments/` - Department listing, detail views, and management
-- `okrs/` - OKR pages and role-specific list views
-- `priorities/` - Weekly priority management and task breakdown
-- `teams/` - Team listing, detail views, and management
-- `users/` - User management interface
-- `workItems/` - Work items and tasks management
+2. **Create backend environment file** (`backend/.env`)
+   ```bash
+   DATABASE_URL=postgresql://postgres:postgres@db:5432/coopcompass
+   SECRET_KEY=your-super-secret-key-change-this-in-production
+   ALGORITHM=HS256
+   ACCESS_TOKEN_EXPIRE_MINUTES=30
+   DEBUG=False
+   
+   # AI/LLM Configuration (optional)
+   OPENAI_API_KEY=your-openai-api-key
+   LANGCHAIN_TRACING_V2=true
+   LANGCHAIN_API_KEY=your-langchain-api-key
+   LANGCHAIN_PROJECT=coopcompass
+   LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+   ```
 
-Each feature module follows a consistent structure:
-- `pages/` - Page components (route-level components)
-- `components/` - Feature-specific UI components
-- `services/` - API integration and business logic
-- `types/` - TypeScript type definitions for the feature
+3. **Optional: Create root `.env` file** (for custom Docker settings)
+   ```bash
+   POSTGRES_USER=postgres
+   POSTGRES_PASSWORD=postgres
+   POSTGRES_DB=coopcompass
+   POSTGRES_PORT=5433
+   BACKEND_PORT=8000
+   FRONTEND_PORT=3000
+   AUTO_SEED=true
+   VITE_API_URL=
+   SECRET_KEY=your-super-secret-key-change-this-in-production
+   DEBUG=False
+   ```
 
-## 👥 User Roles
+   **Note:** If you don't create a root `.env` file, Docker Compose will use default values from `docker-compose.yml`.
 
-### Member
-- View team dashboard
-- Update assigned tasks
-- View team OKRs and BAU activities
+4. **Start all services**
+   ```bash
+   docker-compose up -d --build
+   ```
 
-### Team Lead
-- Manage team OKRs and key results
-- Manage BAU activities and metrics
-- Create and assign work items and tasks
-- Set weekly priorities
-- View team performance
+5. **Access the application**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
+   - API Documentation: http://localhost:8000/docs
 
-### Director
-- View all teams in assigned department
-- Monitor department-level performance
-- View aggregated OKR and BAU lists
-- Drill down to team details
+   The database will be **automatically created and seeded** on first startup. If the database is empty (no users), it will automatically clear any existing partial data and seed fresh demo data.
 
-### Executive
-- Organization-wide visibility
-- View all departments and teams
-- Access aggregated OKR and BAU lists
-- Monitor overall organization performance
+6. **Useful commands**
+   ```bash
+   # View logs
+   docker-compose logs -f
 
-### Admin
-- Full system management
-- User, department, and team management
-- Organization-wide visibility
-- System configuration
+   # Stop services
+   docker-compose down
 
-## 🚀 Getting Started
+   # Restart services
+   docker-compose restart
 
-### Prerequisites
-- Python 3.11+
-- Node.js 18+
-- PostgreSQL 15
-- npm or yarn
+   # Use helper script
+   ./docker.sh start    # Start services
+   ./docker.sh stop     # Stop services
+   ./docker.sh logs     # View logs
+   ./docker.sh seed     # Seed database
+   ```
 
-### Backend Setup
+### Option 2: Local Development (without Docker)
 
+**Backend Setup:**
 ```bash
 cd backend
-
-# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-# Setup environment variables
-cp .env.example .env
-# Edit .env with your DATABASE_URL and SECRET_KEY
+# Create backend/.env file with:
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/coopcompass
+SECRET_KEY=your-secret-key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+DEBUG=True
+OPENAI_API_KEY=your-openai-api-key  # optional
 
-# Run migrations
-alembic upgrade head
-
-# Start development server
-uvicorn app.main:app --reload --port 8000
+# Start server
+uvicorn app.main:app --reload
 ```
 
-### Frontend Setup
-
+**Frontend Setup:**
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
 
-# Setup environment variables
-cp .env.example .env
-# Edit .env with VITE_API_URL
+# Set API URL (optional, defaults to http://localhost:8000)
+export VITE_API_URL=http://localhost:8000
 
 # Start development server
 npm run dev
 ```
 
-## 📊 Key Workflows
+## Database Management
 
-### Quarterly Setup
-1. Create OKRs with key results
-2. Define BAU activities and metrics
-3. Set baseline targets
+### Automatic Setup
 
-### Monthly Planning (Heads-Up)
-1. Review quarterly OKRs
-2. Create work items from OKRs and BAU
-3. Assign owners to work items
+The database is automatically:
+- Created on first startup (PostgreSQL container)
+- Tables are created automatically via SQLAlchemy
+- **Automatically seeded** when empty (if `AUTO_SEED=true`, which is the default)
 
-### Weekly Execution
-1. **Monday:** Select priorities from work items
-2. **Monday:** Break priorities into tasks
-3. **Daily:** Update task status
-4. **Friday:** Review progress and metrics
+**Automatic Seeding Behavior:**
+- When the database is detected as empty (no users), the system will:
+  - Automatically clear any existing partial data (departments, teams, etc.)
+  - Seed the database with comprehensive demo data
+- This ensures a clean, consistent state on first startup or after data cleanup
+- The seeding process is CLI-compliant and works seamlessly via SSH/AWS deployments
 
-### Performance Monitoring
-- Real-time dashboard updates
-- Automated progress calculations
-- Health score tracking
-- Drill-down analysis
+### Manual Database Operations
 
-## 🎨 UI Principles
+**Seed database:**
+```bash
+# Via Docker (safe: only seeds if empty)
+docker-compose exec -T backend python seed_data.py
 
-- **Professional** - Clean, business-focused design
-- **Intuitive** - Clear information hierarchy
-- **Accessible** - WCAG compliant
-- **Responsive** - Mobile-first approach
-- **Consistent** - Unified design system
+# Via helper script
+./docker.sh seed
 
-## 🔐 Security
-
-- JWT-based authentication
-- Password hashing with bcrypt
-- Role-based access control (RBAC)
-- SQL injection prevention
-- XSS protection
-- HTTPS enforcement (production)
-
-## 📈 Metrics & Calculations
-
-### OKR Progress
-```
-Task Progress → Work Item Progress → KR Progress → OKR Progress
+# Force reseed (clears existing data first)
+./docker.sh seed --force
+./docker.sh seed-force
 ```
 
-### BAU Health
+**Seed script options:**
+```bash
+python seed_data.py                    # Safe: only seed if empty, skip if data exists
+python seed_data.py --clear-existing   # Clear existing data, then seed
+python seed_data.py --force            # Force seed (clears first, same as --clear-existing)
+python seed_data.py --drop-schema      # Drop schema and recreate (DESTRUCTIVE - all data lost!)
 ```
-Metric Achievement × Weight → Activity Health → Team BAU Health
+
+**Note:** When running automatically via `init-db.sh` (during Docker startup), the script uses `--clear-existing` by default when the database is empty to ensure clean seeding.
+
+## Default Credentials
+
+All demo users have password: `password123`
+
+**Executives:**
+- `deribe@bank.com` - Chief Executive Officer
+- `aman@bank.com` - Chief Transformation and Strategy Officer
+
+**Directors:**
+- `hailagegn@bank.com` - Director of Payment Platform
+- `samuel@bank.com` - Director of Core Banking System
+- `iyob@bank.com` - Director of Central Finfine District
+
+**Team Leads:**
+- `zidan@bank.com` - ATM Monitoring Team
+- `birhanemeskel@bank.com` - Card Production Team
+- `regasa@bank.com` - T24 Application Team
+- `tesfahun@bank.com` - Application Integration Team
+- `samson@bank.com` - Ijo Branch
+
+**Admin:**
+- `admin@bank.com`
+
+## Deployment
+
+### AWS/SSH Deployment
+
+1. **SSH into your server**
+   ```bash
+   ssh user@your-server
+   ```
+
+2. **Clone and navigate to project**
+   ```bash
+   git clone <repository-url>
+   cd coopcompasslatest
+   ```
+
+3. **Create environment files**
+   
+   **Backend `.env` file** (`backend/.env`):
+   ```bash
+   DATABASE_URL=postgresql://postgres:<strong-password>@db:5432/coopcompass
+   SECRET_KEY=<generate-strong-random-key>
+   ALGORITHM=HS256
+   ACCESS_TOKEN_EXPIRE_MINUTES=30
+   DEBUG=False
+   OPENAI_API_KEY=your-openai-api-key
+   LANGCHAIN_TRACING_V2=true
+   LANGCHAIN_API_KEY=your-langchain-api-key
+   LANGCHAIN_PROJECT=coopcompass
+   LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+   ```
+   
+   **Root `.env` file** (optional, for custom Docker settings):
+   ```bash
+   POSTGRES_USER=postgres
+   POSTGRES_PASSWORD=<strong-password>
+   POSTGRES_DB=coopcompass
+   POSTGRES_PORT=5433
+   BACKEND_PORT=8000
+   FRONTEND_PORT=3000
+   AUTO_SEED=true
+   VITE_API_URL=
+   SECRET_KEY=<same-as-backend/.env>
+   DEBUG=False
+   ```
+
+4. **Start services**
+   ```bash
+   docker-compose up -d --build
+   ```
+
+5. **Verify services are running**
+   ```bash
+   docker-compose ps
+   docker-compose logs -f
+   ```
+
+6. **Verify database seeding**
+   - The database is automatically seeded on first startup if empty
+   - To manually reseed (clears existing data):
+     ```bash
+     docker-compose exec -T backend python seed_data.py --clear-existing
+     ```
+
+### Production Considerations
+
+**Security:**
+- Change `SECRET_KEY` to a strong random value
+- Use strong database passwords
+- Set `DEBUG=False`
+- Configure proper CORS origins in `backend/app/core/config.py`
+- Use environment variables for sensitive data
+
+**Performance:**
+- Use production-grade PostgreSQL settings
+- Configure Nginx caching appropriately
+- Consider using a reverse proxy (Traefik, Nginx) in front
+
+**Backup:**
+- Regularly backup the `postgres_data` Docker volume
+- Set up automated backups
+
+## Environment Variables
+
+### Backend `.env` file (`backend/.env`)
+
+**Required:**
+```env
+DATABASE_URL=postgresql://postgres:postgres@db:5432/coopcompass
+SECRET_KEY=your-super-secret-key-change-this-in-production
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+DEBUG=False
 ```
 
-### Dashboard Aggregation
-- Team-level metrics
-- Department-level averages
-- Organization-wide summaries
+**Optional (AI/LLM):**
+```env
+OPENAI_API_KEY=your-openai-api-key
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=your-langchain-api-key
+LANGCHAIN_PROJECT=coopcompass
+LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+```
 
-## 🛠️ Development
+### Root `.env` file (optional, for Docker Compose)
 
-### Code Style
-- Python: PEP 8
-- TypeScript: ESLint + Prettier
-- Git: Conventional Commits
+If you want to override Docker Compose defaults, create a root `.env` file:
+```env
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=coopcompass
+POSTGRES_PORT=5433
+BACKEND_PORT=8000
+FRONTEND_PORT=3000
+AUTO_SEED=true
+VITE_API_URL=
+SECRET_KEY=your-super-secret-key
+DEBUG=False
+```
 
-### Testing
+**Database Seeding Control:**
+- `AUTO_SEED=true` (default): Automatically seed database when empty on startup
+- `AUTO_SEED=false`: Skip automatic seeding (manual seeding required)
+- `CLEAR_EXISTING_DATA=true`: Clear existing data before seeding (when AUTO_SEED is enabled)
+- `FORCE_SEED=true`: Force seeding with data clearing (same as CLEAR_EXISTING_DATA)
+- `DROP_SCHEMA=true`: Drop and recreate schema before seeding (DESTRUCTIVE - use with caution!)
+
+**Note:** 
+- The backend application reads from `backend/.env` when running locally
+- Docker Compose reads from root `.env` (if exists) and passes variables to containers
+- If root `.env` doesn't exist, Docker Compose uses defaults from `docker-compose.yml`
+- When `AUTO_SEED=true` and the database is empty, the system automatically uses `--clear-existing` to ensure clean seeding
+
+## Testing
+
 ```bash
 # Backend tests
+cd backend
 pytest
 
-# Frontend tests
-npm test
+# Run tests in Docker
+docker-compose exec -T backend pytest
 ```
 
-## 📝 License
+## Troubleshooting
 
-Proprietary - All rights reserved
+**Port conflicts:**
+- Change port mappings in root `.env` file or `docker-compose.yml` (POSTGRES_PORT, BACKEND_PORT, FRONTEND_PORT)
 
-## 🤝 Contributing
+**Database connection issues:**
+- Verify database service is healthy: `docker-compose ps`
+- Check database logs: `docker-compose logs db`
+- Verify `DATABASE_URL` in `backend/.env` matches Docker service name `db` for Docker, or `localhost` for local development
 
-This is an internal project. For questions or issues, contact the development team.
+**Frontend can't reach backend:**
+- Check nginx configuration in `frontend/nginx.conf`
+- Verify backend is running: `docker-compose ps backend`
+- Check backend logs: `docker-compose logs backend`
 
----
+**Rebuild after code changes:**
+```bash
+# Rebuild specific service
+docker-compose up -d --build backend
+docker-compose up -d --build frontend
 
-**Built with ❤️ for effective team execution and performance tracking**
+# Rebuild all
+docker-compose up -d --build
+```
 
+## Additional Resources
+
+- [System Specification](coopcompass_specification.md) - Complete system specification
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [React Documentation](https://react.dev/)
+- [Docker Documentation](https://docs.docker.com/)
+
+## License
+
+[Add your license here]

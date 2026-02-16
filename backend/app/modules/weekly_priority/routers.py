@@ -2,259 +2,243 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from typing import List, Optional
 from app.core.database import get_db
-from app.models import *
-from app.schemas import *
-from app.api.v1.deps import get_current_user, get_current_team_lead
-from app.modules.weekly_priority.services import (
-    get_team_dashboard, 
-    get_department_dashboard,
-    get_organization_dashboard,
-)
-from app.modules.bau.services import calculate_bau_health
-from app.modules.work_items.services import calculate_work_item_progress
-from app.services.calculations import get_current_week
-from datetime import datetime
+from app.api.v1 import deps
+from . import services, schemas
+from app.modules.users.models import User
+from app.models import WeeklyPriority, WeeklyPriorityPlan, WorkItem, Team, Department
 
-router = APIRouter(prefix="/api", tags=["weekly-priority", "dashboard"])
+router = APIRouter(prefix="/api", tags=["weekly-priority"])
 
 
-@router.post("/weekly-priorities", response_model=WeeklyPriorityResponse, status_code=status.HTTP_201_CREATED)
-def set_weekly_priority(
-    priority_data: WeeklyPriorityCreate,
+# Weekly Priority Plan Endpoints
+
+@router.get("/weekly-priority/headsup/{headsup_id}/plans", response_model=List[schemas.WeeklyPriorityPlanResponse])
+def read_plans(
+    headsup_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_team_lead)
+    current_user: User = Depends(deps.get_current_user)
 ):
-    """Set or update a work item priority for a week."""
-    # Check work item exists
-    work_item = db.query(WorkItem).filter(WorkItem.id == priority_data.work_item_id).first()
-    if not work_item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Work item not found"
-        )
-    
-    # Check if priority already exists for this week
+    """Get all weekly plans for a monthly heads-up."""
+    return db.query(WeeklyPriorityPlan).filter(WeeklyPriorityPlan.monthly_headsup_id == headsup_id).all()
+
+
+@router.get("/weekly-priority/headsup/{headsup_id}/plans/{week}", response_model=schemas.WeeklyPriorityPlanResponse)
+def read_plan_by_week(
+    headsup_id: int,
+    week: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Get a weekly plan by headsup ID and week."""
+    db_obj = services.get_weekly_priority_plan_by_week(db, headsup_id=headsup_id, week=week)
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Weekly plan not found")
+    return db_obj
+
+
+@router.post("/weekly-priority/plans", response_model=schemas.WeeklyPriorityPlanResponse, status_code=status.HTTP_201_CREATED)
+def create_plan(
+    obj_in: schemas.WeeklyPriorityPlanCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_team_lead)
+):
+    """Create a new weekly priority plan."""
+    existing = services.get_weekly_priority_plan_by_week(db, headsup_id=obj_in.monthly_headsup_id, week=obj_in.week)
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Weekly plan already exists for {obj_in.week}")
+    return services.create_weekly_priority_plan(db, obj_in=obj_in)
+
+
+@router.get("/weekly-priority/plans/{id}", response_model=schemas.WeeklyPriorityPlanResponse)
+def read_plan(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Get a weekly plan by ID."""
+    db_obj = services.get_weekly_priority_plan(db, plan_id=id)
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Weekly plan not found")
+    return db_obj
+
+
+@router.put("/weekly-priority/plans/{id}", response_model=schemas.WeeklyPriorityPlanResponse)
+def update_plan(
+    id: int,
+    obj_in: schemas.WeeklyPriorityPlanUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_team_lead)
+):
+    """Update a weekly plan focus."""
+    db_obj = services.get_weekly_priority_plan(db, plan_id=id)
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Weekly plan not found")
+    return services.update_weekly_priority_plan(db, db_obj=db_obj, obj_in=obj_in)
+
+
+# Weekly Priority Endpoints
+
+@router.post("/weekly-priority/priorities", response_model=schemas.WeeklyPriorityResponse, status_code=status.HTTP_201_CREATED)
+def set_weekly_priority(
+    obj_in: schemas.WeeklyPriorityCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_team_lead)
+):
+    """Add a work item to a weekly plan with a priority level."""
+    # Check if priority already exists for this work item in this plan
     existing = db.query(WeeklyPriority).filter(
-        WeeklyPriority.work_item_id == priority_data.work_item_id,
-        WeeklyPriority.week == priority_data.week
+        WeeklyPriority.plan_id == obj_in.plan_id,
+        WeeklyPriority.work_item_id == obj_in.work_item_id
     ).first()
     
     if existing:
         # Update existing
-        existing.priority = priority_data.priority
-        db.commit()
-        db.refresh(existing)
-        return existing
+        try:
+            return services.update_weekly_priority(db, priority_id=existing.id, new_priority=obj_in.priority)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
     else:
         # Create new
-        new_priority = WeeklyPriority(
-            work_item_id=priority_data.work_item_id,
-            week=priority_data.week,
-            priority=priority_data.priority
-        )
-        db.add(new_priority)
-        db.commit()
-        db.refresh(new_priority)
-        return new_priority
+        try:
+            return services.create_weekly_priority(db, obj_in=obj_in)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/weekly-priorities", response_model=list[WeeklyPriorityResponse])
+@router.get("/weekly-priority/plans/{plan_id}/priorities", response_model=List[schemas.WeeklyPriorityResponse])
 def list_weekly_priorities(
-    week: str = Query(None),
-    team_id: int = Query(None),
+    plan_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(deps.get_current_user)
 ):
-    """List weekly priorities with optional filters."""
-    query = db.query(WeeklyPriority)
-    
-    if week:
-        query = query.filter(WeeklyPriority.week == week)
-    
-    if team_id:
-        query = query.join(WorkItem).filter(WorkItem.team_id == team_id)
-    
-    priorities = query.all()
-    return priorities
+    """List all priorities for a weekly plan."""
+    return services.get_weekly_priorities(db, plan_id=plan_id)
 
 
-@router.put("/weekly-priorities/{priority_id}", response_model=WeeklyPriorityResponse)
+@router.get("/weekly-priority/priorities", response_model=List[schemas.WeeklyPriorityResponse])
+def list_weekly_priorities_alt(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """Alternative list all priorities for a weekly plan."""
+    return services.get_weekly_priorities(db, plan_id=plan_id)
+
+
+@router.put("/weekly-priority/priorities/{priority_id}", response_model=schemas.WeeklyPriorityResponse)
 def update_weekly_priority(
     priority_id: int,
-    priority_data: WeeklyPriorityUpdate,
+    priority: int = Query(..., ge=1, le=3),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_team_lead)
+    current_user: User = Depends(deps.get_current_team_lead)
 ):
-    """Update a weekly priority."""
-    priority = db.query(WeeklyPriority).filter(WeeklyPriority.id == priority_id).first()
-    
-    if not priority:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Priority not found"
-        )
-    
-    priority.priority = priority_data.priority
-    db.commit()
-    db.refresh(priority)
-    
-    return priority
+    """Update a priority level."""
+    try:
+        updated = services.update_weekly_priority(db, priority_id=priority_id, new_priority=priority)
+        if not updated:
+            raise HTTPException(status_code=404, detail="Priority not found")
+        return updated
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.delete("/weekly-priorities/{priority_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/weekly-priority/priorities/{priority_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_weekly_priority(
     priority_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_team_lead)
+    current_user: User = Depends(deps.get_current_team_lead)
 ):
     """Delete a weekly priority."""
-    priority = db.query(WeeklyPriority).filter(WeeklyPriority.id == priority_id).first()
-    
-    if not priority:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Priority not found"
-        )
-    
-    db.delete(priority)
-    db.commit()
+    if not services.delete_weekly_priority(db, priority_id=priority_id):
+        raise HTTPException(status_code=404, detail="Priority not found")
+    return None
 
 
-@router.get("/teams/{team_id}/dashboard", response_model=DashboardResponse)
+# Dashboard Endpoints
+
+@router.get("/teams/{team_id}/dashboard", response_model=schemas.DashboardResponse, tags=["dashboard"])
 def get_dashboard(
     team_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(deps.get_current_user)
 ):
     """Get team dashboard with all performance metrics."""
     # Check team exists
     team = db.query(Team).filter(Team.id == team_id).first()
     if not team:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Team not found"
-        )
+        raise HTTPException(status_code=404, detail="Team not found")
     
-    dashboard_data = get_team_dashboard(db, team_id)
-    
-    return DashboardResponse(
-        team_id=team_id,
-        okr_progress=dashboard_data["okr_progress"],
-        bau_health=dashboard_data["bau_health"],
-        bau_execution=dashboard_data.get("bau_execution", 0.0),
-        okrs=dashboard_data["okrs"],
-        bau_activities=dashboard_data["bau_activities"],
-        current_week_priorities=dashboard_data["current_week_priorities"],
-        updated_at=dashboard_data["updated_at"]
-    )
+    # Authorization: Directors can only see dashboards for teams in their department
+    if current_user.role == "director":
+        if not team.department_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+    return services.get_team_dashboard(db, team_id)
 
 
-@router.get("/teams/{team_id}/performance", response_model=list[PerformanceTrendResponse])
+@router.get("/teams/{team_id}/performance", response_model=List[schemas.PerformanceTrendResponse], tags=["dashboard"])
 def get_performance_trend(
     team_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(deps.get_current_user)
 ):
-    """Get performance trend over time.
+    """Get performance trend over time."""
+    from datetime import datetime, timezone
     
-    Note: This is a simplified version that returns snapshot data.
-    In a production system, you'd want to store historical snapshots.
-    """
     # Check team exists
     team = db.query(Team).filter(Team.id == team_id).first()
     if not team:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Team not found"
-        )
+        raise HTTPException(status_code=404, detail="Team not found")
     
-    # Get current snapshot
-    current_data = get_team_dashboard(db, team_id)
+    # Authorization: Directors can only see performance for teams in their department
+    if current_user.role == "director":
+        if not team.department_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        department = db.query(Department).filter(Department.id == team.department_id).first()
+        if not department or department.director_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+    dashboard_data = services.get_team_dashboard(db, team_id)
     
-    # Return a single data point (in production, would return historical data)
     return [
         {
-            "date": datetime.utcnow().isoformat(),
-            "okr_progress": current_data["okr_progress"],
-            "bau_health": current_data["bau_health"]
+            "date": datetime.now(timezone.utc).isoformat(),
+            "okr_progress": dashboard_data["okr_progress"],
+            "bau_health": dashboard_data["bau_health"]
         }
     ]
 
 
-@router.get("/departments/{department_id}/dashboard", response_model=DepartmentDashboardResponse)
+@router.get("/departments/{department_id}/dashboard", response_model=schemas.DepartmentDashboardResponse, tags=["dashboard"])
 def get_department_dashboard_endpoint(
     department_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(deps.get_current_user)
 ):
-    """Get department dashboard with all teams performance metrics."""
-    # Check department exists
+    """Get department dashboard for director view."""
     department = db.query(Department).filter(Department.id == department_id).first()
     if not department:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Department not found"
-        )
+        raise HTTPException(status_code=404, detail="Department not found")
     
-    dashboard_data = get_department_dashboard(db, department_id)
-    
-    return DepartmentDashboardResponse(
-        department_id=dashboard_data["department_id"],
-        total_teams=dashboard_data["total_teams"],
-        total_members=dashboard_data["total_members"],
-        average_okr_progress=dashboard_data["average_okr_progress"],
-        average_bau_health=dashboard_data["average_bau_health"],
-        average_bau_execution=dashboard_data.get("average_bau_execution", 0.0),
-        teams=[
-            TeamDashboardSummaryResponse(
-                team_id=t["team_id"],
-                team_name=t["team_name"],
-                members_count=t["members_count"],
-                okr_progress=t["okr_progress"],
-                bau_health=t["bau_health"],
-                bau_execution=t.get("bau_execution", 0.0)
-            ) for t in dashboard_data["teams"]
-        ],
-        updated_at=dashboard_data["updated_at"]
-    )
+    # Authorization: Directors can only see their own department dashboard
+    if current_user.role == "director" and department.director_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied: You are not the director of this department")
+
+    return services.get_department_dashboard(db, department_id)
 
 
-@router.get("/organization/dashboard", response_model=OrganizationDashboardResponse)
+@router.get("/organization/dashboard", response_model=schemas.OrganizationDashboardResponse, tags=["dashboard"])
 def get_organization_dashboard_endpoint(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(deps.get_current_user)
 ):
-    """Get organization (executive) dashboard with all departments and teams."""
-    # Check if user is executive or admin
+    """Get organization dashboard for executive view."""
     if current_user.role not in ['executive', 'admin']:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only executives can access organization dashboard"
-        )
+        raise HTTPException(status_code=403, detail="Access denied")
     
-    dashboard_data = get_organization_dashboard(db)
-    
-    return OrganizationDashboardResponse(
-        total_departments=dashboard_data["total_departments"],
-        total_teams=dashboard_data["total_teams"],
-        total_members=dashboard_data["total_members"],
-        total_directors=dashboard_data["total_directors"],
-        average_okr_progress=dashboard_data["average_okr_progress"],
-        average_bau_health=dashboard_data["average_bau_health"],
-        average_bau_execution=dashboard_data.get("average_bau_execution", 0.0),
-        departments=[
-            DepartmentSummaryResponse(
-                department_id=d["department_id"],
-                department_name=d["department_name"],
-                director_name=d["director_name"],
-                teams_count=d["teams_count"],
-                members_count=d["members_count"],
-                okr_progress=d["okr_progress"],
-                bau_health=d["bau_health"],
-                bau_execution=d.get("bau_execution", 0.0)
-            ) for d in dashboard_data["departments"]
-        ],
-        updated_at=dashboard_data["updated_at"]
-    )
-
+    return services.get_organization_dashboard(db)

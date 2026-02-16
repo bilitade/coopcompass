@@ -1,0 +1,24 @@
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+README.md
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment files (keep .env.example)
+.env
+.env.local
+
+# Docker files (don't copy into containers)
+docker-compose.yml
+.dockerignore
+

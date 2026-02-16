@@ -56,8 +56,8 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ data, 
                     <span>OKR PROGRESS</span>
                     <span className="text-text-primary font-bold">{team.okr_progress.toFixed(1)}%</span>
                   </div>
-                  <div className="w-full bg-border/50 rounded-full h-1.5">
-                    <div className="bg-blue-500 h-1.5 rounded-full transition-all duration-500" style={{ width: `${team.okr_progress}%` }} />
+                  <div className="w-full bg-border/50 rounded-full h-2">
+                    <div className="bg-primary h-2 rounded-full transition-all duration-500" style={{ width: `${team.okr_progress}%` }} />
                   </div>
                 </div>
 
@@ -66,9 +66,9 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ data, 
                     <span>BAU HEALTH</span>
                     <span className="text-text-primary font-bold">{team.bau_health.toFixed(1)}%</span>
                   </div>
-                  <div className="w-full bg-border/50 rounded-full h-1.5">
+                  <div className="w-full bg-border/50 rounded-full h-2">
                     <div 
-                      className={`h-1.5 rounded-full transition-all duration-500 ${team.bau_health >= 90 ? 'bg-emerald-500' : team.bau_health >= 70 ? 'bg-amber-500' : 'bg-red-500'}`} 
+                      className="h-2 rounded-full transition-all duration-500 bg-primary" 
                       style={{ width: `${team.bau_health}%` }} 
                     />
                   </div>

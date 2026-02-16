@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, joinedload
 from typing import List
 from decimal import Decimal
 from app.core.database import get_db
-from app.models import OKR, KeyResult, Team
+from app.models import OKR, KeyResult, Team, Department
 from app.modules.okrs.schemas import *
 from app.modules.okrs.services import (
     get_okr_with_scores,
@@ -202,6 +202,7 @@ def list_team_okrs(
 
     if quarter:
         query = query.filter(OKR.quarter == quarter)
+    # If no quarter specified, return all OKRs (both active and inactive)
 
     okrs = query.all()
     

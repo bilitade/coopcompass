@@ -92,7 +92,7 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({ data, on
                 <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
-                       <span className="text-xs font-bold text-text-secondary">OKR EXECUTION</span>
+                       <span className="text-xs font-bold text-text-secondary">OKR Progress</span>
                        <span className="text-sm font-bold text-text-primary">{dept.okr_progress.toFixed(1)}%</span>
                     </div>
                     <div className="w-full bg-border/50 rounded-full h-2">
@@ -102,12 +102,12 @@ export const ExecutiveDashboard: React.FC<ExecutiveDashboardProps> = ({ data, on
 
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
-                       <span className="text-xs font-bold text-text-secondary">OPERATIONAL HEALTH</span>
+                       <span className="text-xs font-bold text-text-secondary">BAU Health</span>
                        <span className="text-sm font-bold text-text-primary">{dept.bau_health.toFixed(1)}%</span>
                     </div>
                     <div className="w-full bg-border/50 rounded-full h-2">
                       <div 
-                        className={`h-2 rounded-full transition-all duration-300 ${dept.bau_health >= 90 ? 'bg-emerald-500' : dept.bau_health >= 70 ? 'bg-amber-500' : 'bg-red-500'}`} 
+                        className="h-2 rounded-full transition-all duration-300 bg-primary" 
                         style={{ width: `${dept.bau_health}%` }} 
                       />
                     </div>

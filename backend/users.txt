@@ -2,157 +2,169 @@
 COMPASS SYSTEM - USER DIRECTORY
 ================================================================================
 
-EXECUTIVES (C-Suite & VPs)
+EXECUTIVE LEADERSHIP (C-Suite)
 --------------------------------------------------------------------------------
-Name:     Robert Thompson
-Email:    robert@bank.com
+Name:     Deribe Asfaw
+Email:    deribe@bank.com
 Position: Chief Executive Officer
+Status:   Active
+
+Name:     Aman Semir
+Email:    aman@bank.com
+Position: Chief Transformation and Strategy Officer
 Status:   Active
 
 DIRECTORS
 --------------------------------------------------------------------------------
-Name:     Michael Chen
-Email:    michael@bank.com
-Position: Director of Technology & Infrastructure
+Name:     Hailagegn Zerihun
+Email:    hailagegn@bank.com
+Position: Director of Payment Platform
 Status:   Active
 
-Name:     Sarah Martinez
-Email:    sarah@bank.com
-Position: Director of Risk & Compliance
+Name:     Samuel Kuma
+Email:    samuel@bank.com
+Position: Director of Core Banking System
 Status:   Active
 
-Name:     David Kumar
-Email:    david@bank.com
-Position: Director of Operations
-Status:   Active
-
-Name:     Jennifer Lee
-Email:    jennifer@bank.com
-Position: Director of Digital Banking
+Name:     Iyob Shiferaw
+Email:    iyob@bank.com
+Position: Director of Central Finfine District
 Status:   Active
 
 TEAM LEADS
 --------------------------------------------------------------------------------
-Name:     James Wilson
-Email:    james@bank.com
-Position: Team Lead - Core Systems
-Team:     Core Banking Systems
+Name:     Zidan Mohammed
+Email:    zidan@bank.com
+Position: Associate Card Banking Officer
+Team:     ATM Monitoring Team
 Status:   Active
 
-Name:     Alexander Morgan
-Email:    alexander@bank.com
-Position: Security Team Lead
-Team:     Cybersecurity
+Name:     Birhanemeskel Mesfin
+Email:    birhanemeskel@bank.com
+Position: Associate Card Banking Officer
+Team:     Card Production Team
 Status:   Active
 
-Name:     Victoria Garcia
-Email:    victoria@bank.com
-Position: Compliance Team Lead
-Team:     Regulatory Compliance
+Name:     Regasa Alemu
+Email:    regasa@bank.com
+Position: T24 Application Manager
+Team:     T24 Application Team
 Status:   Active
 
-Name:     Lucas Thompson
-Email:    lucas@bank.com
-Position: Fraud Prevention Lead
-Team:     Fraud Prevention
+Name:     Tesfahun Semaw
+Email:    tesfahun@bank.com
+Position: Manager – Application and Integration
+Team:     Application Integration Team
 Status:   Active
 
-Name:     Ava Rodriguez
-Email:    ava@bank.com
-Position: Payment Operations Lead
-Team:     Payment Processing
-Status:   Active
-
-Name:     Benjamin Lee
-Email:    benjamin@bank.com
-Position: Mobile Team Lead
-Team:     Mobile Banking
+Name:     Samson Tadele
+Email:    samson@bank.com
+Position: Branch Manager
+Team:     Ijo Branch
 Status:   Active
 
 TEAM MEMBERS
 --------------------------------------------------------------------------------
-Name:     Emma Brown
-Email:    emma@bank.com
-Position: Senior Software Engineer
-Team:     Core Banking Systems
+Name:     Motuma File
+Email:    motuma@bank.com
+Position: Associate Card Banking Officer
+Team:     ATM Monitoring Team
 Status:   Active
 
-Name:     Oliver Davis
-Email:    oliver@bank.com
-Position: Software Engineer
-Team:     Core Banking Systems
+Name:     Derartu Sisay
+Email:    derartu@bank.com
+Position: Associate Card Banking Officer
+Team:     ATM Monitoring Team
 Status:   Active
 
-Name:     Sophia Taylor
-Email:    sophia@bank.com
-Position: Database Administrator
-Team:     Core Banking Systems
+Name:     Simon Kasahun
+Email:    simon@bank.com
+Position: Associate Card Banking Officer
+Team:     ATM Monitoring Team
 Status:   Active
 
-Name:     Isabella Clark
-Email:    isabella@bank.com
-Position: Security Analyst
-Team:     Cybersecurity
+Name:     Roba Temesgen
+Email:    roba@bank.com
+Position: Associate Card Banking Officer
+Team:     ATM Monitoring Team
 Status:   Active
 
-Name:     Ethan White
-Email:    ethan@bank.com
-Position: Security Engineer
-Team:     Cybersecurity
+Name:     Kebron Kebede
+Email:    kebron@bank.com
+Position: Associate Card Banking Officer
+Team:     ATM Monitoring Team
 Status:   Active
 
-Name:     Daniel Martinez
-Email:    daniel@bank.com
-Position: Compliance Officer
-Team:     Regulatory Compliance
+Name:     Duresa Hedeto
+Email:    duresa@bank.com
+Position: Associate Card Banking Officer
+Team:     Card Production Team
 Status:   Active
 
-Name:     Grace Anderson
-Email:    grace@bank.com
-Position: Regulatory Analyst
-Team:     Regulatory Compliance
+Name:     Elasabeth Dawit
+Email:    elasabeth@bank.com
+Position: Associate Card Banking Officer
+Team:     Card Production Team
 Status:   Active
 
-Name:     Mia Johnson
-Email:    mia@bank.com
-Position: Fraud Analyst
-Team:     Fraud Prevention
+Name:     Isubalo Yirga
+Email:    isubalo@bank.com
+Position: Associate Card Banking Officer
+Team:     Card Production Team
 Status:   Active
 
-Name:     Noah Williams
-Email:    noah@bank.com
-Position: Risk Analyst
-Team:     Fraud Prevention
+Name:     Tomas Biyana
+Email:    tomas@bank.com
+Position: Associate Card Banking Officer
+Team:     Card Production Team
 Status:   Active
 
-Name:     William Chen
-Email:    william@bank.com
-Position: Payment Processor
-Team:     Payment Processing
+Name:     Kelil Harar
+Email:    kelil@bank.com
+Position: Core Banking Application Administrator
+Team:     T24 Application Team
 Status:   Active
 
-Name:     Charlotte Kim
-Email:    charlotte@bank.com
-Position: Operations Specialist
-Team:     Payment Processing
+Name:     Ephrem Daniel
+Email:    ephrem@bank.com
+Position: Core Banking Application Administrator
+Team:     T24 Application Team
 Status:   Active
 
-Name:     Amelia Patel
-Email:    amelia@bank.com
-Position: Mobile Developer
-Team:     Mobile Banking
+Name:     Iyasu Refisa
+Email:    iyasu@bank.com
+Position: Core Banking Application Administrator
+Team:     T24 Application Team
 Status:   Active
 
-Name:     Henry Zhang
-Email:    henry@bank.com
-Position: UX Designer
-Team:     Mobile Banking
+Name:     Tselotemariam Tadesse
+Email:    tselotemariam@bank.com
+Position: Software Development and Integration Officer
+Team:     Application Integration Team
 Status:   Active
 
-Name:     Lily Santos
-Email:    lily@bank.com
-Position: QA Engineer
-Team:     Mobile Banking
+Name:     Zelalem Zerfu
+Email:    zelalem@bank.com
+Position: Software Development and Integration Officer
+Team:     Application Integration Team
+Status:   Active
+
+Name:     Samrawit Abreham
+Email:    samrawit@bank.com
+Position: Customer Service Officer
+Team:     Ijo Branch
+Status:   Active
+
+Name:     Korsa Galmesa
+Email:    korsa@bank.com
+Position: Internal Controller
+Team:     Ijo Branch
+Status:   Active
+
+Name:     Tesfaye Tafa
+Email:    tesfaye@bank.com
+Position: Chief Cashier
+Team:     Ijo Branch
 Status:   Active
 
 ADMINISTRATORS
@@ -165,11 +177,11 @@ Status:   Active
 ================================================================================
 SUMMARY
 ================================================================================
-Total Users:      26
-Executives:       1
-Directors:        4
-Team Leads:       6
-Team Members:     14
+Total Users:      25
+Executives:       2
+Directors:        3
+Team Leads:       5
+Team Members:     15
 Administrators:   1
 ================================================================================
 Generated: 2026-01-22 14:55:35

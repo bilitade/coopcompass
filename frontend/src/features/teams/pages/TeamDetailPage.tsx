@@ -242,6 +242,9 @@ export const TeamDetailPage: React.FC = () => {
                   <div className="flex-1">
                     <h4 className="font-semibold text-text-primary">{member.name}</h4>
                     <p className="text-sm text-text-secondary">{member.email}</p>
+                    {member.position && (
+                      <p className="text-xs text-text-secondary mt-1">{member.position}</p>
+                    )}
                     <p className="text-xs text-text-secondary mt-1 capitalize">{member.role}</p>
                   </div>
                 </div>

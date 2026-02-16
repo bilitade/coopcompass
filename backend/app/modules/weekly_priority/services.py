@@ -56,6 +56,9 @@ def get_team_dashboard(db: Session, team_id: int) -> dict:
         activity_data = get_bau_activity_with_scores(db, activity.id)
         if activity_data:
             bau_healths.append({
+                "activity_id": activity_data["id"],
+                "activity_name": activity_data["name"],
+                "health": activity_data["activity_score"],
                 "id": activity_data["id"],
                 "name": activity_data["name"],
                 "activity_score": activity_data["activity_score"],
@@ -169,13 +172,19 @@ def get_department_dashboard(db: Session, department_id: int) -> dict:
         # Get team dashboard metrics
         team_dashboard = get_team_dashboard(db, team.id)
         
-        # Count OKR progress if it exists (non-zero) or if the team has OKRs
-        if team_dashboard["okrs"] or team_dashboard["okr_progress"] > 0:
+        # Calculate OKR progress from all active OKRs, not just current quarter
+        all_okrs = team_dashboard.get("all_okrs", [])
+        if all_okrs:
+            # Calculate average progress from all active OKRs
+            avg_okr_progress = sum(okr["progress"] for okr in all_okrs) / len(all_okrs)
             teams_with_okrs += 1
-            total_okr_progress += team_dashboard["okr_progress"]
+            total_okr_progress += avg_okr_progress
+            team_okr_progress = avg_okr_progress
+        else:
+            team_okr_progress = 0.0
             
         # Count BAU health if it exists (non-zero) or if the team has BAU activities
-        if team_dashboard["bau_activities"] or team_dashboard["bau_health"] > 0:
+        if len(team_dashboard["bau_activities"]) > 0 or team_dashboard["bau_health"] > 0:
             teams_with_bau += 1
             total_bau_health += team_dashboard["bau_health"]
         
@@ -183,7 +192,7 @@ def get_department_dashboard(db: Session, department_id: int) -> dict:
             "team_id": team.id,
             "team_name": team.name,
             "members_count": len(members),
-            "okr_progress": team_dashboard["okr_progress"],
+            "okr_progress": team_okr_progress,
             "bau_health": team_dashboard["bau_health"]
         })
     

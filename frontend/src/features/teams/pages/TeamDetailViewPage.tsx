@@ -84,9 +84,9 @@ export const TeamDetailViewPage: React.FC = () => {
         />
 
         {/* Team Header */}
-        <div className="bg-gradient-to-r from-blue-500/10 to-blue-500/5 border border-blue-500/20 rounded-xl p-6">
+        <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-6">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-lg">
               <Users className="text-white" size={32} />
             </div>
             <div className="flex-1">
@@ -117,7 +117,7 @@ export const TeamDetailViewPage: React.FC = () => {
                 <p className="text-sm text-text-secondary">BAU Health</p>
                 <p className="text-3xl font-bold mt-2">{dashboardData.bau_health.toFixed(1)}%</p>
               </div>
-              <Activity className="w-12 h-12 text-green-600 dark:text-green-400" />
+              <Activity className="w-12 h-12 text-primary" />
             </div>
           </div>
         </div>
@@ -139,11 +139,14 @@ export const TeamDetailViewPage: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-text-primary truncate">{user.name}</p>
                       <p className="text-sm text-text-secondary truncate">{user.email}</p>
+                      {user.position && (
+                        <p className="text-xs text-text-secondary mt-1 truncate">{user.position}</p>
+                      )}
                       <div className="mt-2">
                         <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
                           user.role === 'lead' 
-                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                            ? 'bg-primary/10 text-primary'
+                            : 'bg-surface-hover text-text-secondary'
                         }`}>
                           {user.role === 'lead' ? 'Team Lead' : 'Member'}
                         </span>
@@ -197,9 +200,9 @@ export const TeamDetailViewPage: React.FC = () => {
                           </span>
                           <span className="font-semibold">{(kr.progress || 0).toFixed(1)}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                           <div
-                            className="bg-primary h-1.5 rounded-full transition-all"
+                            className="bg-primary h-2 rounded-full transition-all"
                             style={{ width: `${kr.progress || 0}%` }}
                           />
                         </div>
@@ -224,25 +227,13 @@ export const TeamDetailViewPage: React.FC = () => {
                 <div key={activity.activity_id} className="border border-border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-lg font-semibold">{activity.activity_name}</h3>
-                    <span className={`font-semibold ${
-                      (activity.health || 0) >= 90
-                        ? 'text-green-600'
-                        : (activity.health || 0) >= 70
-                        ? 'text-yellow-600'
-                        : 'text-red-600'
-                    }`}>
+                    <span className="font-semibold text-primary">
                       {(activity.health || 0).toFixed(1)}%
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-4">
                     <div
-                      className={`h-2 rounded-full transition-all ${
-                        (activity.health || 0) >= 90
-                          ? 'bg-green-600'
-                          : (activity.health || 0) >= 70
-                          ? 'bg-yellow-600'
-                          : 'bg-red-600'
-                      }`}
+                      className="h-2 rounded-full transition-all bg-primary"
                       style={{ width: `${activity.health || 0}%` }}
                     />
                   </div>
@@ -281,21 +272,15 @@ export const TeamDetailViewPage: React.FC = () => {
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm flex-shrink-0 ${
-                        priority.priority === 1
-                          ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                          : priority.priority === 2
-                          ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
-                          : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                      }`}>
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm flex-shrink-0 bg-primary/10 text-primary">
                         P{priority.priority}
                       </span>
                       <p className="font-semibold text-text-primary truncate">{priority.work_item_name}</p>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                      <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div
-                          className="bg-primary h-2.5 rounded-full transition-all"
+                          className="bg-primary h-2 rounded-full transition-all"
                           style={{ width: `${priority.progress}%` }}
                         />
                       </div>

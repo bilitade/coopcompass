@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from decimal import Decimal
 from app.core.database import get_db
-from app.models import BAUActivity, BAUMetric, Team
+from app.models import BAUActivity, BAUMetric, Team, Department
 from app.modules.bau.schemas import *
 from app.modules.bau.services import (
     get_bau_activity_with_scores,

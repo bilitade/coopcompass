@@ -139,7 +139,7 @@ export const DepartmentDetailViewPage: React.FC = () => {
                 <p className="text-sm text-text-secondary">Avg BAU Health</p>
                 <p className="text-3xl font-bold mt-2">{dashboardData.average_bau_health.toFixed(1)}%</p>
               </div>
-              <Activity className="w-12 h-12 text-green-600 dark:text-green-400" />
+              <Activity className="w-12 h-12 text-primary" />
             </div>
           </div>
         </div>
@@ -181,11 +181,11 @@ export const DepartmentDetailViewPage: React.FC = () => {
                         <TrendingUp size={14} />
                         OKR Progress
                       </span>
-                      <span className="font-bold text-blue-600">{team.okr_progress.toFixed(1)}%</span>
+                      <span className="font-bold text-primary">{team.okr_progress.toFixed(1)}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div
-                        className="bg-blue-600 h-2.5 rounded-full transition-all"
+                        className="bg-primary h-2 rounded-full transition-all"
                         style={{ width: `${team.okr_progress}%` }}
                       />
                     </div>
@@ -198,25 +198,13 @@ export const DepartmentDetailViewPage: React.FC = () => {
                         <Activity size={14} />
                         BAU Health
                       </span>
-                      <span className={`font-bold ${
-                        team.bau_health >= 90
-                          ? 'text-green-600'
-                          : team.bau_health >= 70
-                          ? 'text-yellow-600'
-                          : 'text-red-600'
-                      }`}>
+                      <span className="font-bold text-primary">
                         {team.bau_health.toFixed(1)}%
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div
-                        className={`h-2.5 rounded-full transition-all ${
-                          team.bau_health >= 90
-                            ? 'bg-green-600'
-                            : team.bau_health >= 70
-                            ? 'bg-yellow-600'
-                            : 'bg-red-600'
-                        }`}
+                        className="h-2 rounded-full transition-all bg-primary"
                         style={{ width: `${team.bau_health}%` }}
                       />
                     </div>

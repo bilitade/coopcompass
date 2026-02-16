@@ -297,9 +297,9 @@ export const TeamDashboard: React.FC<TeamDashboardProps> = ({ data }) => {
                   {(activity.activity_score || 0).toFixed(0)}%
                 </span>
               </div>
-              <div className="w-full bg-border/40 rounded-full h-1.5 mb-4">
+              <div className="w-full bg-border/40 rounded-full h-2 mb-4">
                 <div 
-                  className={`h-1.5 rounded-full transition-all duration-1000 ${(activity.activity_score || 0) >= 90 ? 'bg-emerald-500' : (activity.activity_score || 0) >= 70 ? 'bg-amber-500' : 'bg-red-500'}`} 
+                  className={`h-2 rounded-full transition-all duration-1000 ${(activity.activity_score || 0) >= 90 ? 'bg-emerald-500' : (activity.activity_score || 0) >= 70 ? 'bg-amber-500' : 'bg-red-500'}`} 
                   style={{ width: `${activity.activity_score || 0}%` }} 
                 />
               </div>

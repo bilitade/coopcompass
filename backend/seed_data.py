@@ -65,34 +65,28 @@ def seed_demo_data():
         print("CREATING DEPARTMENTS")
         print("=" * 60)
         
-        dept_tech = Department(
-            name="Technology & Infrastructure",
-            description="Core banking systems, infrastructure, and digital platforms"
+        dept_payment = Department(
+            name="Payment Platform",
+            description="ATM operations, card production, and payment processing services"
         )
-        dept_risk = Department(
-            name="Risk & Compliance",
-            description="Risk management, regulatory compliance, and security"
+        dept_core = Department(
+            name="Core Banking System",
+            description="T24 core banking application, system integration, and banking operations"
         )
-        dept_ops = Department(
-            name="Operations",
-            description="Transaction processing, customer operations, and service delivery"
-        )
-        dept_digital = Department(
-            name="Digital Banking",
-            description="Mobile banking, digital channels, and customer experience"
+        dept_district = Department(
+            name="Central Finfine District",
+            description="Branch operations, customer service, and district management"
         )
         
-        db.add_all([dept_tech, dept_risk, dept_ops, dept_digital])
+        db.add_all([dept_payment, dept_core, dept_district])
         db.commit()
-        db.refresh(dept_tech)
-        db.refresh(dept_risk)
-        db.refresh(dept_ops)
-        db.refresh(dept_digital)
+        db.refresh(dept_payment)
+        db.refresh(dept_core)
+        db.refresh(dept_district)
         
-        print(f"✓ {dept_tech.name}")
-        print(f"✓ {dept_risk.name}")
-        print(f"✓ {dept_ops.name}")
-        print(f"✓ {dept_digital.name}\n")
+        print(f"✓ {dept_payment.name}")
+        print(f"✓ {dept_core.name}")
+        print(f"✓ {dept_district.name}\n")
         
         # ========================================
         # CREATE TEAMS WITH DESCRIPTIONS
@@ -101,41 +95,36 @@ def seed_demo_data():
         print("CREATING TEAMS")
         print("=" * 60)
         
-        team_core = Team(
-            name="Core Banking Systems",
-            department_id=dept_tech.id,
-            description="Maintains and enhances core banking infrastructure, transaction processing systems, and database management"
+        team_atm = Team(
+            name="ATM Monitoring Team",
+            department_id=dept_payment.id,
+            description="Monitors ATM network performance, handles ATM maintenance, and ensures ATM availability and transaction processing"
         )
-        team_security = Team(
-            name="Cybersecurity",
-            department_id=dept_tech.id,
-            description="Protects bank infrastructure from cyber threats, implements security controls, and monitors security incidents"
+        team_card = Team(
+            name="Card Production Team",
+            department_id=dept_payment.id,
+            description="Manages card production processes, handles card issuance, and ensures card quality and delivery"
         )
-        team_compliance = Team(
-            name="Regulatory Compliance",
-            department_id=dept_risk.id,
-            description="Ensures adherence to banking regulations, conducts compliance audits, and manages regulatory reporting"
+        team_t24 = Team(
+            name="T24 Application Team",
+            department_id=dept_core.id,
+            description="Manages T24 core banking system, handles application administration, and ensures system stability"
         )
-        team_fraud = Team(
-            name="Fraud Prevention",
-            department_id=dept_risk.id,
-            description="Detects and prevents fraudulent transactions, monitors suspicious activities, and implements fraud detection systems"
+        team_integration = Team(
+            name="Application Integration Team",
+            department_id=dept_core.id,
+            description="Develops and maintains system integrations, manages API connections, and ensures seamless data flow"
         )
-        team_payments = Team(
-            name="Payment Processing",
-            department_id=dept_ops.id,
-            description="Processes payment transactions, manages payment gateways, and ensures payment system reliability"
-        )
-        team_mobile = Team(
-            name="Mobile Banking",
-            department_id=dept_digital.id,
-            description="Develops and maintains mobile banking applications, enhances user experience, and drives mobile adoption"
+        team_ijo = Team(
+            name="Ijo Branch",
+            department_id=dept_district.id,
+            description="Branch operations, customer service, cash management, and local banking services"
         )
         
-        db.add_all([team_core, team_security, team_compliance, team_fraud, team_payments, team_mobile])
+        db.add_all([team_atm, team_card, team_t24, team_integration, team_ijo])
         db.commit()
         
-        for team in [team_core, team_security, team_compliance, team_fraud, team_payments, team_mobile]:
+        for team in [team_atm, team_card, team_t24, team_integration, team_ijo]:
             db.refresh(team)
             print(f"✓ {team.name} ({team.department.name})")
         
@@ -148,53 +137,43 @@ def seed_demo_data():
         print("CREATING DIRECTORS")
         print("=" * 60)
         
-        director_tech = User(
-            name="Michael Chen",
-            email="michael@bank.com",
-            position="Director of Technology & Infrastructure",
+        director_payment = User(
+            name="Hailagegn Zerihun",
+            email="hailagegn@bank.com",
+            position="Director of Payment Platform",
             role="director",
             password_hash=hash_password("password123"),
             is_active=True
         )
-        director_risk = User(
-            name="Sarah Martinez",
-            email="sarah@bank.com",
-            position="Director of Risk & Compliance",
+        director_core = User(
+            name="Samuel Kuma",
+            email="samuel@bank.com",
+            position="Director of Core Banking System",
             role="director",
             password_hash=hash_password("password123"),
             is_active=True
         )
-        director_ops = User(
-            name="David Kumar",
-            email="david@bank.com",
-            position="Director of Operations",
-            role="director",
-            password_hash=hash_password("password123"),
-            is_active=True
-        )
-        director_digital = User(
-            name="Jennifer Lee",
-            email="jennifer@bank.com",
-            position="Director of Digital Banking",
+        director_district = User(
+            name="Iyob Shiferaw",
+            email="iyob@bank.com",
+            position="Director of Central Finfine District",
             role="director",
             password_hash=hash_password("password123"),
             is_active=True
         )
         
-        db.add_all([director_tech, director_risk, director_ops, director_digital])
+        db.add_all([director_payment, director_core, director_district])
         db.commit()
         
         # Assign directors to departments
-        dept_tech.director_id = director_tech.id
-        dept_risk.director_id = director_risk.id
-        dept_ops.director_id = director_ops.id
-        dept_digital.director_id = director_digital.id
+        dept_payment.director_id = director_payment.id
+        dept_core.director_id = director_core.id
+        dept_district.director_id = director_district.id
         db.commit()
         
-        print(f"✓ {director_tech.name} → {dept_tech.name}")
-        print(f"✓ {director_risk.name} → {dept_risk.name}")
-        print(f"✓ {director_ops.name} → {dept_ops.name}")
-        print(f"✓ {director_digital.name} → {dept_digital.name}\n")
+        print(f"✓ {director_payment.name} → {dept_payment.name}")
+        print(f"✓ {director_core.name} → {dept_core.name}")
+        print(f"✓ {director_district.name} → {dept_district.name}\n")
         
         # ========================================
         # CREATE EXECUTIVE & ADMIN
@@ -203,10 +182,18 @@ def seed_demo_data():
         print("CREATING EXECUTIVE & ADMIN")
         print("=" * 60)
         
-        executive = User(
-            name="Robert Thompson",
-            email="robert@bank.com",
+        ceo = User(
+            name="Deribe Asfaw",
+            email="deribe@bank.com",
             position="Chief Executive Officer",
+            role="executive",
+            password_hash=hash_password("password123"),
+            is_active=True
+        )
+        cto = User(
+            name="Aman Semir",
+            email="aman@bank.com",
+            position="Chief Transformation and Strategy Officer",
             role="executive",
             password_hash=hash_password("password123"),
             is_active=True
@@ -219,10 +206,11 @@ def seed_demo_data():
             password_hash=hash_password("password123"),
             is_active=True
         )
-        db.add_all([executive, admin])
+        db.add_all([ceo, cto, admin])
         db.commit()
         
-        print(f"✓ {executive.name} ({executive.position})")
+        print(f"✓ {ceo.name} ({ceo.position})")
+        print(f"✓ {cto.name} ({cto.position})")
         print(f"✓ {admin.name}\n")
         
         # ========================================
@@ -232,102 +220,104 @@ def seed_demo_data():
         print("CREATING TEAM MEMBERS")
         print("=" * 60)
         
-        # Core Banking Systems Team
-        users_core = [
-            User(team_id=team_core.id, name="James Wilson", email="james@bank.com", 
-                 position="Team Lead - Core Systems", role="lead", password_hash=hash_password("password123"), is_active=True),
-            User(team_id=team_core.id, name="Emma Brown", email="emma@bank.com", 
-                 position="Senior Software Engineer", role="member", password_hash=hash_password("password123"), is_active=True),
-            User(team_id=team_core.id, name="Oliver Davis", email="oliver@bank.com", 
-                 position="Software Engineer", role="member", password_hash=hash_password("password123"), is_active=True),
-            User(team_id=team_core.id, name="Sophia Taylor", email="sophia@bank.com", 
-                 position="Database Administrator", role="member", password_hash=hash_password("password123"), is_active=True),
+        # ATM Monitoring Team
+        users_atm = [
+            User(team_id=team_atm.id, name="Zidan Mohammed", email="zidan@bank.com", 
+                 position="Associate Card Banking Officer", role="lead", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_atm.id, name="Motuma File", email="motuma@bank.com", 
+                 position="Associate Card Banking Officer", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_atm.id, name="Derartu Sisay", email="derartu@bank.com", 
+                 position="Associate Card Banking Officer", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_atm.id, name="Simon Kasahun", email="simon@bank.com", 
+                 position="Associate Card Banking Officer", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_atm.id, name="Roba Temesgen", email="roba@bank.com", 
+                 position="Associate Card Banking Officer", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_atm.id, name="Kebron Kebede", email="kebron@bank.com", 
+                 position="Associate Card Banking Officer", role="member", password_hash=hash_password("password123"), is_active=True),
         ]
         
-        # Cybersecurity Team
-        users_security = [
-            User(team_id=team_security.id, name="Alexander Morgan", email="alexander@bank.com", 
-                 position="Security Team Lead", role="lead", password_hash=hash_password("password123"), is_active=True),
-            User(team_id=team_security.id, name="Isabella Clark", email="isabella@bank.com", 
-                 position="Security Analyst", role="member", password_hash=hash_password("password123"), is_active=True),
-            User(team_id=team_security.id, name="Ethan White", email="ethan@bank.com", 
-                 position="Security Engineer", role="member", password_hash=hash_password("password123"), is_active=True),
+        # Card Production Team
+        users_card = [
+            User(team_id=team_card.id, name="Birhanemeskel Mesfin", email="birhanemeskel@bank.com", 
+                 position="Associate Card Banking Officer", role="lead", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_card.id, name="Duresa Hedeto", email="duresa@bank.com", 
+                 position="Associate Card Banking Officer", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_card.id, name="Elasabeth Dawit", email="elasabeth@bank.com", 
+                 position="Associate Card Banking Officer", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_card.id, name="Isubalo Yirga", email="isubalo@bank.com", 
+                 position="Associate Card Banking Officer", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_card.id, name="Tomas Biyana", email="tomas@bank.com", 
+                 position="Associate Card Banking Officer", role="member", password_hash=hash_password("password123"), is_active=True),
         ]
         
-        # Regulatory Compliance Team
-        users_compliance = [
-            User(team_id=team_compliance.id, name="Victoria Garcia", email="victoria@bank.com", 
-                 position="Compliance Team Lead", role="lead", password_hash=hash_password("password123"), is_active=True),
-            User(team_id=team_compliance.id, name="Daniel Martinez", email="daniel@bank.com", 
-                 position="Compliance Officer", role="member", password_hash=hash_password("password123"), is_active=True),
-            User(team_id=team_compliance.id, name="Grace Anderson", email="grace@bank.com", 
-                 position="Regulatory Analyst", role="member", password_hash=hash_password("password123"), is_active=True),
+        # T24 Application Team
+        users_t24 = [
+            User(team_id=team_t24.id, name="Regasa Alemu", email="regasa@bank.com", 
+                 position="T24 Application Manager", role="lead", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_t24.id, name="Kelil Harar", email="kelil@bank.com", 
+                 position="Core Banking Application Administrator", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_t24.id, name="Ephrem Daniel", email="ephrem@bank.com", 
+                 position="Core Banking Application Administrator", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_t24.id, name="Iyasu Refisa", email="iyasu@bank.com", 
+                 position="Core Banking Application Administrator", role="member", password_hash=hash_password("password123"), is_active=True),
         ]
         
-        # Fraud Prevention Team
-        users_fraud = [
-            User(team_id=team_fraud.id, name="Lucas Thompson", email="lucas@bank.com", 
-                 position="Fraud Prevention Lead", role="lead", password_hash=hash_password("password123"), is_active=True),
-            User(team_id=team_fraud.id, name="Mia Johnson", email="mia@bank.com", 
-                 position="Fraud Analyst", role="member", password_hash=hash_password("password123"), is_active=True),
-            User(team_id=team_fraud.id, name="Noah Williams", email="noah@bank.com", 
-                 position="Risk Analyst", role="member", password_hash=hash_password("password123"), is_active=True),
+        # Application Integration Team
+        users_integration = [
+            User(team_id=team_integration.id, name="Tesfahun Semaw", email="tesfahun@bank.com", 
+                 position="Manager – Application and Integration", role="lead", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_integration.id, name="Tselotemariam Tadesse", email="tselotemariam@bank.com", 
+                 position="Software Development and Integration Officer", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_integration.id, name="Zelalem Zerfu", email="zelalem@bank.com", 
+                 position="Software Development and Integration Officer", role="member", password_hash=hash_password("password123"), is_active=True),
         ]
         
-        # Payment Processing Team
-        users_payments = [
-            User(team_id=team_payments.id, name="Ava Rodriguez", email="ava@bank.com", 
-                 position="Payment Operations Lead", role="lead", password_hash=hash_password("password123"), is_active=True),
-            User(team_id=team_payments.id, name="William Chen", email="william@bank.com", 
-                 position="Payment Processor", role="member", password_hash=hash_password("password123"), is_active=True),
-            User(team_id=team_payments.id, name="Charlotte Kim", email="charlotte@bank.com", 
-                 position="Operations Specialist", role="member", password_hash=hash_password("password123"), is_active=True),
+        # Ijo Branch Team
+        users_ijo = [
+            User(team_id=team_ijo.id, name="Samson Tadele", email="samson@bank.com", 
+                 position="Branch Manager", role="lead", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_ijo.id, name="Samrawit Abreham", email="samrawit@bank.com", 
+                 position="Customer Service Officer", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_ijo.id, name="Korsa Galmesa", email="korsa@bank.com", 
+                 position="Internal Controller", role="member", password_hash=hash_password("password123"), is_active=True),
+            User(team_id=team_ijo.id, name="Tesfaye Tafa", email="tesfaye@bank.com", 
+                 position="Chief Cashier", role="member", password_hash=hash_password("password123"), is_active=True),
         ]
         
-        # Mobile Banking Team
-        users_mobile = [
-            User(team_id=team_mobile.id, name="Benjamin Lee", email="benjamin@bank.com", 
-                 position="Mobile Team Lead", role="lead", password_hash=hash_password("password123"), is_active=True),
-            User(team_id=team_mobile.id, name="Amelia Patel", email="amelia@bank.com", 
-                 position="Mobile Developer", role="member", password_hash=hash_password("password123"), is_active=True),
-            User(team_id=team_mobile.id, name="Henry Zhang", email="henry@bank.com", 
-                 position="UX Designer", role="member", password_hash=hash_password("password123"), is_active=True),
-            User(team_id=team_mobile.id, name="Lily Santos", email="lily@bank.com", 
-                 position="QA Engineer", role="member", password_hash=hash_password("password123"), is_active=True),
-        ]
-        
-        all_users = users_core + users_security + users_compliance + users_fraud + users_payments + users_mobile
+        all_users = users_atm + users_card + users_t24 + users_integration + users_ijo
         db.add_all(all_users)
         db.commit()
         
         for user in all_users:
             db.refresh(user)
         
-        print(f"✓ Created {len(all_users)} team members across 6 teams\n")
+        print(f"✓ Created {len(all_users)} team members across 5 teams\n")
         
         # Get team leads for easy reference
-        james = users_core[0]      # Core Banking Lead
-        alexander = users_security[0]  # Security Lead
-        victoria = users_compliance[0]  # Compliance Lead
-        lucas = users_fraud[0]     # Fraud Lead
-        ava = users_payments[0]    # Payments Lead
-        benjamin = users_mobile[0] # Mobile Lead
+        zidan = users_atm[0]           # ATM Monitoring Lead
+        birhanemeskel = users_card[0]  # Card Production Lead
+        regasa = users_t24[0]          # T24 Application Lead
+        tesfahun = users_integration[0] # Application Integration Lead
+        samson = users_ijo[0]          # Ijo Branch Lead
         
         # Get some members for task assignment
-        emma = users_core[1]
-        oliver = users_core[2]
-        sophia = users_core[3]
-        isabella = users_security[1]
-        ethan = users_security[2]
-        daniel = users_compliance[1]
-        grace = users_compliance[2]
-        mia = users_fraud[1]
-        noah = users_fraud[2]
-        william = users_payments[1]
-        charlotte = users_payments[2]
-        amelia = users_mobile[1]
-        henry = users_mobile[2]
-        lily = users_mobile[3]
+        motuma = users_atm[1]
+        derartu = users_atm[2]
+        simon = users_atm[3]
+        roba = users_atm[4]
+        kebron = users_atm[5]
+        duresa = users_card[1]
+        elasabeth = users_card[2]
+        isubalo = users_card[3]
+        tomas = users_card[4]
+        kelil = users_t24[1]
+        ephrem = users_t24[2]
+        iyasu = users_t24[3]
+        tselotemariam = users_integration[1]
+        zelalem = users_integration[2]
+        samrawit = users_ijo[1]
+        korsa = users_ijo[2]
+        tesfaye = users_ijo[3]
         
         # ========================================
         # CREATE OKRs FOR ALL TEAMS
@@ -336,123 +326,108 @@ def seed_demo_data():
         print("CREATING OKRs")
         print("=" * 60)
         
-        # Core Banking Systems OKR
-        okr_core = OKR(
-            team_id=team_core.id,
+        # ATM Monitoring Team OKR
+        okr_atm = OKR(
+            team_id=team_atm.id,
             quarter="Q1 2026",
-            objective="Modernize Core Banking Infrastructure",
+            objective="Enhance ATM Network Reliability and Performance",
             is_active=True
         )
-        db.add(okr_core)
+        db.add(okr_atm)
         db.commit()
-        db.refresh(okr_core)
+        db.refresh(okr_atm)
         
-        key_results_core = [
-            KeyResult(okr_id=okr_core.id, description="Migrate 5 critical services to cloud", base_value=Decimal("0"), target_value=Decimal("5"), current_value=Decimal("2"), unit="services", weight=Decimal("0.40")),
-            KeyResult(okr_id=okr_core.id, description="Reduce system downtime by 50%", base_value=Decimal("4"), target_value=Decimal("2"), current_value=Decimal("0.8"), unit="hours/month", weight=Decimal("0.30")),
-            KeyResult(okr_id=okr_core.id, description="Deploy new API gateway", base_value=Decimal("0"), target_value=Decimal("100"), current_value=Decimal("65"), unit="%", weight=Decimal("0.30")),
+        key_results_atm = [
+            KeyResult(okr_id=okr_atm.id, description="Achieve 99.5% ATM uptime across network", base_value=Decimal("98.5"), target_value=Decimal("99.5"), current_value=Decimal("99.2"), unit="%", weight=Decimal("0.50")),
+            KeyResult(okr_id=okr_atm.id, description="Reduce ATM transaction failures by 40%", base_value=Decimal("2.5"), target_value=Decimal("1.5"), current_value=Decimal("2.0"), unit="%", weight=Decimal("0.30")),
+            KeyResult(okr_id=okr_atm.id, description="Complete preventive maintenance for 100% of ATMs", base_value=Decimal("85"), target_value=Decimal("100"), current_value=Decimal("92"), unit="%", weight=Decimal("0.20")),
         ]
-        db.add_all(key_results_core)
+        db.add_all(key_results_atm)
         db.commit()
-        print(f"✓ {team_core.name}: {okr_core.objective} ({len(key_results_core)} KRs)")
+        print(f"✓ {team_atm.name}: {okr_atm.objective} ({len(key_results_atm)} KRs)")
         
-        # Cybersecurity OKR
-        okr_security = OKR(
-            team_id=team_security.id,
+        # Card Production Team OKR
+        okr_card = OKR(
+            team_id=team_card.id,
             quarter="Q1 2026",
-            objective="Enhance Security Posture and Threat Detection",
+            objective="Optimize Card Production and Delivery Process",
             is_active=True
         )
-        db.add(okr_security)
+        db.add(okr_card)
         db.commit()
-        db.refresh(okr_security)
+        db.refresh(okr_card)
         
-        key_results_security = [
-            KeyResult(okr_id=okr_security.id, description="Implement zero-trust architecture", base_value=Decimal("0"), target_value=Decimal("100"), current_value=Decimal("45"), unit="%", weight=Decimal("0.60")),
-            KeyResult(okr_id=okr_security.id, description="Reduce security incidents by 40%", base_value=Decimal("20"), target_value=Decimal("10"), current_value=Decimal("12"), unit="incidents/month", weight=Decimal("0.40")),
+        key_results_card = [
+            KeyResult(okr_id=okr_card.id, description="Reduce card production time by 30%", base_value=Decimal("5"), target_value=Decimal("3.5"), current_value=Decimal("4.2"), unit="days", weight=Decimal("0.40")),
+            KeyResult(okr_id=okr_card.id, description="Achieve 99% card quality accuracy", base_value=Decimal("97"), target_value=Decimal("99"), current_value=Decimal("98.5"), unit="%", weight=Decimal("0.35")),
+            KeyResult(okr_id=okr_card.id, description="Process 100% of card orders within SLA", base_value=Decimal("92"), target_value=Decimal("100"), current_value=Decimal("96"), unit="%", weight=Decimal("0.25")),
         ]
-        db.add_all(key_results_security)
+        db.add_all(key_results_card)
         db.commit()
-        print(f"✓ {team_security.name}: {okr_security.objective} ({len(key_results_security)} KRs)")
+        print(f"✓ {team_card.name}: {okr_card.objective} ({len(key_results_card)} KRs)")
         
-        # Regulatory Compliance OKR
-        okr_compliance = OKR(
-            team_id=team_compliance.id,
+        # T24 Application Team OKR
+        okr_t24 = OKR(
+            team_id=team_t24.id,
             quarter="Q1 2026",
-            objective="Strengthen Regulatory Compliance Framework",
+            objective="Ensure T24 System Stability and Performance",
             is_active=True
         )
-        db.add(okr_compliance)
+        db.add(okr_t24)
         db.commit()
-        db.refresh(okr_compliance)
+        db.refresh(okr_t24)
         
-        key_results_compliance = [
-            KeyResult(okr_id=okr_compliance.id, description="Complete 100% of regulatory audits on time", base_value=Decimal("85"), target_value=Decimal("100"), current_value=Decimal("95"), unit="%", weight=Decimal("0.50")),
-            KeyResult(okr_id=okr_compliance.id, description="Reduce compliance violations by 60%", base_value=Decimal("10"), target_value=Decimal("4"), current_value=Decimal("6"), unit="violations/quarter", weight=Decimal("0.50")),
+        key_results_t24 = [
+            KeyResult(okr_id=okr_t24.id, description="Maintain 99.9% T24 system uptime", base_value=Decimal("99.7"), target_value=Decimal("99.9"), current_value=Decimal("99.85"), unit="%", weight=Decimal("0.50")),
+            KeyResult(okr_id=okr_t24.id, description="Reduce T24 transaction processing time by 20%", base_value=Decimal("3.5"), target_value=Decimal("2.8"), current_value=Decimal("3.1"), unit="seconds", weight=Decimal("0.30")),
+            KeyResult(okr_id=okr_t24.id, description="Complete all scheduled T24 maintenance windows on time", base_value=Decimal("90"), target_value=Decimal("100"), current_value=Decimal("95"), unit="%", weight=Decimal("0.20")),
         ]
-        db.add_all(key_results_compliance)
+        db.add_all(key_results_t24)
         db.commit()
-        print(f"✓ {team_compliance.name}: {okr_compliance.objective} ({len(key_results_compliance)} KRs)")
+        print(f"✓ {team_t24.name}: {okr_t24.objective} ({len(key_results_t24)} KRs)")
         
-        # Fraud Prevention OKR
-        okr_fraud = OKR(
-            team_id=team_fraud.id,
+        # Application Integration Team OKR
+        okr_integration = OKR(
+            team_id=team_integration.id,
             quarter="Q1 2026",
-            objective="Enhance Fraud Detection and Prevention",
+            objective="Enhance System Integration and API Performance",
             is_active=True
         )
-        db.add(okr_fraud)
+        db.add(okr_integration)
         db.commit()
-        db.refresh(okr_fraud)
+        db.refresh(okr_integration)
         
-        key_results_fraud = [
-            KeyResult(okr_id=okr_fraud.id, description="Improve fraud detection rate to 98%", base_value=Decimal("92"), target_value=Decimal("98"), current_value=Decimal("95"), unit="%", weight=Decimal("0.60")),
-            KeyResult(okr_id=okr_fraud.id, description="Reduce false positives by 30%", base_value=Decimal("15"), target_value=Decimal("10.5"), current_value=Decimal("12"), unit="%", weight=Decimal("0.40")),
+        key_results_integration = [
+            KeyResult(okr_id=okr_integration.id, description="Integrate 3 new payment gateways", base_value=Decimal("0"), target_value=Decimal("3"), current_value=Decimal("1"), unit="gateways", weight=Decimal("0.40")),
+            KeyResult(okr_id=okr_integration.id, description="Reduce API response time by 25%", base_value=Decimal("500"), target_value=Decimal("375"), current_value=Decimal("425"), unit="ms", weight=Decimal("0.35")),
+            KeyResult(okr_id=okr_integration.id, description="Achieve 99.5% integration success rate", base_value=Decimal("98"), target_value=Decimal("99.5"), current_value=Decimal("99.2"), unit="%", weight=Decimal("0.25")),
         ]
-        db.add_all(key_results_fraud)
+        db.add_all(key_results_integration)
         db.commit()
-        print(f"✓ {team_fraud.name}: {okr_fraud.objective} ({len(key_results_fraud)} KRs)")
+        print(f"✓ {team_integration.name}: {okr_integration.objective} ({len(key_results_integration)} KRs)")
         
-        # Payment Processing OKR
-        okr_payments = OKR(
-            team_id=team_payments.id,
+        # Ijo Branch OKR
+        okr_ijo = OKR(
+            team_id=team_ijo.id,
             quarter="Q1 2026",
-            objective="Optimize Payment Processing Performance",
+            objective="Improve Branch Customer Service and Operations",
             is_active=True
         )
-        db.add(okr_payments)
+        db.add(okr_ijo)
         db.commit()
-        db.refresh(okr_payments)
+        db.refresh(okr_ijo)
         
-        key_results_payments = [
-            KeyResult(okr_id=okr_payments.id, description="Process 99.9% of payments within 2 seconds", base_value=Decimal("98"), target_value=Decimal("99.9"), current_value=Decimal("99.5"), unit="%", weight=Decimal("0.50")),
-            KeyResult(okr_id=okr_payments.id, description="Reduce payment failures by 50%", base_value=Decimal("2"), target_value=Decimal("1"), current_value=Decimal("1.5"), unit="%", weight=Decimal("0.50")),
+        key_results_ijo = [
+            KeyResult(okr_id=okr_ijo.id, description="Achieve 95% customer satisfaction rating", base_value=Decimal("88"), target_value=Decimal("95"), current_value=Decimal("92"), unit="%", weight=Decimal("0.40")),
+            KeyResult(okr_id=okr_ijo.id, description="Reduce average customer wait time to 10 minutes", base_value=Decimal("18"), target_value=Decimal("10"), current_value=Decimal("13"), unit="minutes", weight=Decimal("0.35")),
+            KeyResult(okr_id=okr_ijo.id, description="Process 100% of transactions accurately", base_value=Decimal("98.5"), target_value=Decimal("100"), current_value=Decimal("99.5"), unit="%", weight=Decimal("0.25")),
         ]
-        db.add_all(key_results_payments)
+        db.add_all(key_results_ijo)
         db.commit()
-        print(f"✓ {team_payments.name}: {okr_payments.objective} ({len(key_results_payments)} KRs)")
-        
-        # Mobile Banking OKR
-        okr_mobile = OKR(
-            team_id=team_mobile.id,
-            quarter="Q1 2026",
-            objective="Launch Next-Gen Mobile Banking App",
-            is_active=True
-        )
-        db.add(okr_mobile)
-        db.commit()
-        db.refresh(okr_mobile)
-        
-        key_results_mobile = [
-            KeyResult(okr_id=okr_mobile.id, description="Achieve 4.5+ star app rating", base_value=Decimal("4.0"), target_value=Decimal("4.5"), current_value=Decimal("4.2"), unit="stars", weight=Decimal("0.50")),
-            KeyResult(okr_id=okr_mobile.id, description="Reach 50K active monthly users", base_value=Decimal("25000"), target_value=Decimal("50000"), current_value=Decimal("35000"), unit="users", weight=Decimal("0.50")),
-        ]
-        db.add_all(key_results_mobile)
-        db.commit()
-        print(f"✓ {team_mobile.name}: {okr_mobile.objective} ({len(key_results_mobile)} KRs)\n")
+        print(f"✓ {team_ijo.name}: {okr_ijo.objective} ({len(key_results_ijo)} KRs)\n")
         
         # Refresh all key results
-        all_key_results = key_results_core + key_results_security + key_results_compliance + key_results_fraud + key_results_payments + key_results_mobile
+        all_key_results = key_results_atm + key_results_card + key_results_t24 + key_results_integration + key_results_ijo
         for kr in all_key_results:
             db.refresh(kr)
         
@@ -463,66 +438,61 @@ def seed_demo_data():
         print("CREATING BAU ACTIVITIES")
         print("=" * 60)
         
-        bau_core = [
-            BAUActivity(team_id=team_core.id, name="System Maintenance", description="Regular system updates and maintenance", is_active=True),
-            BAUActivity(team_id=team_core.id, name="Database Management", description="Database optimization and monitoring", is_active=True),
+        bau_atm = [
+            BAUActivity(team_id=team_atm.id, name="ATM Daily Monitoring", description="24/7 monitoring of ATM network status and transaction processing", is_active=True),
+            BAUActivity(team_id=team_atm.id, name="ATM Cash Replenishment", description="Coordinate and manage ATM cash replenishment schedules", is_active=True),
+            BAUActivity(team_id=team_atm.id, name="ATM Maintenance", description="Scheduled and emergency ATM maintenance and repairs", is_active=True),
         ]
-        db.add_all(bau_core)
+        db.add_all(bau_atm)
         db.commit()
-        for bau in bau_core:
+        for bau in bau_atm:
             db.refresh(bau)
         
-        bau_security = [
-            BAUActivity(team_id=team_security.id, name="Threat Monitoring", description="24/7 security threat monitoring and response", is_active=True),
-            BAUActivity(team_id=team_security.id, name="Security Audits", description="Regular security audits and vulnerability assessments", is_active=True),
+        bau_card = [
+            BAUActivity(team_id=team_card.id, name="Card Order Processing", description="Process daily card orders and manage production queue", is_active=True),
+            BAUActivity(team_id=team_card.id, name="Card Quality Control", description="Quality checks and validation of produced cards", is_active=True),
+            BAUActivity(team_id=team_card.id, name="Card Delivery Management", description="Coordinate card delivery to branches and customers", is_active=True),
         ]
-        db.add_all(bau_security)
+        db.add_all(bau_card)
         db.commit()
-        for bau in bau_security:
+        for bau in bau_card:
             db.refresh(bau)
         
-        bau_compliance = [
-            BAUActivity(team_id=team_compliance.id, name="Regulatory Reporting", description="Monthly and quarterly regulatory reports", is_active=True),
-            BAUActivity(team_id=team_compliance.id, name="Compliance Training", description="Conduct compliance training sessions", is_active=True),
+        bau_t24 = [
+            BAUActivity(team_id=team_t24.id, name="T24 System Monitoring", description="24/7 monitoring of T24 core banking system performance", is_active=True),
+            BAUActivity(team_id=team_t24.id, name="T24 Backup and Recovery", description="Daily backups and recovery procedures for T24 system", is_active=True),
+            BAUActivity(team_id=team_t24.id, name="T24 User Support", description="Support T24 users and resolve application issues", is_active=True),
         ]
-        db.add_all(bau_compliance)
+        db.add_all(bau_t24)
         db.commit()
-        for bau in bau_compliance:
+        for bau in bau_t24:
             db.refresh(bau)
         
-        bau_fraud = [
-            BAUActivity(team_id=team_fraud.id, name="Transaction Monitoring", description="Real-time transaction monitoring for fraud detection", is_active=True),
-            BAUActivity(team_id=team_fraud.id, name="Fraud Investigation", description="Investigate and resolve fraud cases", is_active=True),
+        bau_integration = [
+            BAUActivity(team_id=team_integration.id, name="API Monitoring", description="Monitor API performance and integration health", is_active=True),
+            BAUActivity(team_id=team_integration.id, name="Integration Support", description="Support and troubleshoot system integrations", is_active=True),
+            BAUActivity(team_id=team_integration.id, name="Integration Testing", description="Test and validate new integrations and API changes", is_active=True),
         ]
-        db.add_all(bau_fraud)
+        db.add_all(bau_integration)
         db.commit()
-        for bau in bau_fraud:
+        for bau in bau_integration:
             db.refresh(bau)
         
-        bau_payments = [
-            BAUActivity(team_id=team_payments.id, name="Payment Gateway Management", description="Manage and monitor payment gateways", is_active=True),
-            BAUActivity(team_id=team_payments.id, name="Transaction Reconciliation", description="Daily transaction reconciliation", is_active=True),
+        bau_ijo = [
+            BAUActivity(team_id=team_ijo.id, name="Customer Service", description="Daily customer service operations and support", is_active=True),
+            BAUActivity(team_id=team_ijo.id, name="Cash Management", description="Branch cash management and vault operations", is_active=True),
+            BAUActivity(team_id=team_ijo.id, name="Transaction Processing", description="Process daily banking transactions and account operations", is_active=True),
         ]
-        db.add_all(bau_payments)
+        db.add_all(bau_ijo)
         db.commit()
-        for bau in bau_payments:
+        for bau in bau_ijo:
             db.refresh(bau)
         
-        bau_mobile = [
-            BAUActivity(team_id=team_mobile.id, name="App Performance Monitoring", description="Monitor and optimize mobile app performance", is_active=True),
-            BAUActivity(team_id=team_mobile.id, name="User Support", description="Handle user support tickets and issues", is_active=True),
-        ]
-        db.add_all(bau_mobile)
-        db.commit()
-        for bau in bau_mobile:
-            db.refresh(bau)
-        
-        print(f"✓ {team_core.name}: {len(bau_core)} activities")
-        print(f"✓ {team_security.name}: {len(bau_security)} activities")
-        print(f"✓ {team_compliance.name}: {len(bau_compliance)} activities")
-        print(f"✓ {team_fraud.name}: {len(bau_fraud)} activities")
-        print(f"✓ {team_payments.name}: {len(bau_payments)} activities")
-        print(f"✓ {team_mobile.name}: {len(bau_mobile)} activities\n")
+        print(f"✓ {team_atm.name}: {len(bau_atm)} activities")
+        print(f"✓ {team_card.name}: {len(bau_card)} activities")
+        print(f"✓ {team_t24.name}: {len(bau_t24)} activities")
+        print(f"✓ {team_integration.name}: {len(bau_integration)} activities")
+        print(f"✓ {team_ijo.name}: {len(bau_ijo)} activities\n")
         
         # ========================================
         # CREATE BAU METRICS
@@ -531,47 +501,45 @@ def seed_demo_data():
         print("CREATING BAU METRICS")
         print("=" * 60)
         
-        metrics_core = [
-            BAUMetric(bau_activity_id=bau_core[0].id, name="System Uptime", target_value=Decimal("99.9"), current_value=Decimal("99.7"), unit="%", weight=Decimal("0.6"), metric_type="Higher is Better"),
-            BAUMetric(bau_activity_id=bau_core[0].id, name="Incident Response Time", target_value=Decimal("30"), current_value=Decimal("35"), unit="minutes", weight=Decimal("0.4"), metric_type="Lower is Better"),
-            BAUMetric(bau_activity_id=bau_core[1].id, name="Database Performance", target_value=Decimal("95"), current_value=Decimal("92"), unit="%", weight=Decimal("0.5"), metric_type="Higher is Better"),
+        metrics_atm = [
+            BAUMetric(bau_activity_id=bau_atm[0].id, name="ATM Network Uptime", target_value=Decimal("99.5"), current_value=Decimal("99.2"), unit="%", weight=Decimal("0.5"), metric_type="Higher is Better"),
+            BAUMetric(bau_activity_id=bau_atm[0].id, name="Average Response Time", target_value=Decimal("3"), current_value=Decimal("3.5"), unit="seconds", weight=Decimal("0.3"), metric_type="Lower is Better"),
+            BAUMetric(bau_activity_id=bau_atm[1].id, name="Cash Replenishment Timeliness", target_value=Decimal("100"), current_value=Decimal("96"), unit="%", weight=Decimal("0.4"), metric_type="Higher is Better"),
+            BAUMetric(bau_activity_id=bau_atm[2].id, name="Maintenance Completion Rate", target_value=Decimal("100"), current_value=Decimal("95"), unit="%", weight=Decimal("0.6"), metric_type="Higher is Better"),
         ]
-        db.add_all(metrics_core)
+        db.add_all(metrics_atm)
         db.commit()
         
-        metrics_security = [
-            BAUMetric(bau_activity_id=bau_security[0].id, name="Threat Detection Rate", target_value=Decimal("95"), current_value=Decimal("93"), unit="%", weight=Decimal("0.7"), metric_type="Higher is Better"),
-            BAUMetric(bau_activity_id=bau_security[1].id, name="Vulnerability Resolution Time", target_value=Decimal("48"), current_value=Decimal("55"), unit="hours", weight=Decimal("0.3"), metric_type="Lower is Better"),
+        metrics_card = [
+            BAUMetric(bau_activity_id=bau_card[0].id, name="Order Processing Time", target_value=Decimal("3"), current_value=Decimal("4.2"), unit="days", weight=Decimal("0.4"), metric_type="Lower is Better"),
+            BAUMetric(bau_activity_id=bau_card[1].id, name="Card Quality Accuracy", target_value=Decimal("99"), current_value=Decimal("98.5"), unit="%", weight=Decimal("0.35"), metric_type="Higher is Better"),
+            BAUMetric(bau_activity_id=bau_card[2].id, name="Delivery Success Rate", target_value=Decimal("100"), current_value=Decimal("98"), unit="%", weight=Decimal("0.25"), metric_type="Higher is Better"),
         ]
-        db.add_all(metrics_security)
+        db.add_all(metrics_card)
         db.commit()
         
-        metrics_compliance = [
-            BAUMetric(bau_activity_id=bau_compliance[0].id, name="Report Timeliness", target_value=Decimal("100"), current_value=Decimal("98"), unit="%", weight=Decimal("0.6"), metric_type="Higher is Better"),
-            BAUMetric(bau_activity_id=bau_compliance[1].id, name="Training Completion Rate", target_value=Decimal("95"), current_value=Decimal("92"), unit="%", weight=Decimal("0.4"), metric_type="Higher is Better"),
+        metrics_t24 = [
+            BAUMetric(bau_activity_id=bau_t24[0].id, name="T24 System Uptime", target_value=Decimal("99.9"), current_value=Decimal("99.85"), unit="%", weight=Decimal("0.5"), metric_type="Higher is Better"),
+            BAUMetric(bau_activity_id=bau_t24[1].id, name="Backup Success Rate", target_value=Decimal("100"), current_value=Decimal("99.5"), unit="%", weight=Decimal("0.3"), metric_type="Higher is Better"),
+            BAUMetric(bau_activity_id=bau_t24[2].id, name="Support Ticket Resolution Time", target_value=Decimal("4"), current_value=Decimal("5.2"), unit="hours", weight=Decimal("0.2"), metric_type="Lower is Better"),
         ]
-        db.add_all(metrics_compliance)
+        db.add_all(metrics_t24)
         db.commit()
         
-        metrics_fraud = [
-            BAUMetric(bau_activity_id=bau_fraud[0].id, name="Detection Accuracy", target_value=Decimal("98"), current_value=Decimal("95"), unit="%", weight=Decimal("0.7"), metric_type="Higher is Better"),
-            BAUMetric(bau_activity_id=bau_fraud[1].id, name="Case Resolution Time", target_value=Decimal("24"), current_value=Decimal("28"), unit="hours", weight=Decimal("0.3"), metric_type="Lower is Better"),
+        metrics_integration = [
+            BAUMetric(bau_activity_id=bau_integration[0].id, name="API Uptime", target_value=Decimal("99.5"), current_value=Decimal("99.2"), unit="%", weight=Decimal("0.4"), metric_type="Higher is Better"),
+            BAUMetric(bau_activity_id=bau_integration[1].id, name="Integration Issue Resolution Time", target_value=Decimal("6"), current_value=Decimal("7.5"), unit="hours", weight=Decimal("0.3"), metric_type="Lower is Better"),
+            BAUMetric(bau_activity_id=bau_integration[2].id, name="Integration Test Success Rate", target_value=Decimal("100"), current_value=Decimal("97"), unit="%", weight=Decimal("0.3"), metric_type="Higher is Better"),
         ]
-        db.add_all(metrics_fraud)
+        db.add_all(metrics_integration)
         db.commit()
         
-        metrics_payments = [
-            BAUMetric(bau_activity_id=bau_payments[0].id, name="Gateway Uptime", target_value=Decimal("99.95"), current_value=Decimal("99.9"), unit="%", weight=Decimal("0.5"), metric_type="Higher is Better"),
-            BAUMetric(bau_activity_id=bau_payments[1].id, name="Reconciliation Accuracy", target_value=Decimal("100"), current_value=Decimal("99.8"), unit="%", weight=Decimal("0.5"), metric_type="Higher is Better"),
+        metrics_ijo = [
+            BAUMetric(bau_activity_id=bau_ijo[0].id, name="Customer Satisfaction Score", target_value=Decimal("95"), current_value=Decimal("92"), unit="%", weight=Decimal("0.4"), metric_type="Higher is Better"),
+            BAUMetric(bau_activity_id=bau_ijo[1].id, name="Cash Variance Accuracy", target_value=Decimal("100"), current_value=Decimal("99.8"), unit="%", weight=Decimal("0.3"), metric_type="Higher is Better"),
+            BAUMetric(bau_activity_id=bau_ijo[2].id, name="Transaction Processing Accuracy", target_value=Decimal("100"), current_value=Decimal("99.5"), unit="%", weight=Decimal("0.3"), metric_type="Higher is Better"),
         ]
-        db.add_all(metrics_payments)
-        db.commit()
-        
-        metrics_mobile = [
-            BAUMetric(bau_activity_id=bau_mobile[0].id, name="App Crash Rate", target_value=Decimal("0.5"), current_value=Decimal("0.8"), unit="%", weight=Decimal("0.6"), metric_type="Lower is Better"),
-            BAUMetric(bau_activity_id=bau_mobile[0].id, name="App Load Time", target_value=Decimal("2"), current_value=Decimal("2.5"), unit="seconds", weight=Decimal("0.4"), metric_type="Lower is Better"),
-        ]
-        db.add_all(metrics_mobile)
+        db.add_all(metrics_ijo)
         db.commit()
         
         print(f"✓ Created metrics for all teams\n")
@@ -585,20 +553,19 @@ def seed_demo_data():
         
         current_month = datetime.now(timezone.utc).strftime("%Y-%m")
         
-        headsup_core = MonthlyHeadsUp(team_id=team_core.id, month=current_month, description="Focus on cloud migration and system stability improvements")
-        headsup_security = MonthlyHeadsUp(team_id=team_security.id, month=current_month, description="Enhance zero-trust infrastructure and security monitoring")
-        headsup_compliance = MonthlyHeadsUp(team_id=team_compliance.id, month=current_month, description="Complete Q1 regulatory audits and compliance training")
-        headsup_fraud = MonthlyHeadsUp(team_id=team_fraud.id, month=current_month, description="Improve fraud detection algorithms and reduce false positives")
-        headsup_payments = MonthlyHeadsUp(team_id=team_payments.id, month=current_month, description="Optimize payment processing speed and reliability")
-        headsup_mobile = MonthlyHeadsUp(team_id=team_mobile.id, month=current_month, description="Improve UX, performance, and prepare for app launch")
+        headsup_atm = MonthlyHeadsUp(team_id=team_atm.id, month=current_month, description="Focus on improving ATM network uptime, reducing transaction failures, and completing preventive maintenance for all ATMs")
+        headsup_card = MonthlyHeadsUp(team_id=team_card.id, month=current_month, description="Optimize card production processes, improve quality control, and ensure timely delivery of all card orders")
+        headsup_t24 = MonthlyHeadsUp(team_id=team_t24.id, month=current_month, description="Maintain T24 system stability, optimize transaction processing, and complete all scheduled maintenance windows")
+        headsup_integration = MonthlyHeadsUp(team_id=team_integration.id, month=current_month, description="Integrate new payment gateways, improve API performance, and ensure high integration success rates")
+        headsup_ijo = MonthlyHeadsUp(team_id=team_ijo.id, month=current_month, description="Enhance customer service quality, reduce wait times, and ensure accurate transaction processing")
         
-        all_headsups = [headsup_core, headsup_security, headsup_compliance, headsup_fraud, headsup_payments, headsup_mobile]
+        all_headsups = [headsup_atm, headsup_card, headsup_t24, headsup_integration, headsup_ijo]
         db.add_all(all_headsups)
         db.commit()
         for h in all_headsups:
             db.refresh(h)
         
-        print(f"✓ Created monthly heads-up for all 6 teams\n")
+        print(f"✓ Created monthly heads-up for all 5 teams\n")
         
         # ========================================
         # CREATE WORK ITEMS FOR ALL TEAMS
@@ -607,44 +574,42 @@ def seed_demo_data():
         print("CREATING WORK ITEMS")
         print("=" * 60)
         
-        work_items_core = [
-            WorkItem(team_id=team_core.id, monthly_headsup_id=headsup_core.id, title="Migrate authentication service to cloud", description="Move auth service to AWS infrastructure", source_type="OKR", source_id=key_results_core[0].id, owner_id=james.id, status="In Progress"),
-            WorkItem(team_id=team_core.id, monthly_headsup_id=headsup_core.id, title="Implement auto-failover system", description="Setup automatic failover for critical services", source_type="OKR", source_id=key_results_core[1].id, owner_id=emma.id, status="In Progress"),
-            WorkItem(team_id=team_core.id, monthly_headsup_id=headsup_core.id, title="Deploy API gateway", description="Deploy and configure new API gateway", source_type="OKR", source_id=key_results_core[2].id, owner_id=oliver.id, status="Not Started"),
-            WorkItem(team_id=team_core.id, monthly_headsup_id=headsup_core.id, title="Monthly database optimization", description="Optimize database queries and indexes", source_type="BAU", source_id=bau_core[1].id, owner_id=sophia.id, status="Not Started"),
+        work_items_atm = [
+            WorkItem(team_id=team_atm.id, monthly_headsup_id=headsup_atm.id, title="Improve ATM network uptime to 99.5%", description="Implement proactive monitoring and maintenance to achieve target uptime", source_type="OKR", source_id=key_results_atm[0].id, owner_id=zidan.id, status="In Progress"),
+            WorkItem(team_id=team_atm.id, monthly_headsup_id=headsup_atm.id, title="Reduce ATM transaction failures", description="Identify and resolve common causes of ATM transaction failures", source_type="OKR", source_id=key_results_atm[1].id, owner_id=motuma.id, status="In Progress"),
+            WorkItem(team_id=team_atm.id, monthly_headsup_id=headsup_atm.id, title="Complete preventive maintenance schedule", description="Ensure all ATMs receive scheduled preventive maintenance", source_type="OKR", source_id=key_results_atm[2].id, owner_id=derartu.id, status="Not Started"),
+            WorkItem(team_id=team_atm.id, monthly_headsup_id=headsup_atm.id, title="Daily ATM monitoring and reporting", description="Monitor ATM network status and generate daily reports", source_type="BAU", source_id=bau_atm[0].id, owner_id=simon.id, status="Not Started"),
         ]
         
-        work_items_security = [
-            WorkItem(team_id=team_security.id, monthly_headsup_id=headsup_security.id, title="Deploy zero-trust network controls", description="Implement network segmentation and access controls", source_type="OKR", source_id=key_results_security[0].id, owner_id=alexander.id, status="In Progress"),
-            WorkItem(team_id=team_security.id, monthly_headsup_id=headsup_security.id, title="Enhance threat detection system", description="Improve security monitoring and incident response", source_type="OKR", source_id=key_results_security[1].id, owner_id=isabella.id, status="Not Started"),
-            WorkItem(team_id=team_security.id, monthly_headsup_id=headsup_security.id, title="Conduct security audit", description="Perform quarterly security audit", source_type="BAU", source_id=bau_security[1].id, owner_id=ethan.id, status="Not Started"),
+        work_items_card = [
+            WorkItem(team_id=team_card.id, monthly_headsup_id=headsup_card.id, title="Optimize card production workflow", description="Streamline card production process to reduce processing time", source_type="OKR", source_id=key_results_card[0].id, owner_id=birhanemeskel.id, status="In Progress"),
+            WorkItem(team_id=team_card.id, monthly_headsup_id=headsup_card.id, title="Enhance card quality control process", description="Improve quality checks to achieve 99% accuracy target", source_type="OKR", source_id=key_results_card[1].id, owner_id=duresa.id, status="In Progress"),
+            WorkItem(team_id=team_card.id, monthly_headsup_id=headsup_card.id, title="Ensure timely card delivery", description="Coordinate delivery to meet 100% SLA compliance", source_type="OKR", source_id=key_results_card[2].id, owner_id=elasabeth.id, status="Not Started"),
+            WorkItem(team_id=team_card.id, monthly_headsup_id=headsup_card.id, title="Process daily card orders", description="Handle daily card order processing and queue management", source_type="BAU", source_id=bau_card[0].id, owner_id=isubalo.id, status="Not Started"),
         ]
         
-        work_items_compliance = [
-            WorkItem(team_id=team_compliance.id, monthly_headsup_id=headsup_compliance.id, title="Complete Q1 regulatory audit", description="Finalize and submit Q1 regulatory audit report", source_type="OKR", source_id=key_results_compliance[0].id, owner_id=victoria.id, status="In Progress"),
-            WorkItem(team_id=team_compliance.id, monthly_headsup_id=headsup_compliance.id, title="Review compliance violations", description="Analyze and address compliance violations", source_type="OKR", source_id=key_results_compliance[1].id, owner_id=daniel.id, status="Not Started"),
-            WorkItem(team_id=team_compliance.id, monthly_headsup_id=headsup_compliance.id, title="Prepare regulatory reports", description="Prepare monthly regulatory reports", source_type="BAU", source_id=bau_compliance[0].id, owner_id=grace.id, status="Not Started"),
+        work_items_t24 = [
+            WorkItem(team_id=team_t24.id, monthly_headsup_id=headsup_t24.id, title="Maintain T24 system uptime at 99.9%", description="Ensure T24 core banking system maintains high availability", source_type="OKR", source_id=key_results_t24[0].id, owner_id=regasa.id, status="In Progress"),
+            WorkItem(team_id=team_t24.id, monthly_headsup_id=headsup_t24.id, title="Optimize T24 transaction processing", description="Reduce transaction processing time by 20%", source_type="OKR", source_id=key_results_t24[1].id, owner_id=kelil.id, status="In Progress"),
+            WorkItem(team_id=team_t24.id, monthly_headsup_id=headsup_t24.id, title="Complete scheduled maintenance windows", description="Execute all planned T24 maintenance activities on schedule", source_type="OKR", source_id=key_results_t24[2].id, owner_id=ephrem.id, status="Not Started"),
+            WorkItem(team_id=team_t24.id, monthly_headsup_id=headsup_t24.id, title="Daily T24 system monitoring", description="Monitor T24 system performance and health metrics", source_type="BAU", source_id=bau_t24[0].id, owner_id=iyasu.id, status="Not Started"),
         ]
         
-        work_items_fraud = [
-            WorkItem(team_id=team_fraud.id, monthly_headsup_id=headsup_fraud.id, title="Upgrade fraud detection algorithms", description="Implement ML-based fraud detection improvements", source_type="OKR", source_id=key_results_fraud[0].id, owner_id=lucas.id, status="In Progress"),
-            WorkItem(team_id=team_fraud.id, monthly_headsup_id=headsup_fraud.id, title="Reduce false positive rate", description="Optimize fraud detection to reduce false positives", source_type="OKR", source_id=key_results_fraud[1].id, owner_id=mia.id, status="Not Started"),
-            WorkItem(team_id=team_fraud.id, monthly_headsup_id=headsup_fraud.id, title="Monitor transaction patterns", description="Daily monitoring of transaction patterns", source_type="BAU", source_id=bau_fraud[0].id, owner_id=noah.id, status="Not Started"),
+        work_items_integration = [
+            WorkItem(team_id=team_integration.id, monthly_headsup_id=headsup_integration.id, title="Integrate new payment gateways", description="Complete integration of 3 new payment gateway providers", source_type="OKR", source_id=key_results_integration[0].id, owner_id=tesfahun.id, status="In Progress"),
+            WorkItem(team_id=team_integration.id, monthly_headsup_id=headsup_integration.id, title="Optimize API response times", description="Reduce API response time by 25% through optimization", source_type="OKR", source_id=key_results_integration[1].id, owner_id=tselotemariam.id, status="In Progress"),
+            WorkItem(team_id=team_integration.id, monthly_headsup_id=headsup_integration.id, title="Improve integration success rate", description="Achieve 99.5% integration success rate across all systems", source_type="OKR", source_id=key_results_integration[2].id, owner_id=zelalem.id, status="Not Started"),
+            WorkItem(team_id=team_integration.id, monthly_headsup_id=headsup_integration.id, title="Monitor API performance", description="Daily monitoring of API performance and integration health", source_type="BAU", source_id=bau_integration[0].id, owner_id=tselotemariam.id, status="Not Started"),
         ]
         
-        work_items_payments = [
-            WorkItem(team_id=team_payments.id, monthly_headsup_id=headsup_payments.id, title="Optimize payment processing speed", description="Improve payment processing performance", source_type="OKR", source_id=key_results_payments[0].id, owner_id=ava.id, status="In Progress"),
-            WorkItem(team_id=team_payments.id, monthly_headsup_id=headsup_payments.id, title="Reduce payment failures", description="Identify and fix payment failure causes", source_type="OKR", source_id=key_results_payments[1].id, owner_id=william.id, status="Not Started"),
-            WorkItem(team_id=team_payments.id, monthly_headsup_id=headsup_payments.id, title="Daily transaction reconciliation", description="Perform daily payment reconciliation", source_type="BAU", source_id=bau_payments[1].id, owner_id=charlotte.id, status="Not Started"),
+        work_items_ijo = [
+            WorkItem(team_id=team_ijo.id, monthly_headsup_id=headsup_ijo.id, title="Improve customer satisfaction to 95%", description="Enhance customer service quality and experience", source_type="OKR", source_id=key_results_ijo[0].id, owner_id=samson.id, status="In Progress"),
+            WorkItem(team_id=team_ijo.id, monthly_headsup_id=headsup_ijo.id, title="Reduce customer wait times", description="Optimize branch operations to reduce average wait time to 10 minutes", source_type="OKR", source_id=key_results_ijo[1].id, owner_id=samrawit.id, status="In Progress"),
+            WorkItem(team_id=team_ijo.id, monthly_headsup_id=headsup_ijo.id, title="Ensure transaction accuracy", description="Maintain 100% transaction processing accuracy", source_type="OKR", source_id=key_results_ijo[2].id, owner_id=korsa.id, status="Not Started"),
+            WorkItem(team_id=team_ijo.id, monthly_headsup_id=headsup_ijo.id, title="Daily customer service operations", description="Handle daily customer inquiries and banking services", source_type="BAU", source_id=bau_ijo[0].id, owner_id=samrawit.id, status="Not Started"),
         ]
         
-        work_items_mobile = [
-            WorkItem(team_id=team_mobile.id, monthly_headsup_id=headsup_mobile.id, title="Improve app rating", description="Address user feedback and improve app features", source_type="OKR", source_id=key_results_mobile[0].id, owner_id=benjamin.id, status="In Progress"),
-            WorkItem(team_id=team_mobile.id, monthly_headsup_id=headsup_mobile.id, title="Increase user acquisition", description="Marketing and feature improvements to grow user base", source_type="OKR", source_id=key_results_mobile[1].id, owner_id=amelia.id, status="Not Started"),
-            WorkItem(team_id=team_mobile.id, monthly_headsup_id=headsup_mobile.id, title="Monitor app performance", description="Track and optimize app performance metrics", source_type="BAU", source_id=bau_mobile[0].id, owner_id=henry.id, status="Not Started"),
-        ]
-        
-        all_work_items = work_items_core + work_items_security + work_items_compliance + work_items_fraud + work_items_payments + work_items_mobile
+        all_work_items = work_items_atm + work_items_card + work_items_t24 + work_items_integration + work_items_ijo
         db.add_all(all_work_items)
         db.commit()
         for wi in all_work_items:
@@ -662,12 +627,11 @@ def seed_demo_data():
         current_week = datetime.now(timezone.utc).strftime("%Y-W%U")
         
         plans = [
-            WeeklyPriorityPlan(monthly_headsup_id=headsup_core.id, week=current_week, week_focus="Authentication system migration and failover implementation"),
-            WeeklyPriorityPlan(monthly_headsup_id=headsup_security.id, week=current_week, week_focus="Security infrastructure deployment and monitoring"),
-            WeeklyPriorityPlan(monthly_headsup_id=headsup_compliance.id, week=current_week, week_focus="Regulatory audit completion and compliance review"),
-            WeeklyPriorityPlan(monthly_headsup_id=headsup_fraud.id, week=current_week, week_focus="Fraud detection algorithm improvements"),
-            WeeklyPriorityPlan(monthly_headsup_id=headsup_payments.id, week=current_week, week_focus="Payment processing optimization"),
-            WeeklyPriorityPlan(monthly_headsup_id=headsup_mobile.id, week=current_week, week_focus="App performance improvements and UX enhancements"),
+            WeeklyPriorityPlan(monthly_headsup_id=headsup_atm.id, week=current_week, week_focus="Improve ATM network uptime and reduce transaction failures"),
+            WeeklyPriorityPlan(monthly_headsup_id=headsup_card.id, week=current_week, week_focus="Optimize card production workflow and quality control"),
+            WeeklyPriorityPlan(monthly_headsup_id=headsup_t24.id, week=current_week, week_focus="Maintain T24 system stability and optimize performance"),
+            WeeklyPriorityPlan(monthly_headsup_id=headsup_integration.id, week=current_week, week_focus="Integrate new payment gateways and improve API performance"),
+            WeeklyPriorityPlan(monthly_headsup_id=headsup_ijo.id, week=current_week, week_focus="Enhance customer service quality and reduce wait times"),
         ]
         db.add_all(plans)
         db.commit()
@@ -684,13 +648,16 @@ def seed_demo_data():
         print("=" * 60)
         
         priorities = [
-            WeeklyPriority(plan_id=plans[0].id, work_item_id=work_items_core[0].id, priority=1),
-            WeeklyPriority(plan_id=plans[0].id, work_item_id=work_items_core[1].id, priority=2),
-            WeeklyPriority(plan_id=plans[1].id, work_item_id=work_items_security[0].id, priority=1),
-            WeeklyPriority(plan_id=plans[2].id, work_item_id=work_items_compliance[0].id, priority=1),
-            WeeklyPriority(plan_id=plans[3].id, work_item_id=work_items_fraud[0].id, priority=1),
-            WeeklyPriority(plan_id=plans[4].id, work_item_id=work_items_payments[0].id, priority=1),
-            WeeklyPriority(plan_id=plans[5].id, work_item_id=work_items_mobile[0].id, priority=1),
+            WeeklyPriority(plan_id=plans[0].id, work_item_id=work_items_atm[0].id, priority=1),
+            WeeklyPriority(plan_id=plans[0].id, work_item_id=work_items_atm[1].id, priority=2),
+            WeeklyPriority(plan_id=plans[1].id, work_item_id=work_items_card[0].id, priority=1),
+            WeeklyPriority(plan_id=plans[1].id, work_item_id=work_items_card[1].id, priority=2),
+            WeeklyPriority(plan_id=plans[2].id, work_item_id=work_items_t24[0].id, priority=1),
+            WeeklyPriority(plan_id=plans[2].id, work_item_id=work_items_t24[1].id, priority=2),
+            WeeklyPriority(plan_id=plans[3].id, work_item_id=work_items_integration[0].id, priority=1),
+            WeeklyPriority(plan_id=plans[3].id, work_item_id=work_items_integration[1].id, priority=2),
+            WeeklyPriority(plan_id=plans[4].id, work_item_id=work_items_ijo[0].id, priority=1),
+            WeeklyPriority(plan_id=plans[4].id, work_item_id=work_items_ijo[1].id, priority=2),
         ]
         db.add_all(priorities)
         db.commit()
@@ -704,47 +671,43 @@ def seed_demo_data():
         print("CREATING TASKS")
         print("=" * 60)
         
-        tasks_core = [
-            Task(work_item_id=work_items_core[0].id, title="Setup AWS Infrastructure", description="Setup AWS infrastructure for authentication service migration", assignee_id=oliver.id, status="Done", effort_hours=8, completed_at=datetime.now(timezone.utc) - timedelta(days=3)),
-            Task(work_item_id=work_items_core[0].id, title="Configure Authentication Service", description="Configure authentication service on cloud infrastructure", assignee_id=emma.id, status="In Progress", effort_hours=12),
-            Task(work_item_id=work_items_core[0].id, title="Run Integration Tests", description="Run integration tests for migrated authentication service", assignee_id=sophia.id, status="Not Started", effort_hours=6),
-            Task(work_item_id=work_items_core[1].id, title="Design Failover Architecture", description="Design automatic failover architecture for critical services", assignee_id=james.id, status="Done", effort_hours=10, completed_at=datetime.now(timezone.utc) - timedelta(days=2)),
-            Task(work_item_id=work_items_core[1].id, title="Implement Failover Logic", description="Implement failover logic and automatic switching mechanism", assignee_id=emma.id, status="In Progress", effort_hours=16),
-            Task(work_item_id=work_items_core[2].id, title="Setup API Gateway", description="Setup and configure new API gateway infrastructure", assignee_id=oliver.id, status="Not Started", effort_hours=14),
+        tasks_atm = [
+            Task(work_item_id=work_items_atm[0].id, title="Install new monitoring tools", description="Deploy enhanced ATM monitoring system for better visibility", assignee_id=motuma.id, status="Done", effort_hours=8, completed_at=datetime.now(timezone.utc) - timedelta(days=3)),
+            Task(work_item_id=work_items_atm[0].id, title="Analyze downtime patterns", description="Analyze historical data to identify common downtime causes", assignee_id=derartu.id, status="In Progress", effort_hours=6),
+            Task(work_item_id=work_items_atm[1].id, title="Review transaction failure logs", description="Analyze transaction failure logs to identify root causes", assignee_id=simon.id, status="In Progress", effort_hours=8),
+            Task(work_item_id=work_items_atm[1].id, title="Implement failure prevention measures", description="Deploy fixes for common transaction failure scenarios", assignee_id=roba.id, status="Not Started", effort_hours=10),
+            Task(work_item_id=work_items_atm[2].id, title="Schedule preventive maintenance", description="Create and execute preventive maintenance schedule for all ATMs", assignee_id=kebron.id, status="Not Started", effort_hours=12),
         ]
         
-        tasks_security = [
-            Task(work_item_id=work_items_security[0].id, title="Audit Network Architecture", description="Audit current network architecture for zero-trust implementation", assignee_id=isabella.id, status="Done", effort_hours=12, completed_at=datetime.now(timezone.utc) - timedelta(days=4)),
-            Task(work_item_id=work_items_security[0].id, title="Implement Network Segmentation", description="Implement network segmentation and access controls", assignee_id=ethan.id, status="In Progress", effort_hours=20),
-            Task(work_item_id=work_items_security[1].id, title="Upgrade Threat Detection", description="Upgrade threat detection system with new algorithms", assignee_id=alexander.id, status="Not Started", effort_hours=18),
+        tasks_card = [
+            Task(work_item_id=work_items_card[0].id, title="Review current production workflow", description="Analyze existing card production process for optimization opportunities", assignee_id=duresa.id, status="Done", effort_hours=6, completed_at=datetime.now(timezone.utc) - timedelta(days=2)),
+            Task(work_item_id=work_items_card[0].id, title="Implement workflow improvements", description="Deploy optimized card production workflow", assignee_id=elasabeth.id, status="In Progress", effort_hours=10),
+            Task(work_item_id=work_items_card[1].id, title="Enhance quality control procedures", description="Improve quality check processes and validation criteria", assignee_id=isubalo.id, status="In Progress", effort_hours=8),
+            Task(work_item_id=work_items_card[2].id, title="Coordinate with delivery partners", description="Work with delivery partners to ensure timely card delivery", assignee_id=tomas.id, status="Not Started", effort_hours=6),
         ]
         
-        tasks_compliance = [
-            Task(work_item_id=work_items_compliance[0].id, title="Gather Audit Data", description="Collect and organize data for Q1 regulatory audit", assignee_id=daniel.id, status="Done", effort_hours=16, completed_at=datetime.now(timezone.utc) - timedelta(days=5)),
-            Task(work_item_id=work_items_compliance[0].id, title="Prepare Audit Report", description="Prepare and review Q1 regulatory audit report", assignee_id=victoria.id, status="In Progress", effort_hours=12),
-            Task(work_item_id=work_items_compliance[1].id, title="Analyze Violations", description="Analyze compliance violations and create action plan", assignee_id=grace.id, status="Not Started", effort_hours=10),
+        tasks_t24 = [
+            Task(work_item_id=work_items_t24[0].id, title="Review system health metrics", description="Analyze T24 system health and identify improvement areas", assignee_id=kelil.id, status="Done", effort_hours=8, completed_at=datetime.now(timezone.utc) - timedelta(days=4)),
+            Task(work_item_id=work_items_t24[0].id, title="Implement system optimizations", description="Apply system optimizations to improve uptime", assignee_id=ephrem.id, status="In Progress", effort_hours=12),
+            Task(work_item_id=work_items_t24[1].id, title="Optimize database queries", description="Review and optimize slow database queries affecting transaction speed", assignee_id=iyasu.id, status="In Progress", effort_hours=10),
+            Task(work_item_id=work_items_t24[2].id, title="Plan maintenance windows", description="Schedule and plan upcoming T24 maintenance activities", assignee_id=regasa.id, status="Not Started", effort_hours=6),
         ]
         
-        tasks_fraud = [
-            Task(work_item_id=work_items_fraud[0].id, title="Research ML Algorithms", description="Research and evaluate ML algorithms for fraud detection", assignee_id=mia.id, status="Done", effort_hours=14, completed_at=datetime.now(timezone.utc) - timedelta(days=6)),
-            Task(work_item_id=work_items_fraud[0].id, title="Implement ML Model", description="Implement and test new ML-based fraud detection model", assignee_id=lucas.id, status="In Progress", effort_hours=22),
-            Task(work_item_id=work_items_fraud[1].id, title="Optimize Detection Rules", description="Optimize fraud detection rules to reduce false positives", assignee_id=noah.id, status="Not Started", effort_hours=12),
+        tasks_integration = [
+            Task(work_item_id=work_items_integration[0].id, title="Research payment gateway options", description="Evaluate and select 3 new payment gateway providers", assignee_id=tselotemariam.id, status="Done", effort_hours=10, completed_at=datetime.now(timezone.utc) - timedelta(days=5)),
+            Task(work_item_id=work_items_integration[0].id, title="Integrate first payment gateway", description="Complete integration of first new payment gateway", assignee_id=zelalem.id, status="In Progress", effort_hours=16),
+            Task(work_item_id=work_items_integration[1].id, title="Profile API performance", description="Identify bottlenecks in API response times", assignee_id=tesfahun.id, status="In Progress", effort_hours=8),
+            Task(work_item_id=work_items_integration[1].id, title="Optimize API endpoints", description="Implement optimizations to reduce API response times", assignee_id=tselotemariam.id, status="Not Started", effort_hours=12),
         ]
         
-        tasks_payments = [
-            Task(work_item_id=work_items_payments[0].id, title="Performance Analysis", description="Analyze current payment processing performance", assignee_id=william.id, status="Done", effort_hours=8, completed_at=datetime.now(timezone.utc) - timedelta(days=3)),
-            Task(work_item_id=work_items_payments[0].id, title="Optimize Payment Gateway", description="Optimize payment gateway configuration for better performance", assignee_id=ava.id, status="In Progress", effort_hours=16),
-            Task(work_item_id=work_items_payments[1].id, title="Investigate Failures", description="Investigate root causes of payment failures", assignee_id=charlotte.id, status="Not Started", effort_hours=10),
+        tasks_ijo = [
+            Task(work_item_id=work_items_ijo[0].id, title="Conduct customer satisfaction survey", description="Gather customer feedback to identify improvement areas", assignee_id=samrawit.id, status="Done", effort_hours=6, completed_at=datetime.now(timezone.utc) - timedelta(days=3)),
+            Task(work_item_id=work_items_ijo[0].id, title="Implement service improvements", description="Deploy customer service enhancements based on feedback", assignee_id=korsa.id, status="In Progress", effort_hours=10),
+            Task(work_item_id=work_items_ijo[1].id, title="Analyze wait time patterns", description="Review branch operations to identify wait time bottlenecks", assignee_id=tesfaye.id, status="In Progress", effort_hours=8),
+            Task(work_item_id=work_items_ijo[1].id, title="Optimize branch workflow", description="Streamline branch processes to reduce customer wait times", assignee_id=samson.id, status="Not Started", effort_hours=12),
         ]
         
-        tasks_mobile = [
-            Task(work_item_id=work_items_mobile[0].id, title="User Feedback Analysis", description="Analyze user feedback and identify improvement areas", assignee_id=henry.id, status="Done", effort_hours=10, completed_at=datetime.now(timezone.utc) - timedelta(days=4)),
-            Task(work_item_id=work_items_mobile[0].id, title="Implement UX Improvements", description="Implement UX improvements based on user feedback", assignee_id=amelia.id, status="In Progress", effort_hours=20),
-            Task(work_item_id=work_items_mobile[1].id, title="Marketing Campaign Planning", description="Plan marketing campaign to increase user acquisition", assignee_id=benjamin.id, status="Not Started", effort_hours=12),
-            Task(work_item_id=work_items_mobile[2].id, title="Performance Monitoring Setup", description="Setup comprehensive app performance monitoring", assignee_id=lily.id, status="Not Started", effort_hours=8),
-        ]
-        
-        all_tasks = tasks_core + tasks_security + tasks_compliance + tasks_fraud + tasks_payments + tasks_mobile
+        all_tasks = tasks_atm + tasks_card + tasks_t24 + tasks_integration + tasks_ijo
         db.add_all(all_tasks)
         db.commit()
         
@@ -759,39 +722,37 @@ def seed_demo_data():
         print("✅ DATABASE SEEDED SUCCESSFULLY!")
         print("=" * 60)
         print(f"\n📊 SUMMARY:")
-        print(f"   • Departments: 4")
-        print(f"   • Teams: 6 (all with descriptions)")
-        print(f"   • Users: {len(all_users) + 6} (4 directors + 1 executive + 1 admin + {len(all_users)} team members)")
-        print(f"   • OKRs: 6 (one per team)")
+        print(f"   • Departments: 3")
+        print(f"   • Teams: 5 (all with descriptions)")
+        print(f"   • Users: {len(all_users) + 5} (3 directors + 2 executives + 1 admin + {len(all_users)} team members)")
+        print(f"   • OKRs: 5 (one per team)")
         print(f"   • Key Results: {len(all_key_results)}")
-        print(f"   • BAU Activities: 12 (2 per team)")
-        print(f"   • BAU Metrics: {len(metrics_core) + len(metrics_security) + len(metrics_compliance) + len(metrics_fraud) + len(metrics_payments) + len(metrics_mobile)}")
-        print(f"   • Monthly Heads-Up: 6 (one per team)")
+        print(f"   • BAU Activities: 15 (3 per team)")
+        print(f"   • BAU Metrics: {len(metrics_atm) + len(metrics_card) + len(metrics_t24) + len(metrics_integration) + len(metrics_ijo)}")
+        print(f"   • Monthly Heads-Up: 5 (one per team)")
         print(f"   • Work Items: {len(all_work_items)}")
-        print(f"   • Weekly Priority Plans: 6")
+        print(f"   • Weekly Priority Plans: 5")
         print(f"   • Weekly Priorities: {len(priorities)}")
         print(f"   • Tasks: {len(all_tasks)}")
         
         print(f"\n{'='*60}")
         print(f"🔐 LOGIN CREDENTIALS (All passwords: password123)")
         print(f"{'='*60}")
-        print(f"\n👤 EXECUTIVE:")
-        print(f"   Email: robert@bank.com")
-        print(f"   Role: Chief Executive Officer")
+        print(f"\n👤 EXECUTIVES:")
+        print(f"   Email: deribe@bank.com    (Chief Executive Officer)")
+        print(f"   Email: aman@bank.com      (Chief Transformation and Strategy Officer)")
         
         print(f"\n👤 DIRECTORS:")
-        print(f"   Email: michael@bank.com  (Director of Technology & Infrastructure)")
-        print(f"   Email: sarah@bank.com    (Director of Risk & Compliance)")
-        print(f"   Email: david@bank.com    (Director of Operations)")
-        print(f"   Email: jennifer@bank.com (Director of Digital Banking)")
+        print(f"   Email: hailagegn@bank.com (Director of Payment Platform)")
+        print(f"   Email: samuel@bank.com    (Director of Core Banking System)")
+        print(f"   Email: iyob@bank.com      (Director of Central Finfine District)")
         
         print(f"\n👤 TEAM LEADS:")
-        print(f"   Email: james@bank.com     (Core Banking Systems)")
-        print(f"   Email: alexander@bank.com (Cybersecurity)")
-        print(f"   Email: victoria@bank.com  (Regulatory Compliance)")
-        print(f"   Email: lucas@bank.com     (Fraud Prevention)")
-        print(f"   Email: ava@bank.com       (Payment Processing)")
-        print(f"   Email: benjamin@bank.com  (Mobile Banking)")
+        print(f"   Email: zidan@bank.com           (ATM Monitoring Team)")
+        print(f"   Email: birhanemeskel@bank.com  (Card Production Team)")
+        print(f"   Email: regasa@bank.com          (T24 Application Team)")
+        print(f"   Email: tesfahun@bank.com        (Application Integration Team)")
+        print(f"   Email: samson@bank.com          (Ijo Branch)")
         
         print(f"\n👤 ADMIN:")
         print(f"   Email: admin@bank.com")

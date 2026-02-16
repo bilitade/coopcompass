@@ -54,6 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         { label: 'My Department', path: '/departments', icon: <Building2 size={20} /> },
         { label: 'OKRs Overview', path: '/director/okrs', icon: <Target size={20} /> },
         { label: 'BAU Overview', path: '/director/bau', icon: <Activity size={20} /> },
+        { label: 'OKR Validator', path: '/okrs/validator', icon: <Sparkles size={20} /> },
       ];
     }
 
@@ -64,6 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         { label: 'Organization', path: '/departments', icon: <Building2 size={20} /> },
         { label: 'OKRs Overview', path: '/executive/okrs', icon: <Target size={20} /> },
         { label: 'BAU Overview', path: '/executive/bau', icon: <Activity size={20} /> },
+        { label: 'OKR Validator', path: '/okrs/validator', icon: <Sparkles size={20} /> },
       ];
     }
 
@@ -86,7 +88,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
       { label: 'My Team', path: '/my-team', icon: <Users size={20} /> },
       { label: 'My Tasks', path: '/tasks', icon: <CheckSquare size={20} /> },
-      ...(teamId ? [{ label: 'Performance Snapshots', path: `/teams/${teamId}/snapshots`, icon: <BarChart3 size={20} /> }] : []),
+      { label: 'OKR Validator', path: '/okrs/validator', icon: <Sparkles size={20} /> },
+      ...(teamId ? [{ label: 'Snapshots', path: `/teams/${teamId}/snapshots`, icon: <BarChart3 size={20} /> }] : []),
     ];
   };
 

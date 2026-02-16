@@ -20,7 +20,6 @@ router = APIRouter(prefix="/v1")
     response_model=ValidateResponse,
     status_code=status.HTTP_200_OK,
     summary="Validate an OKR submission",
-    tags=["validation"],
 )
 async def validate_endpoint(payload: ValidateRequest) -> ValidateResponse:
     try:
@@ -32,7 +31,6 @@ async def validate_endpoint(payload: ValidateRequest) -> ValidateResponse:
 @router.post(
     "/validate/stream",
     summary="Validate an OKR submission with progress streaming",
-    tags=["validation"],
 )
 async def validate_stream_endpoint(payload: ValidateRequest) -> StreamingResponse:
     """Stream validation progress using Server-Sent Events."""
@@ -169,7 +167,6 @@ async def validate_stream_endpoint(payload: ValidateRequest) -> StreamingRespons
     response_model=CorrectionResponse,
     status_code=status.HTTP_200_OK,
     summary="Correct an OKR submission and return the improved draft",
-    tags=["correction"],
 )
 async def correct_endpoint(payload: CorrectionRequest) -> CorrectionResponse:
     try:
@@ -181,7 +178,6 @@ async def correct_endpoint(payload: CorrectionRequest) -> CorrectionResponse:
 @router.post(
     "/correct/stream",
     summary="Correct an OKR submission with progress streaming",
-    tags=["correction"],
 )
 async def correct_stream_endpoint(payload: CorrectionRequest) -> StreamingResponse:
     """Stream correction progress using Server-Sent Events."""

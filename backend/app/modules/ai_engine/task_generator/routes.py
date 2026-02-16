@@ -13,7 +13,7 @@ from app.modules.tasks.models import Task
 from app.modules.weekly_priority.models import WeeklyPriorityPlan
 from app.core.logging_config import logger
 
-router = APIRouter(prefix="/task-generator", tags=["task-generator"])
+router = APIRouter(prefix="/task-generator")
 
 
 @router.post("/generate", response_model=TaskGenerationOutput)

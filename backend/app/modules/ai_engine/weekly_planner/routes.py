@@ -17,7 +17,7 @@ from app.modules.weekly_priority.schemas import WeeklyPriorityPlanCreate, Weekly
 from app.modules.monthly_headsup.models import MonthlyHeadsUp
 from app.core.logging_config import logger
 
-router = APIRouter(prefix="/weekly-planner", tags=["weekly-planner"])
+router = APIRouter(prefix="/weekly-planner")
 
 
 @router.post("/generate", response_model=WeeklyPlanOutput)

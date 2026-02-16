@@ -8,7 +8,7 @@ from app.schemas import *
 from app.api.v1.deps import get_current_user, get_current_team_lead
 from app.modules.work_items.services import calculate_work_item_progress
 
-router = APIRouter(prefix="/api", tags=["work-items", "tasks"])
+router = APIRouter(prefix="/api", tags=["work-items"])
 
 
 @router.post("/work-items", response_model=WorkItemResponse, status_code=status.HTTP_201_CREATED)

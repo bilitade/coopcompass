@@ -9,7 +9,7 @@ from . import services, schemas
 from app.modules.users.models import User
 from app.models import WeeklyPriority, WeeklyPriorityPlan, WorkItem, Team, Department
 
-router = APIRouter(prefix="/api", tags=["weekly-priority", "dashboard"])
+router = APIRouter(prefix="/api", tags=["weekly-priority"])
 
 
 # Weekly Priority Plan Endpoints
@@ -158,7 +158,7 @@ def delete_weekly_priority(
 
 # Dashboard Endpoints
 
-@router.get("/teams/{team_id}/dashboard", response_model=schemas.DashboardResponse)
+@router.get("/teams/{team_id}/dashboard", response_model=schemas.DashboardResponse, tags=["dashboard"])
 def get_dashboard(
     team_id: int,
     db: Session = Depends(get_db),
@@ -181,7 +181,7 @@ def get_dashboard(
     return services.get_team_dashboard(db, team_id)
 
 
-@router.get("/teams/{team_id}/performance", response_model=List[schemas.PerformanceTrendResponse])
+@router.get("/teams/{team_id}/performance", response_model=List[schemas.PerformanceTrendResponse], tags=["dashboard"])
 def get_performance_trend(
     team_id: int,
     db: Session = Depends(get_db),
@@ -214,7 +214,7 @@ def get_performance_trend(
     ]
 
 
-@router.get("/departments/{department_id}/dashboard", response_model=schemas.DepartmentDashboardResponse)
+@router.get("/departments/{department_id}/dashboard", response_model=schemas.DepartmentDashboardResponse, tags=["dashboard"])
 def get_department_dashboard_endpoint(
     department_id: int,
     db: Session = Depends(get_db),
@@ -232,7 +232,7 @@ def get_department_dashboard_endpoint(
     return services.get_department_dashboard(db, department_id)
 
 
-@router.get("/organization/dashboard", response_model=schemas.OrganizationDashboardResponse)
+@router.get("/organization/dashboard", response_model=schemas.OrganizationDashboardResponse, tags=["dashboard"])
 def get_organization_dashboard_endpoint(
     db: Session = Depends(get_db),
     current_user: User = Depends(deps.get_current_user)

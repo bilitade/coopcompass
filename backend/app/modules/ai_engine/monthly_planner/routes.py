@@ -16,7 +16,7 @@ from app.modules.work_items.schemas import WorkItemCreate
 from app.models import WorkItem, KeyResult, BAUActivity
 from app.core.logging_config import logger
 
-router = APIRouter(prefix="/monthly-planner", tags=["monthly-planner"])
+router = APIRouter(prefix="/monthly-planner")
 
 
 @router.post("/generate", response_model=MonthlyPlanOutput)

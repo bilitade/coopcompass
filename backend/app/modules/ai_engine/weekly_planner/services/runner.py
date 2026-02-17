@@ -90,7 +90,7 @@ def collect_weekly_context(
         if item.owner_id:
             from app.models import User
             owner = db.query(User).filter(User.id == item.owner_id).first()
-            owner_name = owner.full_name if owner else None
+            owner_name = owner.name if owner else None
         
         # Get source name
         source_name = "Unknown"

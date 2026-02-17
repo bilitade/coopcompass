@@ -149,7 +149,7 @@ const transformCorrectionResponse = (backendResponse: BackendCorrectionResponse)
 export const validateOKR = async (request: ValidateOKRRequest): Promise<ValidateOKRResponse> => {
   try {
     const backendRequest = transformValidateRequest(request);
-    const response = await axios.post(`${API_BASE_URL}/ai-engine/v1/validate`, backendRequest);
+    const response = await axios.post(`${API_BASE_URL}/api/ai-engine/v1/validate`, backendRequest);
     return transformValidateResponse(response.data);
   } catch (error) {
     console.error('Error validating OKR:', error);
@@ -164,7 +164,7 @@ export const validateOKRStream = async (
   try {
     const backendRequest = transformValidateRequest(request);
     
-    const response = await fetch(`${API_BASE_URL}/ai-engine/v1/validate/stream`, {
+    const response = await fetch(`${API_BASE_URL}/api/ai-engine/v1/validate/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -230,7 +230,7 @@ export const validateOKRStream = async (
       return finalResult;
     } else {
       console.warn('No final result from stream, making fallback API call');
-      const fallbackResponse = await axios.post(`${API_BASE_URL}/ai-engine/v1/validate`, backendRequest);
+      const fallbackResponse = await axios.post(`${API_BASE_URL}/api/ai-engine/v1/validate`, backendRequest);
       return transformValidateResponse(fallbackResponse.data);
     }
   } catch (error) {
@@ -242,7 +242,7 @@ export const validateOKRStream = async (
 export const correctOKR = async (request: CorrectOKRRequest): Promise<CorrectOKRResponse> => {
   try {
     const backendRequest = transformCorrectionRequest(request);
-    const response = await axios.post(`${API_BASE_URL}/ai-engine/v1/correct`, backendRequest);
+    const response = await axios.post(`${API_BASE_URL}/api/ai-engine/v1/correct`, backendRequest);
     return transformCorrectionResponse(response.data);
   } catch (error) {
     console.error('Error correcting OKR:', error);
@@ -257,7 +257,7 @@ export const correctOKRStream = async (
   try {
     const backendRequest = transformCorrectionRequest(request);
     
-    const response = await fetch(`${API_BASE_URL}/ai-engine/v1/correct/stream`, {
+    const response = await fetch(`${API_BASE_URL}/api/ai-engine/v1/correct/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -316,7 +316,7 @@ export const correctOKRStream = async (
       return finalResult;
     } else {
       console.warn('No final result from stream, making fallback API call');
-      const fallbackResponse = await axios.post(`${API_BASE_URL}/ai-engine/v1/correct`, backendRequest);
+      const fallbackResponse = await axios.post(`${API_BASE_URL}/api/ai-engine/v1/correct`, backendRequest);
       return transformCorrectionResponse(fallbackResponse.data);
     }
   } catch (error) {
